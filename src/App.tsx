@@ -26,6 +26,8 @@ import {
   Github
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import AboutPage from "./About";
+import ContactPage from "./Contact";
 
 const CountingNumber = ({ value, suffix = "" }: { value: number, suffix?: string }) => {
   const [count, setCount] = useState(0);
@@ -56,25 +58,43 @@ const CountingNumber = ({ value, suffix = "" }: { value: number, suffix?: string
   return <span ref={ref}>{count}{suffix}</span>;
 };
 
-const Navbar = () => {
+const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: string) => void, currentPage: string }) => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6">
       <div className="glass px-8 py-4 rounded-2xl flex items-center gap-8 max-w-6xl w-full justify-between shadow-xl shadow-slate-200/50">
-        <div className="flex items-center gap-3">
+        <div 
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => onNavigate('home')}
+        >
           <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
             <BrainCircuit className="text-white w-6 h-6" />
           </div>
           <span className="font-display font-bold text-2xl tracking-tight text-slate-900">VibeLab</span>
         </div>
         <div className="hidden lg:flex items-center gap-10 text-sm font-semibold text-slate-600">
-          <a href="#problem" className="hover:text-cyan-600 transition-colors">The Problem</a>
-          <a href="#solution" className="hover:text-cyan-600 transition-colors">Our Solution</a>
-          <a href="#how-it-works" className="hover:text-cyan-600 transition-colors">How it Works</a>
-          <a href="#zones" className="hover:text-cyan-600 transition-colors">Learning Zones</a>
+          {currentPage === 'home' ? (
+            <>
+              <a href="#problem" className="hover:text-cyan-600 transition-colors">The Problem</a>
+              <a href="#solution" className="hover:text-cyan-600 transition-colors">Our Solution</a>
+              <a href="#how-it-works" className="hover:text-cyan-600 transition-colors">How it Works</a>
+              <a href="#zones" className="hover:text-cyan-600 transition-colors">Learning Zones</a>
+            </>
+          ) : (
+            <button onClick={() => onNavigate('home')} className="hover:text-cyan-600 transition-colors">Home</button>
+          )}
+          <button 
+            onClick={() => onNavigate('about')} 
+            className={`transition-colors ${currentPage === 'about' ? 'text-cyan-600' : 'hover:text-cyan-600'}`}
+          >
+            About Us
+          </button>
         </div>
         <div className="flex items-center gap-4">
           <button className="hidden sm:block text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">Login</button>
-          <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-cyan-600/30 transition-all active:scale-95">
+          <button 
+            onClick={() => onNavigate('contact')}
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-cyan-600/30 transition-all active:scale-95"
+          >
             Get Started
           </button>
         </div>
@@ -896,18 +916,33 @@ const Footer = () => {
 };
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState('home');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
-      <Navbar />
+      <Navbar onNavigate={setCurrentPage} currentPage={currentPage} />
       <main>
-        <Hero />
-        <Problem />
-        <Solution />
-        <HowItWorks />
-        <LearningZones />
-        <Audience />
-        <Stats />
-        <FinalCTA />
+        {currentPage === 'home' ? (
+          <>
+            <Hero />
+            <Problem />
+            <Solution />
+            <HowItWorks />
+            <LearningZones />
+            <Audience />
+            <Testimonials />
+            <Stats />
+            <FinalCTA />
+          </>
+        ) : currentPage === 'about' ? (
+          <AboutPage />
+        ) : (
+          <ContactPage onNavigate={setCurrentPage} />
+        )}
       </main>
       <Footer />
     </div>
