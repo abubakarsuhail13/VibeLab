@@ -239,7 +239,7 @@ const CompanyBacking = () => {
   );
 };
 
-const FinalCTA = () => {
+const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   return (
     <section className="py-32 px-6 bg-white">
       <div className="max-w-4xl mx-auto text-center">
@@ -250,7 +250,10 @@ const FinalCTA = () => {
           <button className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl">
             Join Early Access
           </button>
-          <button className="flex items-center gap-3 text-slate-900 font-bold px-10 py-5 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all">
+          <button 
+            onClick={() => onNavigate('contact')}
+            className="flex items-center gap-3 text-slate-900 font-bold px-10 py-5 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all"
+          >
             <Mail className="w-5 h-5 text-cyan-600" />
             Contact Us
           </button>
@@ -260,7 +263,7 @@ const FinalCTA = () => {
   );
 };
 
-export default function AboutPage() {
+export default function AboutPage({ onNavigate }: { onNavigate: (page: string) => void }) {
   return (
     <div className="min-h-screen bg-slate-50">
       <AboutHero />
@@ -270,7 +273,7 @@ export default function AboutPage() {
       <IndustryBacking />
       <VisionSection />
       <CompanyBacking />
-      <FinalCTA />
+      <FinalCTA onNavigate={onNavigate} />
     </div>
   );
 }

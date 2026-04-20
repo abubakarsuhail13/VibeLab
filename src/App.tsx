@@ -294,7 +294,7 @@ const LaunchAnimation = () => {
   );
 };
 
-const Hero = () => {
+const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   return (
     <section className="relative pt-48 pb-32 px-6 overflow-hidden min-h-screen flex flex-col items-center justify-center hero-gradient">
       {/* Background Glows */}
@@ -326,7 +326,10 @@ const Hero = () => {
             <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:shadow-xl hover:shadow-cyan-600/30 transition-all flex items-center gap-3 group">
               Join Early Access <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="flex items-center gap-3 text-slate-900 font-bold px-8 py-5 rounded-2xl border border-slate-200 hover:bg-slate-100 transition-all">
+            <button 
+              onClick={() => onNavigate('contact')}
+              className="flex items-center gap-3 text-slate-900 font-bold px-8 py-5 rounded-2xl border border-slate-200 hover:bg-slate-100 transition-all"
+            >
               <School className="w-5 h-5 text-cyan-600" />
               For Schools
             </button>
@@ -787,7 +790,7 @@ const Stats = () => {
   );
 };
 
-const FinalCTA = () => {
+const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [email, setEmail] = useState("");
 
   return (
@@ -824,14 +827,23 @@ const FinalCTA = () => {
               Join Early Access
             </button>
           </form>
-          <p className="text-xs text-slate-500">No spam. Only updates on our launch and early access perks.</p>
+          <div className="flex flex-col items-center gap-4">
+            <button 
+              onClick={() => onNavigate('contact')}
+              className="text-sm font-bold text-cyan-600 hover:underline flex items-center gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Contact Us for Partnerships
+            </button>
+            <p className="text-xs text-slate-500">No spam. Only updates on our launch and early access perks.</p>
+          </div>
         </div>
       </div>
     </section>
   );
 };
 
-const Footer = () => {
+const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   return (
     <footer className="pt-32 pb-12 px-6 border-t border-slate-200 bg-white">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 mb-24">
@@ -845,22 +857,30 @@ const Footer = () => {
           <p className="text-slate-600 mb-8 max-w-xs leading-relaxed">
             The world's first project-native learning platform for the next generation of builders.
           </p>
-          <div className="flex gap-4">
-            {[
-              { icon: <Twitter className="w-5 h-5" />, href: "https://twitter.com/vibelab" },
-              { icon: <Linkedin className="w-5 h-5" />, href: "https://linkedin.com/company/vibelab" },
-              { icon: <Github className="w-5 h-5" />, href: "https://github.com/vibelab" }
-            ].map((social, i) => (
-              <a 
-                key={i} 
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-cyan-500/5 hover:text-cyan-600 transition-all cursor-pointer border-slate-200 text-slate-500"
-              >
-                {social.icon}
-              </a>
-            ))}
+          <div className="space-y-6">
+            <div className="flex gap-4">
+              {[
+                { icon: <Twitter className="w-5 h-5" />, href: "https://twitter.com/vibelab" },
+                { icon: <Linkedin className="w-5 h-5" />, href: "https://linkedin.com/company/vibelab" },
+                { icon: <Github className="w-5 h-5" />, href: "https://github.com/vibelab" }
+              ].map((social, i) => (
+                <a 
+                  key={i} 
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-cyan-500/5 hover:text-cyan-600 transition-all cursor-pointer border-slate-200 text-slate-500"
+                >
+                  {social.icon}
+                </a>
+              ))}
+            </div>
+            <a href="mailto:vibelab@nexaforgetech.com" className="flex items-center gap-3 text-slate-600 hover:text-cyan-600 transition-colors group">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-cyan-50 transition-colors">
+                <Mail className="w-5 h-5" />
+              </div>
+              <span className="font-medium">vibelab@nexaforgetech.com</span>
+            </a>
           </div>
         </div>
 
@@ -882,10 +902,10 @@ const Footer = () => {
 
         <div className="flex flex-col gap-6">
           <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs">Company</h4>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">About Us</a>
+          <button onClick={() => onNavigate('about')} className="text-left text-slate-600 hover:text-cyan-600 transition-colors">About Us</button>
           <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Careers</a>
           <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Press</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Contact</a>
+          <button onClick={() => onNavigate('contact')} className="text-left text-slate-600 hover:text-cyan-600 transition-colors">Contact</button>
         </div>
 
         <div className="flex flex-col gap-6">
@@ -928,7 +948,7 @@ export default function App() {
       <main>
         {currentPage === 'home' ? (
           <>
-            <Hero />
+            <Hero onNavigate={setCurrentPage} />
             <Problem />
             <Solution />
             <HowItWorks />
@@ -936,15 +956,15 @@ export default function App() {
             <Audience />
             <Testimonials />
             <Stats />
-            <FinalCTA />
+            <FinalCTA onNavigate={setCurrentPage} />
           </>
         ) : currentPage === 'about' ? (
-          <AboutPage />
+          <AboutPage onNavigate={setCurrentPage} />
         ) : (
           <ContactPage onNavigate={setCurrentPage} />
         )}
       </main>
-      <Footer />
+      <Footer onNavigate={setCurrentPage} />
     </div>
   );
 }

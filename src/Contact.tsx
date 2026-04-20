@@ -250,8 +250,8 @@ const ContactInfo = () => {
               <Mail className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-bold text-slate-900 mb-4">Email Us</h3>
-            <a href="mailto:info@vibelab.com" className="text-xl font-medium text-cyan-600 hover:underline mb-6 block">
-              info@vibelab.com
+            <a href="mailto:vibelab@nexaforgetech.com" className="text-xl font-medium text-cyan-600 hover:underline mb-6 block">
+              vibelab@nexaforgetech.com
             </a>
             <p className="text-slate-500 font-medium">
               Global EdTech Initiative by NexaForge Technologies
