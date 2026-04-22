@@ -25,9 +25,192 @@ import {
   Linkedin,
   Github
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, FormEvent } from "react";
 import AboutPage from "./About";
 import ContactPage from "./Contact";
+
+const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
+  const [password, setPassword] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [data, setData] = useState<{ waitlist: any[], submissions: any[] } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch('/api/admin/data', {
+        headers: { 'x-admin-key': password }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setData(result);
+        setIsAuthenticated(true);
+        // Persist password for session
+        sessionStorage.setItem('adminKey', password);
+      } else {
+        setError("Invalid admin password");
+      }
+    } catch (err) {
+      setError("Failed to connect to server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const savedKey = sessionStorage.getItem('adminKey');
+    if (savedKey) {
+      setPassword(savedKey);
+      // Automatically attempt login if key exists
+      const ping = async () => {
+        const res = await fetch('/api/admin/data', { headers: { 'x-admin-key': savedKey } });
+        if (res.ok) {
+          setData(await res.json());
+          setIsAuthenticated(true);
+        }
+      };
+      ping();
+    }
+  }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen pt-48 pb-20 px-6 bg-slate-50 flex flex-col items-center">
+        <div className="max-w-md w-full glass p-10 rounded-[3rem] border-slate-200 shadow-2xl">
+          <div className="w-16 h-16 bg-slate-900 rounded-3xl flex items-center justify-center mb-8 mx-auto">
+            <ShieldCheck className="text-white w-8 h-8" />
+          </div>
+          <h2 className="font-display text-3xl font-bold text-slate-900 text-center mb-8">Admin Access</h2>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Secure Key</label>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter admin password"
+                className="w-full px-6 py-4 rounded-2xl bg-white border border-slate-200 focus:outline-none focus:border-cyan-500"
+                required
+              />
+            </div>
+            {error && <p className="text-xs text-red-500 text-center font-bold tracking-tight">{error}</p>}
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-slate-900 text-white py-5 rounded-2xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50"
+            >
+              {loading ? "Authenticating..." : "Login to VibeLab Admin"}
+            </button>
+            <button 
+              type="button"
+              onClick={() => onNavigate('home')}
+              className="w-full text-slate-500 text-xs font-bold uppercase tracking-widest hover:text-cyan-600 transition-colors"
+            >
+              Back to Home
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pt-32 pb-20 px-6 bg-slate-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+          <div>
+            <h1 className="font-display text-4xl font-black text-slate-900 mb-2">Internal Dashboard</h1>
+            <p className="text-slate-500 font-medium">VibeLab Submission Manager • vibelab@nexaforgetech.com</p>
+          </div>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => {
+                sessionStorage.removeItem('adminKey');
+                setIsAuthenticated(false);
+              }}
+              className="px-6 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all"
+            >
+              Logout
+            </button>
+            <button 
+              onClick={() => onNavigate('home')}
+              className="px-6 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 shadow-lg shadow-slate-200 transition-all"
+            >
+              View Live Website
+            </button>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Waitlist Section */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="glass p-8 rounded-[2.5rem] border-white/50 bg-white/70 shadow-xl">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center">
+                    <Users className="text-cyan-600 w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-slate-900">Waitlist</h3>
+                </div>
+                <span className="bg-cyan-100 text-cyan-600 px-3 py-1 rounded-full text-xs font-black">{data?.waitlist?.length || 0}</span>
+              </div>
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                {data?.waitlist?.map((w, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-cyan-200 transition-colors">
+                    <p className="font-bold text-slate-900 text-sm break-all">{w.email}</p>
+                    <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest">{new Date(w.created_at).toLocaleDateString()} • {w.source}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Submissions Section */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="glass p-8 rounded-[2.5rem] border-white/50 bg-white/70 shadow-xl">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <Mail className="text-blue-600 w-5 h-5" />
+                  </div>
+                  <h3 className="font-bold text-slate-900">Inquiries</h3>
+                </div>
+              </div>
+              <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                {data?.submissions?.map((s, i) => (
+                  <div key={i} className="p-6 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h4 className="font-black text-slate-900 leading-tight">{s.name}</h4>
+                        <p className="text-cyan-600 text-xs font-bold">{s.email}</p>
+                      </div>
+                      <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">{s.role}</span>
+                    </div>
+                    {s.organization && <p className="text-xs text-slate-400 mb-2 font-bold uppercase tracking-tighter">@ {s.organization}</p>}
+                    <p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-4 rounded-xl italic border border-slate-100">"{s.message}"</p>
+                    <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">{new Date(s.created_at).toLocaleString()}</p>
+                      {s.interest_type === 'Yes' && (
+                        <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg uppercase">
+                          <Star className="w-3 h-3 fill-emerald-600" /> Investment Lead
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const CountingNumber = ({ value, suffix = "" }: { value: number, suffix?: string }) => {
   const [count, setCount] = useState(0);
@@ -60,42 +243,52 @@ const CountingNumber = ({ value, suffix = "" }: { value: number, suffix?: string
 
 const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: string) => void, currentPage: string }) => {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6">
-      <div className="glass px-8 py-4 rounded-2xl flex items-center gap-8 max-w-6xl w-full justify-between shadow-xl shadow-slate-200/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6 pointer-events-none">
+      <div className="glass px-8 py-4 rounded-2xl flex items-center gap-8 max-w-6xl w-full justify-between shadow-xl shadow-slate-200/50 pointer-events-auto border border-white/20 backdrop-blur-md">
         <div 
-          className="flex items-center gap-3 cursor-pointer"
+          className="flex items-center gap-3 cursor-pointer group"
           onClick={() => onNavigate('home')}
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform">
             <BrainCircuit className="text-white w-6 h-6" />
           </div>
           <span className="font-display font-bold text-2xl tracking-tight text-slate-900">VibeLab</span>
         </div>
-        <div className="hidden lg:flex items-center gap-10 text-sm font-semibold text-slate-600">
-          {currentPage === 'home' ? (
-            <>
-              <a href="#problem" className="hover:text-cyan-600 transition-colors">The Problem</a>
-              <a href="#solution" className="hover:text-cyan-600 transition-colors">Our Solution</a>
-              <a href="#how-it-works" className="hover:text-cyan-600 transition-colors">How it Works</a>
-              <a href="#zones" className="hover:text-cyan-600 transition-colors">Learning Zones</a>
-            </>
-          ) : (
-            <button onClick={() => onNavigate('home')} className="hover:text-cyan-600 transition-colors">Home</button>
-          )}
+        <div className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-600">
+          <button 
+            onClick={() => onNavigate('home')} 
+            className={`hover:text-cyan-600 transition-colors ${currentPage === 'home' ? 'text-slate-900' : ''}`}
+          >
+            Home
+          </button>
           <button 
             onClick={() => onNavigate('about')} 
-            className={`transition-colors ${currentPage === 'about' ? 'text-cyan-600' : 'hover:text-cyan-600'}`}
+            className={`hover:text-cyan-600 transition-colors ${currentPage === 'about' ? 'text-slate-900' : ''}`}
           >
-            About Us
+            About
+          </button>
+          {currentPage === 'home' && (
+            <a href="#how-it-works" className="hover:text-cyan-600 transition-colors">How It Works</a>
+          )}
+          <button 
+            onClick={() => onNavigate('contact')} 
+            className="hover:text-cyan-600 transition-colors"
+          >
+            For Schools
+          </button>
+          <button 
+            onClick={() => onNavigate('contact')} 
+            className={`hover:text-cyan-600 transition-colors ${currentPage === 'contact' ? 'text-slate-900' : ''}`}
+          >
+            Contact
           </button>
         </div>
         <div className="flex items-center gap-4">
-          <button className="hidden sm:block text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors">Login</button>
           <button 
             onClick={() => onNavigate('contact')}
-            className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-cyan-600/30 transition-all active:scale-95"
+            className="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
           >
-            Get Started
+            Join Early Access
           </button>
         </div>
       </div>
@@ -295,11 +488,37 @@ const LaunchAnimation = () => {
 };
 
 const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleWaitlistJoin = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (response.ok) {
+        setSubmitted(true);
+        setEmail("");
+      }
+    } catch (error) {
+      console.error("Waitlist error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section className="relative pt-48 pb-32 px-6 overflow-hidden min-h-screen flex flex-col items-center justify-center hero-gradient">
       {/* Background Glows */}
-      <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[120px] -z-10 animate-pulse" />
-      <div className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[120px] -z-10" />
+      <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] -z-10 animate-pulse" />
+      <div className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] -z-10" />
 
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
         <motion.div 
@@ -308,9 +527,9 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           transition={{ duration: 0.8 }}
           className="text-left"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-400 mb-8 uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-600 mb-8 uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Project-Based AI Learning</span>
+            <span>Join the build revolution</span>
           </div>
           
           <h1 className="font-display text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 leading-[1.05] text-slate-900">
@@ -319,18 +538,40 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           </h1>
           
           <p className="text-xl text-slate-600 max-w-xl mb-12 leading-relaxed">
-            Stop studying theory. Start building real applications. VibeLab is the world's first project-native platform for mastering coding and AI through creation.
+            Learn coding and AI by building real-world projects. Stop consuming tutorials and start creating production-ready software.
           </p>
 
-          <div className="flex flex-wrap items-center gap-6">
-            <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:shadow-xl hover:shadow-cyan-600/30 transition-all flex items-center gap-3 group">
-              Join Early Access <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <form onSubmit={handleWaitlistJoin} className="flex flex-col sm:flex-row gap-3 mb-8 max-w-lg">
+            <div className="relative flex-grow">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <input 
+                type="email" 
+                placeholder="Enter your email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-6 text-slate-900 focus:outline-none focus:border-cyan-500 transition-colors shadow-sm"
+                required
+              />
+            </div>
+            <button 
+              type="submit"
+              disabled={isSubmitting || submitted}
+              className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all whitespace-nowrap shadow-xl shadow-slate-200 disabled:opacity-70"
+            >
+              {submitted ? "Joined!" : isSubmitting ? "Joining..." : "Join Early Access"}
             </button>
+          </form>
+
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Early Access Open</span>
+            </div>
             <button 
               onClick={() => onNavigate('contact')}
-              className="flex items-center gap-3 text-slate-900 font-bold px-8 py-5 rounded-2xl border border-slate-200 hover:bg-slate-100 transition-all"
+              className="flex items-center gap-3 text-slate-900 font-bold px-8 py-4 rounded-2xl border border-slate-200 hover:bg-slate-100 transition-all text-sm group"
             >
-              <School className="w-5 h-5 text-cyan-600" />
+              <School className="w-5 h-5 text-cyan-600 group-hover:scale-110 transition-transform" />
               For Schools
             </button>
           </div>
@@ -340,18 +581,15 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
               {[1, 2, 3, 4].map((i) => (
                 <img 
                   key={i}
-                  src={`https://i.pravatar.cc/100?img=${i + 10}`} 
+                  src={`https://i.pravatar.cc/100?img=${i + 15}`} 
                   alt="User" 
-                  className="w-12 h-12 rounded-full border-4 border-white"
+                  className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
                   referrerPolicy="no-referrer"
                 />
               ))}
             </div>
             <div>
-              <div className="flex items-center gap-1 text-amber-500">
-                {[1, 2, 3, 4, 5].map((i) => <Star key={i} className="w-4 h-4 fill-current" />)}
-              </div>
-              <p className="text-sm text-slate-500 font-medium">Trusted by 50,000+ students worldwide</p>
+              <p className="text-sm text-slate-500 font-medium">Trusted by leading schools and students</p>
             </div>
           </div>
         </motion.div>
@@ -360,11 +598,9 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className="relative"
+          className="relative hidden lg:block"
         >
           <LaunchAnimation />
-          
-          {/* Decorative Rings */}
           <div className="absolute -top-10 -right-10 w-40 h-40 border-2 border-cyan-500/20 rounded-full -z-10 animate-[spin_10s_linear_infinite]" />
           <div className="absolute -bottom-10 -left-10 w-60 h-60 border-2 border-blue-500/10 rounded-full -z-10 animate-[spin_15s_linear_infinite_reverse]" />
         </motion.div>
@@ -390,46 +626,55 @@ const TrustedBy = () => {
 
 const Problem = () => {
   const gaps = [
-    { title: "Theoretical Overload", desc: "Traditional courses focus 90% on theory and only 10% on application, leaving students unprepared." },
-    { title: "Passive Learning", desc: "Watching videos isn't learning. Without building, knowledge evaporates within 48 hours." },
-    { title: "Outdated Tools", desc: "Education systems are lagging 5 years behind the current AI and software industry standards." }
+    { title: "Theory vs. Practice", desc: "Students consume endless tutorials but rarely build anything from scratch, leading to 'tutorial hell'." },
+    { title: "Lack of Real-World Experience", desc: "Most coding platforms use toy problems instead of production-grade architectures used in tech teams." },
+    { title: "No Structured Learning Path", desc: "Traditional education lacks a cohesive journey from zero to deploying real-world AI applications." }
   ];
 
   return (
-    <section id="problem" className="py-32 px-6 relative overflow-hidden">
+    <section id="problem" className="py-40 px-6 relative overflow-hidden bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
-          <div className="relative">
-            <div className="glass p-8 rounded-[3rem] border-red-500/10 relative z-10">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center">
-                  <Zap className="text-red-500 w-6 h-6" />
+        <div className="grid lg:grid-cols-2 gap-24 items-center">
+          <div className="relative order-2 lg:order-1">
+            <div className="glass p-10 rounded-[3rem] border-slate-200 shadow-2xl relative z-10 bg-slate-50/50">
+              <div className="flex items-center gap-4 mb-10">
+                <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center">
+                  <Zap className="text-red-500 w-7 h-7" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900">The Education Gap</h3>
+                <h3 className="text-3xl font-bold text-slate-900 leading-tight">The Build Gap</h3>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {gaps.map((gap, i) => (
-                  <div key={i} className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                    <h4 className="font-bold text-slate-900 mb-2">{gap.title}</h4>
-                    <p className="text-sm text-slate-600">{gap.desc}</p>
+                  <div key={i} className="flex gap-6 group">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-50/50 flex items-center justify-center text-red-500 font-bold border border-red-100 group-hover:bg-red-500 group-hover:text-white transition-all">
+                      !
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 mb-2 text-lg">{gap.title}</h4>
+                      <p className="text-slate-600 leading-relaxed">{gap.desc}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
             <div className="absolute -top-10 -left-10 w-64 h-64 bg-red-500/5 rounded-full blur-[100px] -z-10" />
           </div>
-          <div>
-            <h2 className="font-display text-4xl md:text-6xl font-bold mb-8 text-slate-900 leading-tight">
-              Why Traditional <br />
-              <span className="text-red-500">Education Fails.</span>
+          <div className="order-1 lg:order-2">
+            <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 text-slate-900 leading-[1.1]">
+              Why Learning <br />
+              <span className="text-red-500">Doesn't Mean Building.</span>
             </h2>
-            <p className="text-xl text-slate-600 mb-8 leading-relaxed">
-              The world is moving faster than the classroom. Students are graduating with degrees but without the ability to build production-ready software.
+            <p className="text-xl text-slate-600 mb-10 leading-relaxed">
+              Consuming content is passive. Mastering a skill requires active creation. VibeLab bridges the gap between watching and doing.
             </p>
-            <ul className="space-y-4">
-              {["Degrees are losing value", "Industry demands builders, not scholars", "AI is changing the required skill set"].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-slate-700">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            <ul className="space-y-6">
+              {[
+                "Tutorials create a false sense of mastery",
+                "Degrees often lack practical engineering skills",
+                "Industry demands a portfolio of real projects"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-4 text-slate-700 font-medium">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
                   {item}
                 </li>
               ))}
@@ -443,31 +688,32 @@ const Problem = () => {
 
 const Solution = () => {
   return (
-    <section id="solution" className="py-32 px-6 bg-white relative">
+    <section id="solution" className="py-40 px-6 bg-slate-50 relative">
       <div className="max-w-7xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-xs font-bold text-emerald-600 mb-8 uppercase tracking-widest">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>The Build-to-Learn Model</span>
+          <span>The Build-to-Learn Solution</span>
         </div>
-        <h2 className="font-display text-4xl md:text-7xl font-bold mb-8 text-slate-900">
-          Mastery Through <span className="text-emerald-600">Creation.</span>
+        <h2 className="font-display text-5xl md:text-7xl font-extrabold mb-8 text-slate-900 max-w-4xl mx-auto leading-tight">
+          Redefining Education Through <span className="text-emerald-600">Creation.</span>
         </h2>
-        <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-20">
-          VibeLab flips the script. We start with the project and teach you the theory as you need it. It's faster, more engaging, and produces real-world results.
+        <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-20 leading-relaxed">
+          Master any digital skill by working on production-ready projects with AI-assisted guidance and industrial standards.
         </p>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { icon: <Code2 />, title: "Live Coding", desc: "Build real apps in our cloud-native IDE with AI assistance." },
-            { icon: <Cpu />, title: "AI Integration", desc: "Learn to leverage LLMs and AI agents in every project." },
-            { icon: <Rocket />, title: "Production Ready", desc: "Deploy your work to the cloud and build a real portfolio." }
+            { icon: <Code2 />, title: "Project-Based", desc: "No more lectures. Start with a project and learn the theory exactly when you need it." },
+            { icon: <Cpu />, title: "AI-Assisted", desc: "Get real-time guidance from AI tutors that help you solve problems, not just give answers." },
+            { icon: <Zap />, title: "Real-World Output", desc: "Every project you build is a functional piece of software ready for the real world." },
+            { icon: <Rocket />, title: "Portfolio Ready", desc: "Build a verified digital portfolio of work that actually proves your engineering skills." }
           ].map((item, i) => (
-            <div key={i} className="p-10 rounded-[2.5rem] glass border-emerald-500/10 text-left group">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/5 flex items-center justify-center text-emerald-600 mb-8 group-hover:scale-110 transition-transform">
+            <div key={i} className="p-10 rounded-[2.5rem] bg-white border border-slate-100 text-left group hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/5 flex items-center justify-center text-emerald-600 mb-8 group-hover:scale-110 transition-transform shadow-sm">
                 {item.icon}
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-slate-900">{item.title}</h3>
-              <p className="text-slate-600 leading-relaxed">{item.desc}</p>
+              <h3 className="text-2xl font-extrabold mb-4 text-slate-900 tracking-tight">{item.title}</h3>
+              <p className="text-slate-600 leading-relaxed font-medium">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -478,53 +724,60 @@ const Solution = () => {
 
 const HowItWorks = () => {
   const steps = [
-    { number: "01", title: "Select a Project", desc: "Choose from our library of real-world applications to build." },
-    { number: "02", title: "Interactive Build", desc: "Follow our guided build process with just-in-time theory." },
-    { number: "03", title: "AI Code Review", desc: "Get instant feedback on your code from our advanced AI agents." },
-    { number: "04", title: "Launch & Portfolio", desc: "Deploy your app and add it to your verified digital portfolio." }
+    { number: "01", title: "Choose a learning path", desc: "Select your area of expertise, from fullstack dev to AI systems and startup building." },
+    { number: "02", title: "Start a real-world project", desc: "Dive immediately into a production-grade workspace with all the tools you need." },
+    { number: "03", title: "Get AI guidance", desc: "Our AI agents monitor your progress, providing hints and feedback at every step." },
+    { number: "04", title: "Build a portfolio", desc: "Verified projects are added to your profile, proving your skills to schools and employers." }
   ];
 
   return (
-    <section id="how-it-works" className="py-32 px-6 bg-slate-50 border-y border-slate-200">
+    <section id="how-it-works" className="py-40 px-6 bg-white border-y border-slate-100">
       <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-24">
+          <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 text-slate-900 leading-tight">
+            How <span className="gradient-text">VibeLab</span> Works
+          </h2>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            A seamless journey from absolute beginner to verified production-ready engineer.
+          </p>
+        </div>
         <div className="grid lg:grid-cols-2 gap-20 items-center">
-          <div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold mb-8 text-slate-900 leading-tight">
-              Your Path to <br />
-              <span className="gradient-text">Mastery</span> is Simple.
-            </h2>
-            <div className="space-y-12">
-              {steps.map((step, i) => (
-                <div key={i} className="flex gap-8 group">
-                  <div className="flex-shrink-0 w-16 h-16 rounded-2xl glass border-cyan-500/10 flex items-center justify-center text-2xl font-display font-black text-cyan-600 group-hover:bg-cyan-500/10 transition-all">
-                    {step.number}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold mb-2 text-slate-900">{step.title}</h3>
-                    <p className="text-slate-600">{step.desc}</p>
-                  </div>
+          <div className="space-y-12">
+            {steps.map((step, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="flex gap-8 group"
+              >
+                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-2xl font-display font-black text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-sm">
+                  {step.number}
                 </div>
-              ))}
-            </div>
+                <div>
+                  <h3 className="text-2xl font-extrabold mb-3 text-slate-900 tracking-tight">{step.title}</h3>
+                  <p className="text-lg text-slate-600 leading-relaxed font-medium">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
           <div className="relative">
-            <div className="aspect-square rounded-[3rem] overflow-hidden border border-slate-200 relative group">
+            <div className="aspect-[4/3] rounded-[3rem] overflow-hidden border border-slate-200 relative group shadow-3xl">
               <img 
-                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1000&q=80" 
-                alt="Learning Process" 
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80" 
+                alt="Collaboration" 
+                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-cyan-500/5 mix-blend-overlay" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full bg-cyan-600 flex items-center justify-center shadow-xl shadow-cyan-600/30 cursor-pointer hover:scale-110 transition-transform">
-                  <Play className="w-8 h-8 fill-white text-white ml-1" />
+              <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl cursor-pointer hover:scale-110 transition-transform">
+                  <Play className="w-8 h-8 fill-slate-900 text-slate-900 ml-1" />
                 </div>
               </div>
             </div>
-            {/* Decorative Elements */}
-            <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -z-10" />
-            <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl -z-10" />
+            <div className="absolute -top-6 -right-6 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl -z-10" />
+            <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -z-10" />
           </div>
         </div>
       </div>
@@ -534,37 +787,37 @@ const HowItWorks = () => {
 
 const LearningZones = () => {
   const zones = [
-    { title: "Spark", desc: "The beginning of your journey. Learn the fundamentals by building simple scripts.", color: "from-cyan-500 to-blue-600" },
-    { title: "Build", desc: "Create functional web and mobile applications with modern frameworks.", color: "from-blue-600 to-indigo-600" },
-    { title: "Forge", desc: "Deep dive into AI integration, backend systems, and complex architectures.", color: "from-indigo-600 to-purple-600" },
-    { title: "Launch", desc: "Production-grade deployment, scaling, and professional portfolio completion.", color: "from-purple-600 to-pink-600" }
+    { title: "Web Development", desc: "Master modern frontend and backend architectures by building production-ready SaaS applications.", color: "from-cyan-500 to-blue-600" },
+    { title: "AI & Automation", desc: "Integrate LLMs, vector databases, and AI agents into your workflows and products.", color: "from-blue-600 to-indigo-600" },
+    { title: "Startup Building", desc: "Learn the full product lifecycle: from idea and prototyping to launch and user acquisition.", color: "from-indigo-600 to-purple-600" },
+    { title: "Freelancing Skills", desc: "Acquire the practical technical and soft skills needed to thrive as an independent developer.", color: "from-purple-600 to-pink-600" }
   ];
 
   return (
-    <section id="zones" className="py-32 px-6 relative">
+    <section id="zones" className="py-40 px-6 relative bg-slate-50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-24">
-          <h2 className="font-display text-4xl md:text-6xl font-bold mb-6 text-slate-900">
-            The <span className="gradient-text">Learning Zones.</span>
+          <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 text-slate-900 leading-tight">
+            Explore <span className="gradient-text">Learning Zones.</span>
           </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto text-lg">
-            Progress through our structured ecosystem designed to take you from zero to production-ready.
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Specialized paths designed to help you become a top 1% technical creator in the global market.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {zones.map((zone, i) => (
             <motion.div 
               key={i}
-              whileHover={{ scale: 1.05 }}
-              className="p-10 rounded-[2.5rem] glass border-slate-200 relative group overflow-hidden"
+              whileHover={{ y: -8 }}
+              className="p-10 rounded-[3rem] bg-white border border-slate-100 relative group overflow-hidden shadow-sm hover:shadow-xl transition-all"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${zone.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${zone.color} flex items-center justify-center text-white font-black mb-8 shadow-lg`}>
+              <div className={`absolute inset-0 bg-gradient-to-br ${zone.color} opacity-0 group-hover:opacity-[0.03] transition-opacity`} />
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${zone.color} flex items-center justify-center text-white font-black mb-8 shadow-lg shadow-cyan-500/20`}>
                 {i + 1}
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-slate-900">{zone.title}</h3>
-              <p className="text-slate-600 leading-relaxed">{zone.desc}</p>
+              <h3 className="text-2xl font-extrabold mb-4 text-slate-900 tracking-tight leading-tight">{zone.title}</h3>
+              <p className="text-slate-600 leading-relaxed font-medium">{zone.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -575,53 +828,54 @@ const LearningZones = () => {
 
 const Audience = () => {
   const targets = [
-    { title: "Aspiring Developers", desc: "Start your career with a portfolio that actually proves you can build." },
-    { title: "Career Switchers", desc: "Transition into tech faster by focusing on the skills that matter today." },
-    { title: "AI Enthusiasts", desc: "Master the tools of the future by integrating AI into every project." }
+    { title: "Students", desc: "Build a verified portfolio of production-grade projects while learning the core engineering principles." },
+    { title: "Schools", desc: "Bring industry-standard project-based learning to your institution with our structured curriculum and tools." },
+    { title: "Career Switchers", desc: "Transition into tech by learning the skills required for today's market: AI, SaaS, and fullstack dev." }
   ];
 
   return (
-    <section className="py-32 px-6 bg-slate-50">
+    <section className="py-40 px-6 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-24 items-center">
           <div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold mb-8 text-slate-900">
+            <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-10 text-slate-900 leading-[1.1]">
               Built for the <br />
-              <span className="gradient-text">Next Generation</span> of Creators.
+              <span className="gradient-text">Builders of Tomorrow.</span>
             </h2>
-            <div className="space-y-8">
+            <div className="space-y-10">
               {targets.map((t, i) => (
-                <div key={i} className="flex gap-6">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-cyan-500/5 flex items-center justify-center">
-                    <CheckCircle2 className="text-cyan-600 w-6 h-6" />
+                <div key={i} className="flex gap-8 group">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-50 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-sm border border-cyan-100">
+                    <CheckCircle2 className="w-7 h-7" />
                   </div>
                   <div>
-                    <h4 className="text-xl font-bold text-slate-900 mb-2">{t.title}</h4>
-                    <p className="text-slate-600">{t.desc}</p>
+                    <h4 className="text-2xl font-extrabold text-slate-900 mb-3 tracking-tight">{t.title}</h4>
+                    <p className="text-lg text-slate-600 leading-relaxed font-medium">{t.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
           <div className="relative">
-            <div className="glass p-4 rounded-[3rem] border-slate-200">
+            <div className="bg-slate-100 p-6 rounded-[3.5rem] border border-slate-200 overflow-hidden relative group">
               <img 
-                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1000&q=80" 
-                alt="Students collaborating" 
-                className="rounded-[2.5rem] w-full h-full object-cover"
+                src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1200&q=80" 
+                alt="Builders" 
+                className="rounded-[2.5rem] w-full h-full object-cover shadow-2xl group-hover:scale-105 transition-transform duration-1000"
                 referrerPolicy="no-referrer"
               />
+              <div className="absolute inset-0 bg-cyan-500/5 mix-blend-overlay" />
             </div>
-            <div className="absolute -bottom-10 -right-10 glass p-8 rounded-3xl border-cyan-500/10 shadow-2xl">
-              <div className="flex items-center gap-4">
+            <div className="absolute -bottom-8 -right-8 glass p-8 rounded-[2.5rem] border-white/20 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center gap-5">
                 <div className="flex -space-x-3">
                   {[1, 2, 3].map(i => (
-                    <img key={i} src={`https://i.pravatar.cc/100?img=${i + 20}`} className="w-10 h-10 rounded-full border-2 border-white" referrerPolicy="no-referrer" />
+                    <img key={i} src={`https://i.pravatar.cc/100?img=${i + 30}`} className="w-12 h-12 rounded-full border-2 border-white shadow-md" referrerPolicy="no-referrer" />
                   ))}
                 </div>
-                <div className="text-sm">
-                  <p className="text-slate-900 font-bold">Join 5,000+</p>
-                  <p className="text-slate-500 text-xs">Early access members</p>
+                <div className="text-slate-900">
+                  <p className="font-black text-lg leading-tight uppercase tracking-tighter">Join 50k+</p>
+                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Global Builders</p>
                 </div>
               </div>
             </div>
@@ -792,50 +1046,82 @@ const Stats = () => {
 
 const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleWaitlistJoin = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (response.ok) {
+        setSubmitted(true);
+        setEmail("");
+      }
+    } catch (error) {
+      console.error("Waitlist error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <section className="py-40 px-6 relative overflow-hidden">
+    <section className="py-40 px-6 relative overflow-hidden bg-slate-50">
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/5 via-blue-600/5 to-transparent -z-10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-cyan-500/5 rounded-full blur-[150px] -z-20" />
       
-      <div className="max-w-5xl mx-auto text-center glass p-20 rounded-[4rem] border-cyan-500/10 shadow-2xl relative">
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-2xl shadow-cyan-500/30">
+      <div className="max-w-5xl mx-auto text-center glass p-16 md:p-24 rounded-[4rem] border-white/40 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] relative overflow-hidden bg-white/40 backdrop-blur-2xl">
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-3xl bg-slate-900 flex items-center justify-center shadow-2xl shadow-slate-900/20">
           <Rocket className="text-white w-10 h-10" />
         </div>
         
-        <h2 className="font-display text-5xl md:text-7xl font-bold mb-8 text-slate-900 leading-tight">
-          Ready to <span className="gradient-text">Build</span> <br /> Your Future?
+        <h2 className="font-display text-5xl md:text-7xl font-extrabold mb-8 text-slate-900 leading-tight tracking-tight">
+          Start building your <br />
+          <span className="gradient-text">future today.</span>
         </h2>
-        <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto">
-          Join the early access list and be the first to experience the build-to-learn revolution.
-        </p>
         
-        <div className="max-w-md mx-auto">
-          <form className="flex flex-col sm:flex-row gap-4 mb-8" onSubmit={(e) => e.preventDefault()}>
-            <div className="relative flex-grow">
+        <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
+          Join the early access list and be the first to experience the build-to-learn revolution. No fluff, only production-ready skills.
+        </p>
+
+        <div className="flex flex-col items-center gap-10">
+          <form onSubmit={handleWaitlistJoin} className="flex flex-col sm:flex-row gap-4 w-full max-w-lg">
+            <div className="relative flex-1">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input 
                 type="email" 
-                placeholder="Enter your email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-5 pl-12 pr-6 text-slate-900 focus:outline-none focus:border-cyan-500 transition-colors"
+                placeholder="Enter your email" 
+                className="w-full pl-12 pr-4 py-5 rounded-2xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-bold shadow-sm"
                 required
               />
             </div>
-            <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-8 py-5 rounded-2xl font-bold hover:shadow-xl hover:shadow-cyan-600/30 transition-all whitespace-nowrap">
-              Join Early Access
+            <button 
+              type="submit"
+              disabled={isSubmitting || submitted}
+              className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold hover:bg-slate-800 transition-all active:scale-95 whitespace-nowrap shadow-xl shadow-slate-200 disabled:opacity-70"
+            >
+              {submitted ? "Success!" : isSubmitting ? "Joining..." : "Join Early Access"}
             </button>
           </form>
-          <div className="flex flex-col items-center gap-4">
+
+          <div className="flex items-center gap-8">
             <button 
               onClick={() => onNavigate('contact')}
-              className="text-sm font-bold text-cyan-600 hover:underline flex items-center gap-2"
+              className="flex items-center gap-2 text-slate-900 hover:text-cyan-600 font-black uppercase tracking-widest text-xs transition-colors"
             >
-              <Mail className="w-4 h-4" />
-              Contact Us for Partnerships
+              <Mail className="w-5 h-5" />
+              Contact Us
             </button>
-            <p className="text-xs text-slate-500">No spam. Only updates on our launch and early access perks.</p>
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest italic leading-relaxed">Early Access is limited to first 1000 applicants.</p>
           </div>
         </div>
       </div>
@@ -909,10 +1195,14 @@ const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
         </div>
 
         <div className="flex flex-col gap-6">
-          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs">Legal</h4>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Privacy Policy</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Terms of Service</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Cookie Policy</a>
+          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs">Admin</h4>
+          <button 
+            onClick={() => onNavigate('admin')}
+            className="text-left text-slate-600 hover:text-cyan-600 transition-colors"
+          >
+            Submissions
+          </button>
+          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Internal Ops</a>
         </div>
       </div>
       
@@ -954,12 +1244,12 @@ export default function App() {
             <HowItWorks />
             <LearningZones />
             <Audience />
-            <Testimonials />
-            <Stats />
             <FinalCTA onNavigate={setCurrentPage} />
           </>
         ) : currentPage === 'about' ? (
           <AboutPage onNavigate={setCurrentPage} />
+        ) : currentPage === 'admin' ? (
+          <AdminPanel onNavigate={setCurrentPage} />
         ) : (
           <ContactPage onNavigate={setCurrentPage} />
         )}

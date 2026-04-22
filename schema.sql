@@ -13,6 +13,12 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index for faster lookups by email or role if needed
-CREATE INDEX idx_email ON contact_submissions(email);
-CREATE INDEX idx_role ON contact_submissions(role);
+CREATE TABLE IF NOT EXISTS waitlist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    source VARCHAR(100) DEFAULT 'vibelab_landing_v1',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups
+CREATE INDEX idx_waitlist_email ON waitlist(email);
