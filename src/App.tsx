@@ -88,12 +88,21 @@ const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           <h2 className="font-display text-3xl font-bold text-slate-900 text-center mb-8">Admin Access</h2>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Admin Email</label>
+              <input 
+                type="email" 
+                value="vibelab@nexaforgetech.com"
+                disabled
+                className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 cursor-not-allowed"
+              />
+            </div>
+            <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Secure Key</label>
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password"
+                placeholder="Enter admin password (0000)"
                 className="w-full px-6 py-4 rounded-2xl bg-white border border-slate-200 focus:outline-none focus:border-cyan-500"
                 required
               />
