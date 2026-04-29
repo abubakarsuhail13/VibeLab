@@ -28,6 +28,9 @@ import {
 import { useState, useRef, useEffect, FormEvent } from "react";
 import AboutPage from "./About";
 import ContactPage from "./Contact";
+import Login from "./Login";
+import Signup from "./Signup";
+import Dashboard from "./Dashboard";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [password, setPassword] = useState("");
@@ -250,7 +253,12 @@ const CountingNumber = ({ value, suffix = "" }: { value: number, suffix?: string
   return <span ref={ref}>{count}{suffix}</span>;
 };
 
-const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: string) => void, currentPage: string }) => {
+const Navbar = ({ onNavigate, currentPage, user, onLogout }: { 
+  onNavigate: (page: string) => void, 
+  currentPage: string,
+  user: any,
+  onLogout: () => void
+}) => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6 pointer-events-none">
       <div className="glass px-8 py-4 rounded-2xl flex items-center gap-8 max-w-6xl w-full justify-between shadow-xl shadow-slate-200/50 pointer-events-auto border border-white/20 backdrop-blur-md">
@@ -270,21 +278,27 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: string) => voi
           >
             Home
           </button>
-          <button 
-            onClick={() => onNavigate('about')} 
-            className={`hover:text-cyan-600 transition-colors ${currentPage === 'about' ? 'text-slate-900' : ''}`}
-          >
-            About
-          </button>
+          
+          {user ? (
+            <button 
+              onClick={() => onNavigate('dashboard')} 
+              className={`hover:text-cyan-600 transition-colors ${currentPage === 'dashboard' ? 'text-slate-900' : ''}`}
+            >
+              Dashboard
+            </button>
+          ) : (
+            <button 
+              onClick={() => onNavigate('about')} 
+              className={`hover:text-cyan-600 transition-colors ${currentPage === 'about' ? 'text-slate-900' : ''}`}
+            >
+              About
+            </button>
+          )}
+
           {currentPage === 'home' && (
             <a href="#how-it-works" className="hover:text-cyan-600 transition-colors">How It Works</a>
           )}
-          <button 
-            onClick={() => onNavigate('contact')} 
-            className="hover:text-cyan-600 transition-colors"
-          >
-            For Schools
-          </button>
+          
           <button 
             onClick={() => onNavigate('contact')} 
             className={`hover:text-cyan-600 transition-colors ${currentPage === 'contact' ? 'text-slate-900' : ''}`}
@@ -293,12 +307,35 @@ const Navbar = ({ onNavigate, currentPage }: { onNavigate: (page: string) => voi
           </button>
         </div>
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => onNavigate('contact')}
-            className="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
-          >
-            Join Early Access
-          </button>
+          {user ? (
+            <>
+              <div className="hidden sm:flex flex-col items-end mr-2">
+                <span className="text-xs font-bold text-slate-900">{user.name}</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest">{user.role}</span>
+              </div>
+              <button 
+                onClick={onLogout}
+                className="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => onNavigate('login')}
+                className="text-slate-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:text-slate-900 transition-all"
+              >
+                Login
+              </button>
+              <button 
+                onClick={() => onNavigate('signup')}
+                className="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
+              >
+                Sign Up
+              </button>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -1236,14 +1273,38 @@ const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('vibelab_user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentPage]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('vibelab_user');
+    localStorage.removeItem('vibelab_token');
+    setUser(null);
+    setCurrentPage('home');
+  };
+
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
-      <Navbar onNavigate={setCurrentPage} currentPage={currentPage} />
+      <Navbar 
+        onNavigate={(p) => {
+          // If accessing dashboard without user, and it's protected (later), we might want to redirect.
+          // For now, simpler:
+          setCurrentPage(p);
+        }} 
+        currentPage={currentPage} 
+        user={user}
+        onLogout={handleLogout}
+      />
       <main>
         {currentPage === 'home' ? (
           <>
@@ -1259,11 +1320,17 @@ export default function App() {
           <AboutPage onNavigate={setCurrentPage} />
         ) : currentPage === 'admin' ? (
           <AdminPanel onNavigate={setCurrentPage} />
+        ) : currentPage === 'login' ? (
+          <Login onNavigate={setCurrentPage} onLoginSuccess={setUser} />
+        ) : currentPage === 'signup' ? (
+          <Signup onNavigate={setCurrentPage} onLoginSuccess={setUser} />
+        ) : currentPage === 'dashboard' ? (
+          <Dashboard user={user} onLogout={handleLogout} />
         ) : (
           <ContactPage onNavigate={setCurrentPage} />
         )}
       </main>
-      <Footer onNavigate={setCurrentPage} />
+      {currentPage !== 'dashboard' && <Footer onNavigate={setCurrentPage} />}
     </div>
   );
 }

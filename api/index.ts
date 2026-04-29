@@ -3,8 +3,12 @@ import cors from 'cors';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'vibelab_secret_key_2024';
 
 const app = express();
 const router = express.Router();
@@ -111,6 +115,16 @@ const getPool = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         `);
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100),
+            email VARCHAR(255) UNIQUE,
+            password VARCHAR(255),
+            role ENUM('student', 'teacher'),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
         console.log('DB Debug: Tables verified/created.');
       } catch (tableErr: any) {
         console.error('DB Debug: Error creating tables:', tableErr.message);
@@ -196,6 +210,63 @@ router.post('/waitlist', async (req, res) => {
       details: error.message,
       code: error.code
     });
+  }
+});
+
+router.post('/auth/register', async (req, res) => {
+  const { name, email, password, role } = req.body;
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    const [existing]: any = await p.execute('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing.length > 0) return res.status(400).json({ error: 'Email already registered' });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const [result]: any = await p.execute(
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, role]
+    );
+    const userId = result.insertId;
+    const token = jwt.sign({ userId, email, role }, JWT_SECRET, { expiresIn: '24h' });
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      token,
+      user: { id: userId, name, email, role }
+    });
+  } catch (error: any) {
+    console.error('Registration Error:', error);
+    res.status(500).json({ error: 'Database error during registration' });
+  }
+});
+
+router.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    const [rows]: any = await p.execute('SELECT * FROM users WHERE email = ?', [email]);
+    if (rows.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+    });
+  } catch (error: any) {
+    console.error('Login Error:', error);
+    res.status(500).json({ error: 'Database error during login' });
   }
 });
 
