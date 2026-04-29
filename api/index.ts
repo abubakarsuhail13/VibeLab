@@ -14,31 +14,35 @@ app.use(express.json());
 
 // Email Configuration (Nodemailer)
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.hostinger.com',
-  port: parseInt(process.env.EMAIL_PORT || '465'),
-  secure: process.env.EMAIL_PORT === '465', // true for 465, false for 587
+  host: process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.hostinger.com',
+  port: parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '465'),
+  secure: (process.env.EMAIL_PORT || process.env.SMTP_PORT) === '465', 
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.EMAIL_USER || process.env.SMTP_USER,
+    pass: process.env.EMAIL_PASS || process.env.SMTP_PASS,
   },
   tls: {
-    rejectUnauthorized: false // Often needed for Hostinger
+    rejectUnauthorized: false
   }
 });
 
 // Helper to send emails
 const sendMail = async (options: nodemailer.SendMailOptions) => {
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn('Email config ERROR: EMAIL_USER or EMAIL_PASS missing');
+    const user = process.env.EMAIL_USER || process.env.SMTP_USER;
+    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+    if (!user || !pass) {
+      console.warn('Email config ERROR: USER or PASS missing');
       return null;
     }
     
-    console.log(`Email Debug: Attempting mail from ${process.env.EMAIL_USER} to ${options.to}`);
-    console.log(`Email Debug: Host ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT} (Secure: ${process.env.EMAIL_PORT === '465'})`);
+    console.log(`Email Debug: Attempting mail from ${user} to ${options.to}`);
+    const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.hostinger.com';
+    const port = process.env.EMAIL_PORT || process.env.SMTP_PORT || '465';
+    console.log(`Email Debug: Host ${host}:${port}`);
 
     const info = await transporter.sendMail({
-      from: `"VibeLab" <${process.env.EMAIL_USER}>`,
+      from: `"VibeLab" <${user}>`,
       ...options,
     });
     console.log('Email SUCCESS: %s', info.messageId);
@@ -57,7 +61,7 @@ const sendMail = async (options: nodemailer.SendMailOptions) => {
 const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PASS,
+  password: process.env.DB_PASS || process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: parseInt(process.env.DB_PORT || '3306'),
   waitForConnections: true,
@@ -142,16 +146,15 @@ router.post('/waitlist', async (req, res) => {
     }
 
     try {
-      console.log(`Waitlist DB: Attempting to insert ${email}`);
-      await p.execute('INSERT INTO waitlist (email, source) VALUES (?, ?)', [email, 'vibelab_landing_v1']);
-      console.log(`Waitlist DB: Successfully added ${email}`);
+      console.log(`Waitlist DB: Attempting to insert/update ${email}`);
+      await p.execute(
+        'INSERT INTO waitlist (email, source) VALUES (?, ?) ON DUPLICATE KEY UPDATE source = VALUES(source), created_at = CURRENT_TIMESTAMP', 
+        [email, 'vibelab_landing_v1']
+      );
+      console.log(`Waitlist DB: Successfully processed ${email}`);
     } catch (dbError: any) {
-      if (dbError.code === 'ER_DUP_ENTRY') {
-        console.log(`Waitlist DB: Duplicate entry for ${email}`);
-        return res.json({ success: true, message: 'You are already on the waitlist!' });
-      }
-      console.error('Waitlist DB Insertion Error:', dbError);
-      throw dbError; // Rethrow to be caught by outer catch
+      console.error('Waitlist DB Error:', dbError);
+      throw dbError; 
     }
 
     // Send Confirmation Email to User
@@ -265,8 +268,24 @@ router.get('/admin/data', async (req, res) => {
 });
 
 router.get('/health', async (req, res) => {
-  const p = await getPool();
-  res.json({ status: 'ok', db: !!p, env: !!process.env.DB_HOST });
+  try {
+    const p = await getPool();
+    if (!p) return res.json({ status: 'error', reason: 'No pool' });
+    const [rows] = await p.execute('SELECT COUNT(*) as count FROM waitlist');
+    res.json({ 
+      status: 'ok', 
+      db: true, 
+      count: (rows as any)[0].count,
+      env: !!process.env.DB_HOST 
+    });
+  } catch (err: any) {
+    res.json({ 
+      status: 'error', 
+      db: false, 
+      error: err.message,
+      env: !!process.env.DB_HOST 
+    });
+  }
 });
 
 // Mounting the router at both /api and root to be safe

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -17,11 +18,56 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
+// Email Configuration (Nodemailer)
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.hostinger.com',
+  port: parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '465'),
+  secure: (process.env.EMAIL_PORT || process.env.SMTP_PORT) === '465', 
+  auth: {
+    user: process.env.EMAIL_USER || process.env.SMTP_USER,
+    pass: process.env.EMAIL_PASS || process.env.SMTP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false
+  }
+});
+
+// Helper to send emails
+const sendMail = async (options: nodemailer.SendMailOptions) => {
+  try {
+    const user = process.env.EMAIL_USER || process.env.SMTP_USER;
+    const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+    if (!user || !pass) {
+      console.warn('Email config ERROR: USER or PASS missing');
+      return null;
+    }
+    
+    console.log(`Email Debug: Attempting mail from ${user} to ${options.to}`);
+    const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.hostinger.com';
+    const port = process.env.EMAIL_PORT || process.env.SMTP_PORT || '465';
+    console.log(`Email Debug: Host ${host}:${port}`);
+
+    const info = await transporter.sendMail({
+      from: `"VibeLab" <${user}>`,
+      ...options,
+    });
+    console.log('Email SUCCESS: %s', info.messageId);
+    return info;
+  } catch (error: any) {
+    console.error('Email FAILURE:', {
+      message: error.message,
+      code: error.code,
+      command: error.command
+    });
+    return null;
+  }
+};
+
 // MySQL Connection Pool (Hostinger)
 const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PASS,
+  password: process.env.DB_PASS || process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: parseInt(process.env.DB_PORT || '3306'),
   waitForConnections: true,
@@ -32,20 +78,55 @@ const dbConfig = {
 
 let pool: any = null;
 
-// Initialize pool and test connection
 const getPool = async () => {
   if (!pool) {
     if (!process.env.DB_HOST) {
-      console.warn('DB_HOST not configured. Database features will be simulated or fail.');
+      console.warn('DB_HOST not configured.');
       return null;
     }
     try {
+      console.log('DB Debug: Connecting to Host:', dbConfig.host, 'User:', dbConfig.user, 'DB:', dbConfig.database);
       pool = mysql.createPool(dbConfig);
       const connection = await pool.getConnection();
       console.log('Successfully connected to MySQL database');
+      
+      // Auto-ensure tables exist
+      try {
+        console.log('DB Debug: Ensuring tables exist...');
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS waitlist (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            source VARCHAR(100) DEFAULT 'vibelab_landing_v1',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS contact_submissions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            organization VARCHAR(255),
+            role VARCHAR(100) NOT NULL,
+            interest_type VARCHAR(50),
+            message TEXT NOT NULL,
+            source VARCHAR(100) DEFAULT 'vibelab_landing_v1',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        console.log('DB Debug: Tables verified/created.');
+      } catch (tableErr: any) {
+        console.error('DB Debug: Error creating tables:', tableErr.message);
+      }
+      
       connection.release();
-    } catch (err) {
-      console.error('Failed to connect to MySQL database:', err);
+    } catch (err: any) {
+      console.error('CRITICAL: Failed to connect to MySQL database:', {
+        message: err.message,
+        code: err.code,
+        host: dbConfig.host,
+        user: dbConfig.user
+      });
       pool = null;
       return null;
     }
@@ -54,50 +135,133 @@ const getPool = async () => {
 };
 
 // API Routes
-
 app.post('/api/waitlist', async (req, res) => {
   const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+  console.log('POST /api/waitlist - Request Body:', req.body);
+
+  if (!email) {
+    console.warn('Waitlist Error: Email is missing in request body');
+    return res.status(400).json({ error: 'Email is required' });
+  }
 
   try {
     const p = await getPool();
-    if (!p) return res.status(503).json({ error: 'Database connection failed' });
-    
-    await p.execute(
-      'INSERT INTO waitlist (email, source) VALUES (?, ?)',
-      [email, 'vibelab_landing_v1']
-    );
+    if (!p) {
+      console.error('Waitlist Error: Database connection failed');
+      return res.status(503).json({ error: 'Database connection failed' });
+    }
+
+    try {
+      console.log(`Waitlist DB: Attempting to insert/update ${email}`);
+      await p.execute(
+        'INSERT INTO waitlist (email, source) VALUES (?, ?) ON DUPLICATE KEY UPDATE source = VALUES(source), created_at = CURRENT_TIMESTAMP', 
+        [email, 'vibelab_landing_v1']
+      );
+      console.log(`Waitlist DB: Successfully processed ${email}`);
+    } catch (dbError: any) {
+      console.error('Waitlist DB Error:', dbError);
+      throw dbError; 
+    }
+
+    // Send Confirmation Email to User
+    console.log(`Email: Attempting to send confirmation to ${email}`);
+    const userEmail = await sendMail({
+      to: email,
+      subject: 'Welcome to the VibeLab Waitlist!',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
+          <h1 style="color: #0ea5e9;">Welcome to VibeLab!</h1>
+          <p>Hi there,</p>
+          <p>Thank you for joining the VibeLab waitlist. We're excited to have you with us on our journey to redefine how schools and creators collaborate.</p>
+          <p>We'll notify you as soon as we're ready for your early access.</p>
+          <br/>
+          <p>Best regards,<br/>The VibeLab Team</p>
+        </div>
+      `
+    });
+    console.log(`Email: User confirmation status: ${userEmail ? 'Sent' : 'Failed'}`);
+
+    // Send Notification to Admin
+    const adminEmailAddr = process.env.ADMIN_EMAIL || 'vibelab@nexaforgetech.com';
+    console.log(`Email: Attempting to send admin notification to ${adminEmailAddr}`);
+    const adminEmail = await sendMail({
+      to: adminEmailAddr,
+      subject: '🚀 New Waitlist Signup!',
+      html: `<p><strong>New signup:</strong> ${email}</p><p>Source: vibelab_landing_v1</p>`
+    });
+    console.log(`Email: Admin notification status: ${adminEmail ? 'Sent' : 'Failed'}`);
+
     res.json({ success: true, message: 'Successfully joined waitlist' });
   } catch (error: any) {
     console.error('Waitlist DB Error:', error);
-    if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Email already exists' });
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json({ 
+      error: 'Database error', 
+      details: error.message,
+      code: error.code
+    });
   }
 });
 
 app.post('/api/contact', async (req, res) => {
   const { name, email, organization, role, interest_type, message, source } = req.body;
   if (!name || !email || !role || !message) return res.status(400).json({ error: 'Required fields missing' });
-
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
-
     await p.execute(
       'INSERT INTO contact_submissions (name, email, organization, role, interest_type, message, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [name, email, organization, role, interest_type, message, source || 'vibelab_landing_v1']
     );
+
+    // Send Confirmation Email to User
+    console.log(`Email: Attempting to send contact confirmation to ${email}`);
+    const userEmail = await sendMail({
+      to: email,
+      subject: 'We received your inquiry - VibeLab',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
+          <h1 style="color: #0ea5e9;">Thanks for contacting VibeLab!</h1>
+          <p>Hi ${name},</p>
+          <p>We've received your inquiry and our team will get back to you shortly.</p>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #64748b; font-size: 12px; text-transform: uppercase;">Your Message:</p>
+            <p style="margin: 10px 0 0 0; color: #475569; font-style: italic;">"${message}"</p>
+          </div>
+          <br/>
+          <p>Best regards,<br/>The VibeLab Team</p>
+        </div>
+      `
+    });
+    console.log(`Email: User contact confirmation: ${userEmail ? 'Sent' : 'Failed'}`);
+
+    // Send Notification to Admin
+    const adminEmailAddr = process.env.ADMIN_EMAIL || 'vibelab@nexaforgetech.com';
+    console.log(`Email: Attempting to send admin contact notification to ${adminEmailAddr}`);
+    const adminEmail = await sendMail({
+      to: adminEmailAddr,
+      subject: `📩 New Contact Inquiry from ${name}`,
+      html: `
+        <h2>New Inquiry Details:</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Org:</strong> ${organization || 'N/A'}</p>
+        <p><strong>Role:</strong> ${role}</p>
+        <p><strong>Interest:</strong> ${interest_type}</p>
+        <p><strong>Message:</strong> ${message}</p>
+      `
+    });
+    console.log(`Email: Admin contact notification: ${adminEmail ? 'Sent' : 'Failed'}`);
+
     res.json({ success: true, message: 'Message sent successfully' });
   } catch (error: any) {
-    console.error('Contact DB Error:', error);
     res.status(500).json({ error: 'Database error', details: error.message });
   }
 });
 
 app.get('/api/admin/data', async (req, res) => {
   const adminKey = req.headers['x-admin-key'];
-  if (adminKey !== process.env.VITE_ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' });
-
+  const secureKey = process.env.VITE_ADMIN_PASSWORD || '0000';
+  if (adminKey !== secureKey) return res.status(401).json({ error: 'Unauthorized' });
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database not connected' });
@@ -110,8 +274,24 @@ app.get('/api/admin/data', async (req, res) => {
 });
 
 app.get('/api/health', async (req, res) => {
-  const p = await getPool();
-  res.json({ status: 'ok', db: !!p });
+  try {
+    const p = await getPool();
+    if (!p) return res.json({ status: 'error', reason: 'No pool' });
+    const [rows] = await p.execute('SELECT COUNT(*) as count FROM waitlist');
+    res.json({ 
+      status: 'ok', 
+      db: true, 
+      count: (rows as any)[0].count,
+      env: !!process.env.DB_HOST 
+    });
+  } catch (err: any) {
+    res.json({ 
+      status: 'error', 
+      db: false, 
+      error: err.message,
+      env: !!process.env.DB_HOST 
+    });
+  }
 });
 
 // For local development with Vite
@@ -122,22 +302,46 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
       appType: 'spa',
     });
     app.use(vite.middlewares);
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, '0.0.0.0', async () => {
       console.log(`Server running at http://localhost:${PORT}`);
+      await getPool();
+
+      // Verify Email Config
+      transporter.verify((error, success) => {
+        if (error) {
+          console.error('Email Debug: Transporter verification FAILED:', error);
+        } else {
+          console.log('Email Debug: Server is ready to take our messages');
+        }
+      });
     });
   };
   startDev();
-} else if (!process.env.VERCEL) {
-  // Production start for standard Node environment (not Serverless)
+} else {
+  // Production start or Vercel
   const distPath = path.join(process.cwd(), 'dist');
   app.use(express.static(distPath));
   app.get('*', (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-  });
+  
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', async () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+      // Initialize DB and tables on startup
+      await getPool();
+      
+      // Verify Email Config
+      transporter.verify((error, success) => {
+        if (error) {
+          console.error('Email Debug: Transporter verification FAILED:', error);
+        } else {
+          console.log('Email Debug: Server is ready to take our messages');
+        }
+      });
+    });
+  }
 }
 
-// Export app for Vercel
 export default app;
+
