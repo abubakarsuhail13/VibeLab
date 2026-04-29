@@ -85,11 +85,30 @@ const getPool = async () => {
 // API Sub-Router
 router.post('/waitlist', async (req, res) => {
   const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+  console.log('POST /api/waitlist - Request Body:', req.body);
+
+  if (!email) {
+    console.warn('Waitlist Error: Email is missing in request body');
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
   try {
     const p = await getPool();
-    if (!p) return res.status(503).json({ error: 'Database connection failed' });
-    await p.execute('INSERT INTO waitlist (email, source) VALUES (?, ?)', [email, 'vibelab_landing_v1']);
+    if (!p) {
+      console.error('Waitlist Error: Database connection failed');
+      return res.status(503).json({ error: 'Database connection failed' });
+    }
+
+    try {
+      await p.execute('INSERT INTO waitlist (email, source) VALUES (?, ?)', [email, 'vibelab_landing_v1']);
+      console.log(`Waitlist: Successfully added ${email}`);
+    } catch (dbError: any) {
+      if (dbError.code === 'ER_DUP_ENTRY') {
+        console.log(`Waitlist: Duplicate entry for ${email}`);
+        return res.json({ success: true, message: 'You are already on the waitlist!' });
+      }
+      throw dbError; // Rethrow to be caught by outer catch
+    }
 
     // Send Confirmation Email to User
     sendMail({
@@ -116,8 +135,12 @@ router.post('/waitlist', async (req, res) => {
 
     res.json({ success: true, message: 'Successfully joined waitlist' });
   } catch (error: any) {
-    if (error.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Email already exists' });
-    res.status(500).json({ error: 'Database error', details: error.message });
+    console.error('Waitlist DB Error:', error);
+    res.status(500).json({ 
+      error: 'Database error', 
+      details: error.message,
+      code: error.code
+    });
   }
 });
 
