@@ -21,7 +21,7 @@ app.use(express.json());
 // Email Configuration (Nodemailer)
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.hostinger.com',
-  port: parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '465'),
+  port: parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587'),
   secure: (process.env.EMAIL_PORT || process.env.SMTP_PORT) === '465', 
   auth: {
     user: process.env.EMAIL_USER || process.env.SMTP_USER,
@@ -29,7 +29,10 @@ const transporter = nodemailer.createTransport({
   },
   tls: {
     rejectUnauthorized: false
-  }
+  },
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
 // Helper to send emails
