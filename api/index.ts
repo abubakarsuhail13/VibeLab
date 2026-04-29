@@ -16,28 +16,39 @@ app.use(express.json());
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || 'smtp.hostinger.com',
   port: parseInt(process.env.EMAIL_PORT || '465'),
-  secure: true, // true for 465, false for other ports
+  secure: process.env.EMAIL_PORT === '465', // true for 465, false for 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    rejectUnauthorized: false // Often needed for Hostinger
+  }
 });
 
 // Helper to send emails
 const sendMail = async (options: nodemailer.SendMailOptions) => {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn('Email credentials not configured. Skipping email.');
+      console.warn('Email config ERROR: EMAIL_USER or EMAIL_PASS missing');
       return null;
     }
+    
+    console.log(`Email Debug: Attempting mail from ${process.env.EMAIL_USER} to ${options.to}`);
+    console.log(`Email Debug: Host ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT} (Secure: ${process.env.EMAIL_PORT === '465'})`);
+
     const info = await transporter.sendMail({
       from: `"VibeLab" <${process.env.EMAIL_USER}>`,
       ...options,
     });
-    console.log('Email sent: %s', info.messageId);
+    console.log('Email SUCCESS: %s', info.messageId);
     return info;
-  } catch (error) {
-    console.error('Email Error:', error);
+  } catch (error: any) {
+    console.error('Email FAILURE:', {
+      message: error.message,
+      code: error.code,
+      command: error.command
+    });
     return null;
   }
 };
@@ -64,9 +75,40 @@ const getPool = async () => {
       return null;
     }
     try {
+      console.log('DB Debug: Connecting to Host:', dbConfig.host, 'User:', dbConfig.user, 'DB:', dbConfig.database);
       pool = mysql.createPool(dbConfig);
       const connection = await pool.getConnection();
       console.log('Successfully connected to MySQL database');
+      
+      // Auto-ensure tables exist
+      try {
+        console.log('DB Debug: Ensuring tables exist...');
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS waitlist (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            source VARCHAR(100) DEFAULT 'vibelab_landing_v1',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS contact_submissions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            organization VARCHAR(255),
+            role VARCHAR(100) NOT NULL,
+            interest_type VARCHAR(50),
+            message TEXT NOT NULL,
+            source VARCHAR(100) DEFAULT 'vibelab_landing_v1',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        console.log('DB Debug: Tables verified/created.');
+      } catch (tableErr: any) {
+        console.error('DB Debug: Error creating tables:', tableErr.message);
+      }
+      
       connection.release();
     } catch (err: any) {
       console.error('CRITICAL: Failed to connect to MySQL database:', {
@@ -100,18 +142,21 @@ router.post('/waitlist', async (req, res) => {
     }
 
     try {
+      console.log(`Waitlist DB: Attempting to insert ${email}`);
       await p.execute('INSERT INTO waitlist (email, source) VALUES (?, ?)', [email, 'vibelab_landing_v1']);
-      console.log(`Waitlist: Successfully added ${email}`);
+      console.log(`Waitlist DB: Successfully added ${email}`);
     } catch (dbError: any) {
       if (dbError.code === 'ER_DUP_ENTRY') {
-        console.log(`Waitlist: Duplicate entry for ${email}`);
+        console.log(`Waitlist DB: Duplicate entry for ${email}`);
         return res.json({ success: true, message: 'You are already on the waitlist!' });
       }
+      console.error('Waitlist DB Insertion Error:', dbError);
       throw dbError; // Rethrow to be caught by outer catch
     }
 
     // Send Confirmation Email to User
-    sendMail({
+    console.log(`Email: Attempting to send confirmation to ${email}`);
+    const userEmail = await sendMail({
       to: email,
       subject: 'Welcome to the VibeLab Waitlist!',
       html: `
@@ -125,13 +170,17 @@ router.post('/waitlist', async (req, res) => {
         </div>
       `
     });
+    console.log(`Email: User confirmation status: ${userEmail ? 'Sent' : 'Failed'}`);
 
     // Send Notification to Admin
-    sendMail({
-      to: process.env.ADMIN_EMAIL || 'vibelab@nexaforgetech.com',
+    const adminEmailAddr = process.env.ADMIN_EMAIL || 'vibelab@nexaforgetech.com';
+    console.log(`Email: Attempting to send admin notification to ${adminEmailAddr}`);
+    const adminEmail = await sendMail({
+      to: adminEmailAddr,
       subject: '🚀 New Waitlist Signup!',
       html: `<p><strong>New signup:</strong> ${email}</p><p>Source: vibelab_landing_v1</p>`
     });
+    console.log(`Email: Admin notification status: ${adminEmail ? 'Sent' : 'Failed'}`);
 
     res.json({ success: true, message: 'Successfully joined waitlist' });
   } catch (error: any) {
@@ -156,7 +205,8 @@ router.post('/contact', async (req, res) => {
     );
 
     // Send Confirmation Email to User
-    sendMail({
+    console.log(`Email: Attempting to send contact confirmation to ${email}`);
+    const userEmail = await sendMail({
       to: email,
       subject: 'We received your inquiry - VibeLab',
       html: `
@@ -173,10 +223,13 @@ router.post('/contact', async (req, res) => {
         </div>
       `
     });
+    console.log(`Email: User contact confirmation: ${userEmail ? 'Sent' : 'Failed'}`);
 
     // Send Notification to Admin
-    sendMail({
-      to: process.env.ADMIN_EMAIL || 'vibelab@nexaforgetech.com',
+    const adminEmailAddr = process.env.ADMIN_EMAIL || 'vibelab@nexaforgetech.com';
+    console.log(`Email: Attempting to send admin contact notification to ${adminEmailAddr}`);
+    const adminEmail = await sendMail({
+      to: adminEmailAddr,
       subject: `📩 New Contact Inquiry from ${name}`,
       html: `
         <h2>New Inquiry Details:</h2>
@@ -188,6 +241,7 @@ router.post('/contact', async (req, res) => {
         <p><strong>Message:</strong> ${message}</p>
       `
     });
+    console.log(`Email: Admin contact notification: ${adminEmail ? 'Sent' : 'Failed'}`);
 
     res.json({ success: true, message: 'Message sent successfully' });
   } catch (error: any) {
