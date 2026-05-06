@@ -92,6 +92,7 @@ export default function ForgotPassword({ onNavigate }: { onNavigate: (page: stri
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="yours@example.com"
+                  autoComplete="email"
                   className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 font-medium placeholder:text-slate-300"
                 />
               </div>

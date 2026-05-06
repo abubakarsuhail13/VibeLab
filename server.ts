@@ -167,6 +167,27 @@ const getPool = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         `);
+
+        // Ensure missing columns exist for existing tables
+        const [columns]: any = await connection.execute('SHOW COLUMNS FROM users');
+        const columnNames = columns.map((c: any) => c.Field);
+        
+        if (!columnNames.includes('is_verified')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN is_verified TINYINT DEFAULT 0');
+        }
+        if (!columnNames.includes('verification_token')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)');
+        }
+        if (!columnNames.includes('reset_token')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)');
+        }
+        if (!columnNames.includes('reset_token_expires')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN reset_token_expires DATETIME');
+        }
+        if (!columnNames.includes('avatar_url')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN avatar_url LONGTEXT');
+        }
+
         console.log('DB Debug: Tables verified/created.');
       } catch (tableErr: any) {
         console.error('DB Debug: Error creating tables:', tableErr.message);

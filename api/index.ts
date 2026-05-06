@@ -152,6 +152,27 @@ const getPool = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         `);
+
+        // Ensure missing columns exist for existing tables
+        const [columns]: any = await connection.execute('SHOW COLUMNS FROM users');
+        const columnNames = columns.map((c: any) => c.Field);
+        
+        if (!columnNames.includes('is_verified')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN is_verified TINYINT DEFAULT 0');
+        }
+        if (!columnNames.includes('verification_token')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)');
+        }
+        if (!columnNames.includes('reset_token')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)');
+        }
+        if (!columnNames.includes('reset_token_expires')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN reset_token_expires DATETIME');
+        }
+        if (!columnNames.includes('avatar_url')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN avatar_url LONGTEXT');
+        }
+
         console.log('DB Debug: Tables verified/created.');
       } catch (tableErr: any) {
         console.error('DB Debug: Error creating tables:', tableErr.message);
@@ -352,6 +373,51 @@ router.post('/user/upload-avatar', authenticateToken, upload.single('avatar'), a
     res.json({ success: true, avatarUrl });
   } catch (error) {
     res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+router.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+  
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    
+    const [rows]: any = await p.execute('SELECT * FROM users WHERE email = ?', [email]);
+    if (rows.length === 0) return res.status(401).json({ error: 'Invalid email or password' });
+    
+    const user = rows[0];
+
+    // Check if verified
+    if (!user.is_verified) {
+      return res.status(403).json({ error: 'Please verify your email address before logging in.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid email or password' });
+    
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role,
+        avatar_url: user.avatar_url 
+      }
+    });
+  } catch (error: any) {
+    console.error('Login Error:', error);
+    res.status(500).json({ error: 'Database error during login' });
   }
 });
 
