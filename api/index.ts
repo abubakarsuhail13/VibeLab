@@ -279,7 +279,7 @@ router.post('/auth/register', async (req, res) => {
       [name, email, hashedPassword, role, verificationToken]
     );
 
-    const baseUrl = process.env.VITE_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app';
     await sendMail({
       to: email,
       subject: 'Verify your VibeLab Account',
@@ -330,7 +330,7 @@ router.post('/auth/forgot-password', async (req, res) => {
     const resetToken = cryptoRandomString({ length: 32, type: 'url-safe' });
     const expires = new Date(Date.now() + 3600000);
     await p.execute('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?', [resetToken, expires, user.id]);
-    const baseUrl = process.env.VITE_APP_URL || 'http://localhost:3000';
+    const baseUrl = process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app';
     await sendMail({
       to: email,
       subject: 'Reset your VibeLab Password',

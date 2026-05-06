@@ -307,7 +307,7 @@ app.post('/api/auth/register', async (req, res) => {
     const userId = result.insertId;
     
     // Send Verification Email
-    const baseUrl = process.env.VITE_APP_URL || `http://localhost:${PORT}`; // Default for dev
+    const baseUrl = process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app';
     await sendMail({
       to: email,
       subject: 'Verify your VibeLab Account',
@@ -377,7 +377,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       [resetToken, expires, user.id]
     );
 
-    const baseUrl = process.env.VITE_APP_URL || `http://localhost:${PORT}`;
+    const baseUrl = process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app';
     await sendMail({
       to: email,
       subject: 'Reset your VibeLab Password',
