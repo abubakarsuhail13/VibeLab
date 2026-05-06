@@ -1280,8 +1280,12 @@ export default function App() {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('vibelab_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    if (savedUser && savedUser !== 'undefined') {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+      }
     }
   }, []);
 

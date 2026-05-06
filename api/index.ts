@@ -1,3 +1,4 @@
+// AI-REBUILD-TRIGGER: V3 (MemoryStorage and Path Logging)
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
@@ -174,11 +175,9 @@ const getPool = async () => {
         }
 
         console.log('DB Debug: Tables verified/created.');
-      } catch (tableErr: any) {
-        console.error('DB Debug: Error creating tables:', tableErr.message);
+      } finally {
+        connection.release();
       }
-      
-      connection.release();
     } catch (err: any) {
       console.error('CRITICAL: Failed to connect to MySQL database:', {
         message: err.message,
@@ -514,12 +513,18 @@ router.get('/health', async (req, res) => {
 });
 
 // Mounting the router at both /api and root to be safe
+app.use((req, res, next) => {
+  console.log(`API Request: ${req.method} ${req.url}`);
+  next();
+});
+
 app.use('/api', router);
 app.use('/', router);
 
 // Error Fallback
 app.use((req, res) => {
-  res.status(404).json({ error: 'API route not found', path: req.path });
+  console.warn(`404 Not Found: ${req.method} ${req.url}`);
+  res.status(404).json({ error: 'API route not found', path: req.url });
 });
 
 export default app;
