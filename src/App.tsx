@@ -31,6 +31,9 @@ import ContactPage from "./Contact";
 import Login from "./Login";
 import Signup from "./Signup";
 import Dashboard from "./Dashboard";
+import VerifyEmail from "./VerifyEmail";
+import ForgotPassword from "./ForgotPassword";
+import ResetPassword from "./ResetPassword";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [password, setPassword] = useState("");
@@ -1293,6 +1296,13 @@ export default function App() {
     setCurrentPage('home');
   };
 
+  useEffect(() => {
+    // Handle URL based routing for verification and reset
+    const path = window.location.pathname;
+    if (path === '/verify-email') setCurrentPage('verify-email');
+    if (path === '/reset-password') setCurrentPage('reset-password');
+  }, []);
+
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
       <Navbar 
@@ -1325,7 +1335,13 @@ export default function App() {
         ) : currentPage === 'signup' ? (
           <Signup onNavigate={setCurrentPage} onLoginSuccess={setUser} />
         ) : currentPage === 'dashboard' ? (
-          <Dashboard user={user} onLogout={handleLogout} />
+          <Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} />
+        ) : currentPage === 'verify-email' ? (
+          <VerifyEmail onNavigate={setCurrentPage} />
+        ) : currentPage === 'forgot-password' ? (
+          <ForgotPassword onNavigate={setCurrentPage} />
+        ) : currentPage === 'reset-password' ? (
+          <ResetPassword onNavigate={setCurrentPage} />
         ) : (
           <ContactPage onNavigate={setCurrentPage} />
         )}

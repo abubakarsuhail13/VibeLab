@@ -84,7 +84,16 @@ export default function Login({ onNavigate, onLoginSuccess }: LoginProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Password</label>
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Password</label>
+              <button 
+                type="button"
+                onClick={() => onNavigate('forgot-password')}
+                className="text-[10px] font-bold text-cyan-600 hover:text-cyan-700 uppercase tracking-wider"
+              >
+                Forgot?
+              </button>
+            </div>
             <div className="relative">
               <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input 

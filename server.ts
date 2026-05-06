@@ -8,6 +8,8 @@ import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import cryptoRandomString from 'crypto-random-string';
 
 dotenv.config();
 
@@ -16,11 +18,52 @@ const __dirname = path.dirname(__filename);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'vibelab_secret_key_2024';
 
+// Multer Storage Configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/avatars');
+  },
+  filename: (req, file, cb) => {
+    const userId = (req as any).user?.userId || 'anonymous';
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `avatar-${userId}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images are allowed'));
+    }
+  }
+});
+
+// Auth Middleware
+const authenticateToken = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) return res.status(403).json({ error: 'Token expired or invalid' });
+    req.user = user;
+    next();
+  });
+};
+
 const app = express();
 const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static avatars
+app.use('/avatars', express.static(path.join(process.cwd(), 'public/avatars')));
 
 // Email Configuration (Nodemailer)
 const transporter = nodemailer.createTransport({
@@ -128,6 +171,11 @@ const getPool = async () => {
             email VARCHAR(255) UNIQUE,
             password VARCHAR(255),
             role ENUM('student', 'teacher'),
+            is_verified TINYINT DEFAULT 0,
+            verification_token VARCHAR(255),
+            reset_token VARCHAR(255),
+            reset_token_expires DATETIME,
+            avatar_url TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         `);
@@ -237,27 +285,159 @@ app.post('/api/auth/register', async (req, res) => {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Generate Verification Token
+    const verificationToken = cryptoRandomString({ length: 32, type: 'url-safe' });
 
     // Insert user
     const [result]: any = await p.execute(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, role]
+      'INSERT INTO users (name, email, password, role, verification_token) VALUES (?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, role, verificationToken]
     );
 
     const userId = result.insertId;
-    const token = jwt.sign({ userId, email, role }, JWT_SECRET, { expiresIn: '24h' });
+    
+    // Send Verification Email
+    const baseUrl = process.env.VITE_APP_URL || `http://localhost:${PORT}`; // Default for dev
+    await sendMail({
+      to: email,
+      subject: 'Verify your VibeLab Account',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
+          <h1 style="color: #0ea5e9;">Welcome to VibeLab, ${name}!</h1>
+          <p>Please verify your email address to activate your account and start your learning journey.</p>
+          <a href="${baseUrl}/verify-email?token=${verificationToken}" 
+             style="display: inline-block; background: #0ea5e9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
+            Verify Email Address
+          </a>
+          <p style="font-size: 12px; color: #64748b;">If you didn't create an account, you can safely ignore this email.</p>
+        </div>
+      `
+    });
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful',
-      token,
-      user: { id: userId, name, email, role }
+      message: 'Registration successful! Please check your email to verify your account.'
     });
   } catch (error: any) {
     console.error('Registration Error:', error);
     res.status(500).json({ error: 'Database error during registration' });
   }
 });
+
+app.get('/api/auth/verify', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ error: 'Token missing' });
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [rows]: any = await p.execute('SELECT id FROM users WHERE verification_token = ?', [token]);
+    if (rows.length === 0) return res.status(400).json({ error: 'Invalid or expired verification token' });
+
+    const user = rows[0];
+    await p.execute('UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?', [user.id]);
+
+    res.json({ success: true, message: 'Email verified successfully! You can now log in.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [rows]: any = await p.execute('SELECT id, name FROM users WHERE email = ?', [email]);
+    if (rows.length === 0) {
+      // Don't reveal if account exists for security, just say we sent it if it exists
+      return res.json({ success: true, message: 'If an account exists with that email, a reset link has been sent.' });
+    }
+
+    const user = rows[0];
+    const resetToken = cryptoRandomString({ length: 32, type: 'url-safe' });
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    await p.execute(
+      'UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
+      [resetToken, expires, user.id]
+    );
+
+    const baseUrl = process.env.VITE_APP_URL || `http://localhost:${PORT}`;
+    await sendMail({
+      to: email,
+      subject: 'Reset your VibeLab Password',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
+          <h1>Password Reset Request</h1>
+          <p>Hi ${user.name}, we received a request to reset your password.</p>
+          <p>Click the link below to set a new password (valid for 1 hour):</p>
+          <a href="${baseUrl}/reset-password?token=${resetToken}" 
+             style="display: inline-block; background: #1e293b; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
+            Reset Password
+          </a>
+          <p>If you didn't request this, you can ignore this email.</p>
+        </div>
+      `
+    });
+
+    res.json({ success: true, message: 'Reset link sent to your email.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Forgot password failed' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Token and password required' });
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [rows]: any = await p.execute(
+      'SELECT id FROM users WHERE reset_token = ? AND reset_token_expires > NOW()',
+      [token]
+    );
+
+    if (rows.length === 0) return res.status(400).json({ error: 'Invalid or expired reset token' });
+
+    const user = rows[0];
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await p.execute(
+      'UPDATE users SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
+      [hashedPassword, user.id]
+    );
+
+    res.json({ success: true, message: 'Password reset successful! You can now log in with your new password.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Password reset failed' });
+  }
+});
+
+app.post('/api/user/upload-avatar', authenticateToken, upload.single('avatar'), async (req, res) => {
+  try {
+    const request = req as any;
+    if (!request.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const avatarUrl = `/avatars/${request.file.filename}`;
+    await p.execute('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, request.user.userId]);
+
+    res.json({ success: true, avatarUrl });
+  } catch (error) {
+    res.status(500).json({ error: 'Avatar upload failed' });
+  }
+});
+
 
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
@@ -276,6 +456,11 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     const user = rows[0];
+
+    // Check if verified
+    if (!user.is_verified) {
+      return res.status(403).json({ error: 'Please verify your email address before logging in.' });
+    }
 
     // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
@@ -298,7 +483,8 @@ app.post('/api/auth/login', async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        avatar_url: user.avatar_url
       }
     });
   } catch (error: any) {

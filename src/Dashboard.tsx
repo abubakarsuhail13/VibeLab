@@ -1,3 +1,4 @@
+import { useState, useRef, ChangeEvent } from "react";
 import { motion } from "motion/react";
 import { 
   Rocket, 
@@ -11,15 +12,23 @@ import {
   Zap,
   Star,
   Clock,
-  LogOut
+  LogOut,
+  Camera,
+  ShieldCheck,
+  AlertTriangle,
+  Upload
 } from "lucide-react";
 
 interface DashboardProps {
   user: any;
   onLogout: () => void;
+  onUpdateUser: (user: any) => void;
 }
 
-export default function Dashboard({ user, onLogout }: DashboardProps) {
+export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardProps) {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const stats = [
     { label: "Active Projects", value: "3", icon: <Rocket className="w-5 h-5 text-cyan-500" />, bg: "bg-cyan-50" },
     { label: "Skills Earned", value: "12", icon: <Star className="w-5 h-5 text-amber-500" />, bg: "bg-amber-50" },
@@ -33,17 +42,90 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
     { name: "Personal AI Assistant", progress: 90, category: "Software", date: "Just now" },
   ];
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("File is too large. Max 2MB.");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch('/api/user/upload-avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        const updatedUser = { ...user, avatar_url: data.avatarUrl };
+        localStorage.setItem('vibelab_user', JSON.stringify(updatedUser));
+        onUpdateUser(updatedUser);
+      } else {
+        alert(data.error || "Upload failed");
+      }
+    } catch (err) {
+      alert("Error uploading avatar");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar - Hidden on mobile, but simple for this demo */}
+      {/* Sidebar */}
       <div className="w-72 bg-white border-r border-slate-200 hidden lg:flex flex-col p-8 pt-24 sticky top-0 h-screen">
-        <div className="flex items-center gap-4 mb-10 px-2 py-3 bg-slate-50 rounded-2xl border border-slate-100">
-          <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xl uppercase">
-            {user?.name?.[0] || 'U'}
-          </div>
-          <div>
-            <p className="font-bold text-slate-900 truncate w-32">{user?.name || 'User'}</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'Member'}</p>
+        <div className="relative group mb-10">
+          <div className="flex items-center gap-4 px-2 py-3 bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+            <div 
+              onClick={handleAvatarClick}
+              className="relative w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xl uppercase overflow-hidden cursor-pointer group/avatar shrink-0"
+            >
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                user?.name?.[0] || 'U'
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity">
+                <Camera className="w-4 h-4 text-white" />
+              </div>
+              {uploading && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              className="hidden" 
+              accept="image/*"
+            />
+            <div className="truncate">
+              <p className="font-bold text-slate-900 truncate">{user?.name || 'User'}</p>
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'Member'}</p>
+                {user?.is_verified ? (
+                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                ) : (
+                  <AlertTriangle className="w-3 h-3 text-amber-500" title="Unverified" />
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -77,8 +159,39 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 md:p-12 pt-32 overflow-y-auto">
+      <div className="flex-1 p-8 md:p-12 pt-16 lg:pt-32 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
+          {/* Mobile Profile Bar */}
+          <div className="lg:hidden flex items-center justify-between mb-8 pb-8 border-b border-slate-200">
+            <div className="flex items-center gap-4">
+              <div 
+                onClick={handleAvatarClick}
+                className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xl uppercase overflow-hidden relative"
+              >
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name?.[0] || 'U'
+                )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="font-bold text-slate-900">{user?.name || 'User'}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'Member'}</p>
+                  {user?.is_verified && <ShieldCheck className="w-3 h-3 text-emerald-500" />}
+                </div>
+              </div>
+            </div>
+            <button onClick={onLogout} className="p-2 text-red-500">
+              <LogOut className="w-6 h-6" />
+            </button>
+          </div>
+
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
             <div>
               <h1 className="text-4xl font-display font-bold text-slate-900 mb-2">Hello, {user?.name?.split(' ')[0] || 'there'}!</h1>
@@ -91,7 +204,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                 <input 
                   type="text" 
                   placeholder="Search labs..." 
-                  className="pl-11 pr-6 py-3 rounded-xl bg-white border border-slate-200 outline-none focus:border-slate-900 transition-all font-medium text-sm w-48 lg:w-64"
+                  className="pl-11 pr-6 py-3 rounded-xl bg-white border border-slate-200 outline-none focus:border-slate-900 transition-all font-medium text-sm w-44 lg:w-64"
                 />
               </div>
               <button className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors">
