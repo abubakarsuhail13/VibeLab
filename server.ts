@@ -19,16 +19,7 @@ const __dirname = path.dirname(__filename);
 const JWT_SECRET = process.env.JWT_SECRET || 'vibelab_secret_key_2024';
 
 // Multer Storage Configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/avatars');
-  },
-  filename: (req, file, cb) => {
-    const userId = (req as any).user?.userId || 'anonymous';
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `avatar-${userId}-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage,
@@ -61,9 +52,6 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
-
-// Serve static avatars
-app.use('/avatars', express.static(path.join(process.cwd(), 'public/avatars')));
 
 // Email Configuration (Nodemailer)
 const transporter = nodemailer.createTransport({
@@ -175,7 +163,7 @@ const getPool = async () => {
             verification_token VARCHAR(255),
             reset_token VARCHAR(255),
             reset_token_expires DATETIME,
-            avatar_url TEXT,
+            avatar_url LONGTEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         `);
@@ -429,7 +417,10 @@ app.post('/api/user/upload-avatar', authenticateToken, upload.single('avatar'), 
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
-    const avatarUrl = `/avatars/${request.file.filename}`;
+    // Convert to base64
+    const base64Image = request.file.buffer.toString('base64');
+    const avatarUrl = `data:${request.file.mimetype};base64,${base64Image}`;
+
     await p.execute('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, request.user.userId]);
 
     res.json({ success: true, avatarUrl });

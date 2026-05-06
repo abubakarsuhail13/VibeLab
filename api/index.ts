@@ -13,17 +13,11 @@ dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'vibelab_secret_key_2024';
 
-// Multer Storage Configuration (for Vercel/Production use memory if disk isn't persistent, but for now we follow the local pattern)
-const storage = multer.memoryStorage(); // Vercel doesn't support persistent disk, so memory + base64 or external storage is better, but since I must "update the record with local URL" I'll stick to a mixed approach or memory for the API route.
+// Multer Storage Configuration (using memory for serverless compatibility)
+const storage = multer.memoryStorage();
 const upload = multer({ 
-  storage: multer.diskStorage({
-    destination: 'public/avatars',
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, `avatar-${uniqueSuffix}${path.extname(file.originalname)}`);
-    }
-  }),
-  limits: { fileSize: 2 * 1024 * 1024 }
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
 });
 
 // Auth Middleware
@@ -154,7 +148,7 @@ const getPool = async () => {
             verification_token VARCHAR(255),
             reset_token VARCHAR(255),
             reset_token_expires DATETIME,
-            avatar_url TEXT,
+            avatar_url LONGTEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         `);
@@ -346,9 +340,14 @@ router.post('/user/upload-avatar', authenticateToken, upload.single('avatar'), a
   try {
     const request = req as any;
     if (!request.file) return res.status(400).json({ error: 'No file' });
+    
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
-    const avatarUrl = `/avatars/${request.file.filename}`;
+
+    // Convert to base64
+    const base64Image = request.file.buffer.toString('base64');
+    const avatarUrl = `data:${request.file.mimetype};base64,${base64Image}`;
+
     await p.execute('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, request.user.userId]);
     res.json({ success: true, avatarUrl });
   } catch (error) {
