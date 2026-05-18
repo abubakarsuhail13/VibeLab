@@ -285,13 +285,26 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
            <div className="p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Public Verification</p>
               <p className="text-[11px] text-slate-500 mb-4 font-medium leading-relaxed">Share your verified builder profile with recruiters.</p>
+            <div className="flex gap-2">
               <button 
                 onClick={() => window.open(`/verify/${user.id}`, '_blank')}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-[11px] font-bold hover:bg-slate-50 transition-all shadow-sm"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-[11px] font-bold hover:bg-slate-50 transition-all shadow-sm"
               >
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                Public Profile
+                View Profile
               </button>
+              <button 
+                onClick={() => {
+                  const url = `${window.location.origin}/verify/${user.id}`;
+                  navigator.clipboard.writeText(url);
+                  alert('Link copied to clipboard!');
+                }}
+                className="flex items-center justify-center p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                title="Copy profile link"
+              >
+                <LinkIcon className="w-4 h-4" />
+              </button>
+            </div>
            </div>
            
            <button 
