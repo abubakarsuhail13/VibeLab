@@ -375,6 +375,121 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                   </div>
                 </div>
 
+                {/* Progress Visualization */}
+                <div className="mb-12">
+                   <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-10 shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                        <div className="lg:col-span-4 space-y-6">
+                           <div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 px-1">Curriculum Journey</p>
+                              <h2 className="text-2xl font-display font-bold text-slate-900 leading-tight">Mastering AI & Engineering</h2>
+                           </div>
+                           
+                           <div className="space-y-4">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm">
+                                    <CheckCircle2 size={18} />
+                                 </div>
+                                 <div>
+                                    <p className="text-xs font-bold text-slate-900">{phases.filter(p => p.status === 'completed').length} Completed</p>
+                                    <p className="text-[10px] text-slate-400 font-medium tracking-wide">Phases Mastered</p>
+                                 </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                 <div className="w-10 h-10 rounded-xl bg-emerald-900 flex items-center justify-center text-emerald-100 shadow-sm">
+                                    <Zap size={18} />
+                                 </div>
+                                 <div className="min-w-0">
+                                    <p className="text-xs font-bold text-slate-900 truncate">
+                                      {phases.find(p => p.status === 'active')?.name || 'None Active'}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 font-medium tracking-wide">Current Focus</p>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div className="lg:col-span-8">
+                           <div className="relative">
+                              {/* Connector Line */}
+                              <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                 <motion.div 
+                                   initial={{ width: 0 }}
+                                   animate={{ width: `${totalPhaseProgress}%` }}
+                                   className="h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                                   transition={{ duration: 1.5, ease: "easeOut" }}
+                                 />
+                              </div>
+
+                              {/* Progress Markers */}
+                              <div className="relative flex justify-between items-center h-20">
+                                 {phases.map((phase, idx) => {
+                                   const isCompleted = phase.status === 'completed';
+                                   const isActive = phase.status === 'active';
+                                   return (
+                                     <div key={idx} className="relative flex flex-col items-center">
+                                       <motion.div 
+                                         initial={{ scale: 0 }}
+                                         animate={{ scale: 1 }}
+                                         transition={{ delay: 0.5 + (idx * 0.1) }}
+                                         className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 z-10 ${
+                                           isCompleted ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 
+                                           isActive ? 'bg-white border-4 border-emerald-500 text-emerald-500 shadow-xl' :
+                                           'bg-white border-2 border-slate-200 text-slate-300'
+                                         }`}
+                                       >
+                                         {isCompleted ? <CheckCircle2 size={16} /> : <span className="text-xs font-black">{idx + 1}</span>}
+                                       </motion.div>
+                                       {isActive && (
+                                         <motion.div 
+                                           initial={{ opacity: 0, y: 10 }}
+                                           animate={{ opacity: 1, y: 0 }}
+                                           className="absolute -bottom-8 whitespace-nowrap text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100"
+                                         >
+                                           In Progress
+                                         </motion.div>
+                                       )}
+                                       {idx === phases.length - 1 && (
+                                         <div className="absolute -top-8 right-0 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                           Goal: {phases.length}
+                                         </div>
+                                       )}
+                                     </div>
+                                   );
+                                 })}
+                              </div>
+                           </div>
+                           
+                           <div className="mt-14 flex items-center justify-between">
+                              <div className="flex items-center gap-6">
+                                 <div>
+                                    <span className="block text-2xl font-display font-bold text-slate-900">{totalPhaseProgress}%</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Completion</span>
+                                 </div>
+                                 <div className="w-px h-10 bg-slate-100" />
+                                 <div>
+                                    <span className="block text-2xl font-display font-bold text-slate-900">{underwayProjects[0]?.name || 'N/A'}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1 max-w-[120px]">Current Build</span>
+                                 </div>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  const activeP = phases.find(p => p.status === 'active');
+                                  if (activeP) handlePhaseClick(activeP.id);
+                                }}
+                                className="hidden md:flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 group"
+                              >
+                                Continue Path
+                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                              </button>
+                           </div>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                   {stats.map((stat, i) => (
