@@ -54,21 +54,34 @@ app.use(cors());
 app.use(express.json());
 
 // Email Configuration (Nodemailer)
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.hostinger.com',
-  port: parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587'),
-  secure: (process.env.EMAIL_PORT || process.env.SMTP_PORT) === '465', 
-  auth: {
-    user: process.env.EMAIL_USER || process.env.SMTP_USER,
-    pass: process.env.EMAIL_PASS || process.env.SMTP_PASS,
-  },
+const emailUser = process.env.EMAIL_USER || process.env.SMTP_USER;
+const emailPass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
+const emailHost = process.env.EMAIL_HOST || process.env.SMTP_HOST || 'smtp.hostinger.com';
+const emailPort = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587');
+const isSecure = (process.env.EMAIL_PORT || process.env.SMTP_PORT || '587') === '465';
+
+const transporterOptions: any = {
+  host: emailHost,
+  port: emailPort,
+  secure: isSecure,
   tls: {
     rejectUnauthorized: false
   },
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-});
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000,
+};
+
+if (emailUser && emailPass) {
+  transporterOptions.auth = {
+    user: emailUser,
+    pass: emailPass,
+  };
+} else {
+  console.warn('Email Debug: Credentials missing in environment variables.');
+}
+
+const transporter = nodemailer.createTransport(transporterOptions);
 
 // Helper to send emails
 const sendMail = async (options: nodemailer.SendMailOptions) => {
@@ -609,14 +622,20 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
       console.log(`Server running at http://localhost:${PORT}`);
       await getPool();
 
-      // Verify Email Config
-      transporter.verify((error, success) => {
-        if (error) {
-          console.error('Email Debug: Transporter verification FAILED:', error);
-        } else {
-          console.log('Email Debug: Server is ready to take our messages');
-        }
-      });
+      // Verify Email Config (Dev)
+      if (emailUser && emailPass) {
+        transporter.verify((error: any, success) => {
+          if (error) {
+            console.error('Email Debug: Transporter verification FAILED (Dev):', {
+              message: error.message,
+              code: error.code,
+              command: error.command
+            });
+          } else {
+            console.log('Email Debug: Server is ready to take our messages');
+          }
+        });
+      }
     });
   };
   startDev();
@@ -634,14 +653,20 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
       // Initialize DB and tables on startup
       await getPool();
       
-      // Verify Email Config
-      transporter.verify((error, success) => {
-        if (error) {
-          console.error('Email Debug: Transporter verification FAILED:', error);
-        } else {
-          console.log('Email Debug: Server is ready to take our messages');
-        }
-      });
+      // Verify Email Config (Prod)
+      if (emailUser && emailPass) {
+        transporter.verify((error: any, success) => {
+          if (error) {
+            console.error('Email Debug: Transporter verification FAILED (Prod):', {
+              message: error.message,
+              code: error.code,
+              command: error.command
+            });
+          } else {
+            console.log('Email Debug: Server is ready to take our messages');
+          }
+        });
+      }
     });
   }
 }
