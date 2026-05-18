@@ -10,6 +10,7 @@ import {
   Zap, 
   CheckCircle2,
   ChevronRight,
+  Trophy,
   Mail,
   Users,
   School,
@@ -582,12 +583,12 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           </div>
           
           <h1 className="font-display text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 leading-[1.05] text-slate-900">
-            Build <span className="gradient-text">Skills.</span> <br />
-            Not Just Learn Them.
+            Learn AI & Code. <br />
+            <span className="gradient-text">Through 7 Phases.</span>
           </h1>
           
           <p className="text-xl text-slate-600 max-w-xl mb-12 leading-relaxed">
-            Learn coding and AI by building real-world projects. Stop consuming tutorials and start creating production-ready software.
+            Master software engineering and AI through a project-driven 7-phase journey. From core foundations to career-ready fullstack architect.
           </p>
 
           <form onSubmit={handleWaitlistJoin} className="flex flex-col sm:flex-row gap-3 mb-8 max-w-lg">
@@ -773,10 +774,10 @@ const Solution = () => {
 
 const HowItWorks = () => {
   const steps = [
-    { number: "01", title: "Choose a learning path", desc: "Select your area of expertise, from fullstack dev to AI systems and startup building." },
-    { number: "02", title: "Start a real-world project", desc: "Dive immediately into a production-grade workspace with all the tools you need." },
-    { number: "03", title: "Get AI guidance", desc: "Our AI agents monitor your progress, providing hints and feedback at every step." },
-    { number: "04", title: "Build a portfolio", desc: "Verified projects are added to your profile, proving your skills to schools and employers." }
+    { number: "01", title: "Join the Curriculum", desc: "Access the 7-Phase learning path designed to take you from foundational logic to AI mastery." },
+    { number: "02", title: "Build Real Projects", desc: "Every phase contains production-grade labs where you build actual software using modern stacks." },
+    { number: "03", title: "AI-Assisted Learning", desc: "Our AI agents monitor your code, providing instant hints and architectural feedback." },
+    { number: "04", title: "Verified Portfolio", desc: "Complete all phases to build a verified digital portfolio that proves your skills to the world." }
   ];
 
   return (
@@ -1274,6 +1275,56 @@ const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   );
 };
 
+const LearningPathSection = () => {
+  const phases = [
+    { id: 1, name: "Foundations", desc: "Web fundamentals & core logic." },
+    { id: 2, name: "Frontend", desc: "Modern UI with React & Tailwind." },
+    { id: 3, name: "Backend", desc: "Server-side logic & robust APIs." },
+    { id: 4, name: "Databases", desc: "Data structures & optimization." },
+    { id: 5, name: "AI Systems", desc: "LLM integration & prompt engineering." },
+    { id: 6, name: "Architecture", desc: "Fullstack patterns at scale." },
+    { id: 7, name: "Career", desc: "Portfolio & interview prep." }
+  ];
+
+  return (
+    <section id="path" className="py-40 px-6 bg-slate-900 text-white relative overflow-hidden">
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] -z-0" />
+      
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="text-center mb-24">
+          <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 leading-tight text-white">
+            The 7-Phase <span className="text-cyan-400">Mastery Path.</span>
+          </h2>
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
+            A cohesive journey designed to bridge the gap between "tutorial student" and "production engineer."
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {phases.map((phase) => (
+            <div key={phase.id} className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-all group backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-8">
+                <span className="text-4xl font-display font-black text-white/10 group-hover:text-cyan-400/20 transition-colors">0{phase.id}</span>
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-cyan-400" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold mb-3 text-white tracking-tight leading-tight">{phase.name}</h3>
+              <p className="text-slate-400 leading-relaxed text-sm font-medium">{phase.desc}</p>
+            </div>
+          ))}
+          
+          <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-cyan-600 to-blue-700 flex flex-col justify-center items-center text-center shadow-2xl shadow-cyan-500/20">
+             <Trophy className="w-12 h-12 text-white mb-4" />
+             <h3 className="text-2xl font-bold mb-2">Graduation</h3>
+             <p className="text-white/80 text-sm font-medium">Verified Portfolio & Global Certification</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState<any>(null);
@@ -1323,6 +1374,8 @@ export default function App() {
         {currentPage === 'home' ? (
           <>
             <Hero onNavigate={setCurrentPage} />
+            <TrustedBy />
+            <LearningPathSection />
             <Problem />
             <Solution />
             <HowItWorks />
