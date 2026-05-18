@@ -46,9 +46,10 @@ interface Submission {
 interface PhaseViewProps {
   phaseId: number;
   onBack: () => void;
+  onProgress?: () => void;
 }
 
-export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
+export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProps) {
   const [phase, setPhase] = useState<Phase | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,10 +71,10 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
         fetch(`/api/phase/${phaseId}/projects`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('/api/submissions/user', {
+        fetch('/api/user/submissions', {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('/api/badges/user', {
+        fetch('/api/user/badges', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -106,6 +107,10 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
       if (response.ok) {
         setHasBadge(true);
         fetchPhaseData(); // refresh state
+        onProgress?.(); // Refresh dashboard/sidebar
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || "Certification failed");
       }
     } catch (err) {
       console.error("Failed to certify", err);
@@ -123,7 +128,7 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
   const fetchUserSubmission = async (projectId: number) => {
     try {
       const token = localStorage.getItem('vibelab_token');
-      const res = await fetch('/api/submissions/user', {
+      const res = await fetch('/api/user/submissions', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -169,6 +174,7 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
 
       if (response.ok) {
         setSubmissionStatus('success');
+        onProgress?.();
       } else {
         setSubmissionStatus('error');
       }
@@ -225,6 +231,7 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (phaseRes.ok) setPhase(await phaseRes.json());
+        onProgress?.();
       }
     } catch (err) {
       console.error("Failed to update progress", err);

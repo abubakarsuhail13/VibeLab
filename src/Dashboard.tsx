@@ -64,8 +64,8 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
       const [phasesRes, progressRes, subsRes, badgesRes] = await Promise.all([
         fetch('/api/phases', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/progress', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/submissions/user', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/badges/user', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/user/submissions', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/user/badges', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       
       if (phasesRes.ok) setPhases(await phasesRes.json());
@@ -870,10 +870,11 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                 <PhaseView 
                   phaseId={selectedPhaseId!} 
                   onBack={() => {
-                  setActiveView('overview');
-                  fetchDashboardData(); // Update phases and progress
-                }} 
-              />
+                    setActiveView('overview');
+                    fetchDashboardData(); // Update phases and progress
+                  }} 
+                  onProgress={fetchDashboardData}
+                />
               </motion.div>
             )}
           </AnimatePresence>

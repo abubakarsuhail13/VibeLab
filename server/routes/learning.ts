@@ -84,6 +84,8 @@ router.post('/progress/update', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
+    console.log(`[DEBUG] Updating progress for User ${req.user.userId}, Project ${projectId}`);
+
     await p.execute(
       `INSERT INTO user_project_progress (user_id, project_id, completed_steps, is_completed) 
        VALUES (?, ?, ?, ?) 
@@ -106,33 +108,26 @@ router.post('/progress/update', authenticateToken, async (req: any, res) => {
         
         const completedCount = completedInPhase[0].count;
         const percentage = Math.round((completedCount / totalProjects) * 100);
-        const status = percentage === 100 ? 'completed' : 'active';
         
+        // Only mark as completed IF they also have submissions? 
+        // Actually, status 'completed' should be reserved for AFTER certification (badge) 
+        // Let's keep status 'active' even at 100% until they certify.
+        const status = percentage === 100 ? 'active' : 'active'; 
+        
+        console.log(`[DEBUG] Phase ${phaseId} Progress: ${percentage}% for User ${req.user.userId}`);
+
         await p.execute(
           `INSERT INTO user_phase_progress (user_id, phase_id, status, progress_percentage) 
            VALUES (?, ?, ?, ?) 
-           ON DUPLICATE KEY UPDATE status = VALUES(status), progress_percentage = VALUES(progress_percentage)`,
-          [req.user.userId, phaseId, status, percentage]
+           ON DUPLICATE KEY UPDATE progress_percentage = VALUES(progress_percentage)`,
+          [req.user.userId, phaseId, 'active', percentage]
         );
-
-        if (percentage === 100) {
-          const [currentPhase]: any = await p.execute('SELECT order_index FROM phases WHERE id = ?', [phaseId]);
-          if (currentPhase.length > 0) {
-            const nextOrder = currentPhase[0].order_index + 1;
-            const [nextPhase]: any = await p.execute('SELECT id FROM phases WHERE order_index = ?', [nextOrder]);
-            if (nextPhase.length > 0) {
-              await p.execute(
-                'INSERT IGNORE INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, ?)',
-                [req.user.userId, nextPhase[0].id, 'active']
-              );
-            }
-          }
-        }
       }
     }
 
     res.json({ success: true });
   } catch (error: any) {
+    console.error('[ERROR] Progress Update Failed:', error);
     res.status(500).json({ error: 'Failed to update progress' });
   }
 });
@@ -145,6 +140,8 @@ router.post('/submission', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
+    console.log(`[DEBUG] Saving submission for User ${req.user.userId}, Project ${projectId}`);
+
     await p.execute(
       `INSERT INTO project_submissions (user_id, project_id, phase_id, github_url, live_url, description) 
        VALUES (?, ?, ?, ?, ?, ?) 
@@ -154,6 +151,7 @@ router.post('/submission', authenticateToken, async (req: any, res) => {
 
     res.json({ success: true, message: 'Submission saved successfully' });
   } catch (error: any) {
+    console.error('[ERROR] Submission Save Failed:', error);
     res.status(500).json({ error: 'Failed to save submission' });
   }
 });
@@ -168,6 +166,7 @@ router.get('/progress', authenticateToken, async (req: any, res) => {
 
     res.json({ phaseProgress, projectProgress });
   } catch (error: any) {
+    console.error('[ERROR] Fetch Progress Failed:', error);
     res.status(500).json({ error: 'Failed to fetch progress' });
   }
 });
@@ -178,8 +177,11 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
+    console.log(`[DEBUG] Starting Certification for User ${req.user.userId}, Phase ${id}`);
+
+    // 1. Check all projects completed
     const [allProjects]: any = await p.execute('SELECT id FROM phase_projects WHERE phase_id = ?', [id]);
-    if (allProjects.length === 0) return res.status(400).json({ error: 'No projects in this phase' });
+    if (allProjects.length === 0) return res.status(400).json({ error: 'No projects found in this phase' });
 
     const projectIds = allProjects.map((ap: any) => ap.id);
     const [completed]: any = await p.execute(
@@ -188,33 +190,52 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
     );
 
     if (completed[0].count < allProjects.length) {
-      return res.status(400).json({ error: 'Complete all projects to earn certification.' });
+      console.log(`[DEBUG] Certification Rejected: Only ${completed[0].count}/${allProjects.length} projects completed.`);
+      return res.status(400).json({ error: 'Complete all builds to earn certification.' });
     }
 
+    // 2. Check all projects submitted
+    const [submissions]: any = await p.execute(
+      'SELECT COUNT(*) as count FROM project_submissions WHERE user_id = ? AND project_id IN (?)',
+      [req.user.userId, projectIds]
+    );
+
+    if (submissions[0].count < allProjects.length) {
+      console.log(`[DEBUG] Certification Rejected: Only ${submissions[0].count}/${allProjects.length} projects submitted.`);
+      return res.status(400).json({ error: 'Project submissions (GitHub URL) are required for all builds.' });
+    }
+
+    // 3. Create Badge
     await p.execute(
       'INSERT IGNORE INTO badges (user_id, phase_id) VALUES (?, ?)',
       [req.user.userId, id]
     );
 
+    // 4. Update Current Phase to COMPLETED
     await p.execute(
       'INSERT INTO user_phase_progress (user_id, phase_id, status, progress_percentage) VALUES (?, ?, "completed", 100) ON DUPLICATE KEY UPDATE status = "completed", progress_percentage = 100',
       [req.user.userId, id]
     );
 
+    console.log(`[DEBUG] Phase ${id} marked COMPLETED for User ${req.user.userId}`);
+
+    // 5. Unlock Next Phase
     const [currentPhase]: any = await p.execute('SELECT order_index FROM phases WHERE id = ?', [id]);
     if (currentPhase.length > 0) {
       const nextOrder = currentPhase[0].order_index + 1;
       const [nextPhase]: any = await p.execute('SELECT id FROM phases WHERE order_index = ?', [nextOrder]);
       if (nextPhase.length > 0) {
         await p.execute(
-          'INSERT IGNORE INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, "active")',
+          'INSERT INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, "active") ON DUPLICATE KEY UPDATE status = "active"',
           [req.user.userId, nextPhase[0].id]
         );
+        console.log(`[DEBUG] Phase ${nextPhase[0].id} UNLOCKED (status: active) for User ${req.user.userId}`);
       }
     }
 
     res.json({ success: true, message: 'Phase certified! Badge earned.' });
   } catch (error: any) {
+    console.error('[ERROR] Certification failed:', error);
     res.status(500).json({ error: 'Failed to certify phase' });
   }
 });

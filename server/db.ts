@@ -164,47 +164,57 @@ export const getPool = async () => {
           }
         }
 
-        // Seed initial projects for Phase 1 if empty
-        const [projectCount]: any = await connection.execute('SELECT COUNT(*) as count FROM phase_projects');
-        if (projectCount[0].count === 0) {
-          const [phase1]: any = await connection.execute('SELECT id FROM phases WHERE order_index = 1');
-          if (phase1.length > 0) {
-            const phase1Id = phase1[0].id;
-            const initialProjects = [
-              [
-                phase1Id,
-                'Personal Portfolio Website',
-                'Build a stunning, responsive personal portfolio website to showcase your future projects.',
-                'Beginner',
-                JSON.stringify(['HTML5', 'CSS3', 'Responsive Design', 'Vercel Deployment']),
-                JSON.stringify([
-                  { title: 'Project Setup', desc: 'Initialize your repository and set up a basic HTML structure.' },
-                  { title: 'Responsive Layout', desc: 'Implement a mobile-first grid using CSS Flexbox or Grid.' },
-                  { title: 'Navigation & Sections', desc: 'Create About, Projects, and Contact sections with smooth scrolling.' },
-                  { title: 'Deployment', desc: 'Connect your GitHub repo to Vercel and deploy your live site.' }
-                ])
-              ],
-              [
-                phase1Id,
-                'Interactive Task Manager',
-                'Create a robust task management application with local storage and advanced filtering.',
-                'Intermediate',
-                JSON.stringify(['JavaScript ES6', 'LocalStorage', 'Event Delegation', 'CSS Variables']),
-                JSON.stringify([
-                  { title: 'UI Design', desc: 'Build a clean interface for adding and listing tasks.' },
-                  { title: 'CRUD Logic', desc: 'Implement create, read, update, and delete functionality for tasks.' },
-                  { title: 'Persistence', desc: 'Save task state to the browser’s local storage.' },
-                  { title: 'Filters & Sorting', desc: 'Add ability to filter by status and sort by priority.' }
-                ])
-              ]
-            ];
-            for (const project of initialProjects) {
+        // Seed initial projects for all phases if they are missing
+        const [allPhases]: any = await connection.execute('SELECT id, order_index FROM phases ORDER BY order_index');
+        
+        const projectsByPhase: Record<number, any[][]> = {
+          1: [
+            ['Personal Portfolio Website', 'Build a stunning, responsive personal portfolio website.', 'Beginner', ['HTML5', 'CSS3', 'Vercel'], [{title:'Setup',desc:'Init repo'},{title:'UI',desc:'CSS Grid'},{title:'Deploy',desc:'Vercel'}]],
+            ['Interactive Task Manager', 'Create a robust task management application.', 'Intermediate', ['JavaScript', 'LocalStorage'], [{title:'UI',desc:'Build interface'},{title:'Logic',desc:'CRUD functionality'},{title:'Storage',desc:'Save state'}]]
+          ],
+          2: [
+            ['React Dashboard', 'Build a modern analytics dashboard with React.', 'Intermediate', ['React', 'Tailwind', 'Recharts'], [{title:'Setup',desc:'Vite + React'},{title:'Comps',desc:'Sidebar + Charts'},{title:'Data',desc:'Mock stats'}]]
+          ],
+          3: [
+            ['Social Media API', 'Build a backend for a social platform.', 'Advanced', ['Node.js', 'Express', 'JWT'], [{title:'Auth',desc:'JWT Login'},{title:'Posts',desc:'CRUD operations'},{title:'Likes',desc:'Relation logic'}]]
+          ],
+          4: [
+            ['E-commerce Database', 'Schema design for complex inventory.', 'Advanced', ['MySQL', 'Indexing', 'Transactions'], [{title:'Schema',desc:'Tables design'},{title:'Queries',desc:'Complex joins'},{title:'Optimization',desc:'Index tune'}]]
+          ],
+          5: [
+            ['AI Content Generator', 'Integrate Gemini for automatic blog posts.', 'Advanced', ['Gemini API', 'Node.js'], [{title:'Setup',desc:'API Key config'},{title:'Prompt',desc:'Engineering'},{title:'UI',desc:'Generation flow'}]]
+          ],
+          6: [
+            ['Real-time Chat App', 'Socket-based communication system.', 'Expert', ['WebSockets', 'Redis'], [{title:'Socket',desc:'Connection logic'},{title:'Rooms',desc:'Channel mapping'},{title:'History',desc:'DB persistence'}]]
+          ],
+          7: [
+            ['Capstone Product', 'Your final graduation project.', 'Expert', ['Fullstack', 'AWS/Vercel'], [{title:'Pitch',desc:'Define product'},{title:'Build',desc:'MVP features'},{title:'Launch',desc:'Live demo'}]]
+          ]
+        };
+
+        for (const phase of allPhases) {
+          const [existingCount]: any = await connection.execute('SELECT COUNT(*) as count FROM phase_projects WHERE phase_id = ?', [phase.id]);
+          if (existingCount[0].count === 0) {
+            const phaseProjects = projectsByPhase[phase.order_index] || [];
+            for (const pDetails of phaseProjects) {
               await connection.execute(
                 'INSERT INTO phase_projects (phase_id, title, description, difficulty, requirements, steps) VALUES (?, ?, ?, ?, ?, ?)',
-                project
+                [phase.id, pDetails[0], pDetails[1], pDetails[2], JSON.stringify(pDetails[3]), JSON.stringify(pDetails[4])]
               );
             }
           }
+        }
+
+        // Seed Test User
+        const [testUser]: any = await connection.execute('SELECT id FROM users WHERE email = ?', ['testbuilder@vibelab.io']);
+        if (testUser.length === 0) {
+          const bcrypt = await import('bcryptjs');
+          const hashedPassword = await bcrypt.default.hash('Password123', 10);
+          await connection.execute(
+            'INSERT INTO users (name, email, password, role, is_verified) VALUES (?, ?, ?, ?, ?)',
+            ['Test Builder', 'testbuilder@vibelab.io', hashedPassword, 'student', 1]
+          );
+          console.log('DB Debug: Test User created.');
         }
 
         // Ensure missing columns exist for existing tables
