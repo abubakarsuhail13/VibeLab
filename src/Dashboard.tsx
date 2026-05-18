@@ -21,7 +21,8 @@ import {
   Trophy,
   Github,
   Link as LinkIcon,
-  FileText
+  FileText,
+  CheckCircle2
 } from "lucide-react";
 import PhaseView from "./PhaseView";
 
@@ -259,13 +260,27 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
           )}
         </nav>
 
-        <button 
-          onClick={onLogout}
-          className="mt-auto flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-all"
-        >
-          <LogOut className="w-5 h-5" />
-          Log Out
-        </button>
+        <div className="mt-8 pt-6 border-t border-slate-100 space-y-4">
+           <div className="p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Public Verification</p>
+              <p className="text-[11px] text-slate-500 mb-4 font-medium leading-relaxed">Share your verified builder profile with recruiters.</p>
+              <button 
+                onClick={() => window.open(`/verify/${user.id}`, '_blank')}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-[11px] font-bold hover:bg-slate-50 transition-all shadow-sm"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                Public Profile
+              </button>
+           </div>
+           
+           <button 
+            onClick={onLogout}
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+            Log Out
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}

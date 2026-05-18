@@ -869,6 +869,49 @@ app.get('/api/badges/user', authenticateToken, async (req: any, res) => {
   }
 });
 
+app.get('/api/user/:userId/profile', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    const [rows]: any = await p.execute('SELECT id, name, avatar_url, role, created_at FROM users WHERE id = ?', [userId]);
+    if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+app.get('/api/user/:userId/submissions', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    const [rows]: any = await p.execute(
+      'SELECT s.*, p.title as project_title FROM project_submissions s JOIN phase_projects p ON s.project_id = p.id WHERE s.user_id = ? ORDER BY s.created_at DESC',
+      [userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch submissions' });
+  }
+});
+
+app.get('/api/user/:userId/badges', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    const [rows]: any = await p.execute(
+      'SELECT b.*, p.name as phase_name FROM badges b JOIN phases p ON b.phase_id = p.id WHERE b.user_id = ? ORDER BY b.created_at DESC',
+      [userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch badges' });
+  }
+});
+
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {

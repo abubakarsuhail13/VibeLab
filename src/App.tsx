@@ -35,6 +35,7 @@ import Dashboard from "./Dashboard";
 import VerifyEmail from "./VerifyEmail";
 import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
+import PublicProfile from "./PublicProfile";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [password, setPassword] = useState("");
@@ -1356,6 +1357,7 @@ export default function App() {
     const path = window.location.pathname;
     if (path === '/verify-email') setCurrentPage('verify-email');
     if (path === '/reset-password') setCurrentPage('reset-password');
+    if (path.startsWith('/verify/')) setCurrentPage('verify-profile');
   }, []);
 
   return (
@@ -1399,11 +1401,13 @@ export default function App() {
           <ForgotPassword onNavigate={setCurrentPage} />
         ) : currentPage === 'reset-password' ? (
           <ResetPassword onNavigate={setCurrentPage} />
+        ) : currentPage === 'verify-profile' ? (
+          <PublicProfile userId={window.location.pathname.split('/verify/')[1]} />
         ) : (
           <ContactPage onNavigate={setCurrentPage} />
         )}
       </main>
-      {currentPage !== 'dashboard' && <Footer onNavigate={setCurrentPage} />}
+      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && <Footer onNavigate={setCurrentPage} />}
     </div>
   );
 }
