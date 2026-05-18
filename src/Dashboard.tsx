@@ -18,7 +18,10 @@ import {
   AlertTriangle,
   Lock,
   LayoutDashboard,
-  Trophy
+  Trophy,
+  Github,
+  Link as LinkIcon,
+  FileText
 } from "lucide-react";
 import PhaseView from "./PhaseView";
 
@@ -38,11 +41,13 @@ interface Phase {
 
 export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardProps) {
   const [uploading, setUploading] = useState(false);
-  const [activeView, setActiveView] = useState<'overview' | 'phase'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions'>('overview');
   const [selectedPhaseId, setSelectedPhaseId] = useState<number | null>(null);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loadingPhases, setLoadingPhases] = useState(true);
   const [progressData, setProgressData] = useState<{ phaseProgress: any[], projectProgress: any[] } | null>(null);
+  const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -53,13 +58,15 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
     setLoadingPhases(true);
     try {
       const token = localStorage.getItem('vibelab_token');
-      const [phasesRes, progressRes] = await Promise.all([
+      const [phasesRes, progressRes, subsRes] = await Promise.all([
         fetch('/api/phases', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/progress', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/progress', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/submissions/user', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       
       if (phasesRes.ok) setPhases(await phasesRes.json());
       if (progressRes.ok) setProgressData(await progressRes.json());
+      if (subsRes.ok) setUserSubmissions(await subsRes.json());
     } catch (err) {
       console.error("Failed to fetch dashboard data", err);
     } finally {
@@ -195,6 +202,16 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
             Overview
           </button>
 
+          <button 
+            onClick={() => setActiveView('submissions')}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+              activeView === 'submissions' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <Trophy className="w-5 h-5" />
+            My Submissions
+          </button>
+
           <div className="pt-6 pb-2 px-4">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Learning Path</p>
           </div>
@@ -295,9 +312,17 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                         className="pl-11 pr-6 py-3 rounded-xl bg-white border border-slate-200 outline-none focus:border-slate-900 transition-all font-medium text-sm w-44 lg:w-64"
                       />
                     </div>
-                    <button className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors">
-                      <Bell className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors">
+                        <Bell className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={fetchDashboardData}
+                        className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-colors"
+                      >
+                        <Clock className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -402,6 +427,81 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                       </div>
                     </div>
                   </div>
+                </div>
+              </motion.div>
+            ) : activeView === 'submissions' ? (
+              <motion.div
+                key="submissions"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <div className="flex items-center justify-between mb-12">
+                  <div>
+                    <h1 className="text-4xl font-display font-bold text-slate-900 mb-2">My Submissions</h1>
+                    <p className="text-slate-500 font-medium whitespace-nowrap">Your project history and verified builds.</p>
+                  </div>
+                  <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-amber-500" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  {userSubmissions.length > 0 ? userSubmissions.map((sub, i) => (
+                    <motion.div 
+                      key={sub.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm transition-all hover:shadow-md"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-bold text-slate-900">{sub.project_title}</h3>
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">Verified</span>
+                          </div>
+                          <p className="text-slate-500 text-sm font-medium line-clamp-1">{sub.description}</p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Submitted on {new Date(sub.created_at).toLocaleDateString()}</p>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <a 
+                            href={sub.github_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all text-sm font-bold"
+                          >
+                            <Github className="w-4 h-4" />
+                            GitHub
+                          </a>
+                          {sub.live_url && (
+                             <a 
+                              href={sub.live_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all text-sm font-bold shadow-lg shadow-slate-900/10"
+                            >
+                              <LinkIcon className="w-4 h-4" />
+                              Live Demo
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )) : (
+                    <div className="py-20 text-center rounded-[3rem] bg-slate-50 border border-dashed border-slate-200">
+                      <FileText className="w-16 h-16 text-slate-300 mx-auto mb-6" />
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">No submissions yet</h3>
+                      <p className="text-slate-500 max-w-sm mx-auto">Complete all steps in a project to unlock the submission form and start building your portfolio.</p>
+                      <button 
+                        onClick={() => setActiveView('overview')}
+                        className="mt-8 px-8 py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all"
+                      >
+                        Browse Projects
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ) : (

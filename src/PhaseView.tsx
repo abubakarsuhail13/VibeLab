@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   CheckCircle2, 
@@ -37,6 +37,12 @@ interface Project {
   is_completed: boolean;
 }
 
+interface Submission {
+  github_url: string;
+  live_url: string;
+  description: string;
+}
+
 interface PhaseViewProps {
   phaseId: number;
   onBack: () => void;
@@ -48,27 +54,106 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'learn' | 'build' | 'progress'>('build');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [submission, setSubmission] = useState<Submission>({ github_url: '', live_url: '', description: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const fetchPhaseData = async () => {
     try {
       const token = localStorage.getItem('vibelab_token');
-      const [phaseRes, projectsRes] = await Promise.all([
+      const [phaseRes, projectsRes, submissionsRes] = await Promise.all([
         fetch(`/api/phase/${phaseId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch(`/api/phase/${phaseId}/projects`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch('/api/submissions/user', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
 
       if (phaseRes.ok && projectsRes.ok) {
         setPhase(await phaseRes.json());
-        setProjects(await projectsRes.json());
+        const projectsData = await projectsRes.json();
+        setProjects(projectsData);
+        
+        if (submissionsRes.ok) {
+          const userSubmissions = await submissionsRes.json();
+          // We can populate submission state if the selected project is already submitted
+          // But since we just fetched all projects, we'll wait for selection to populate form
+          return userSubmissions; // pass it back if needed
+        }
       }
     } catch (err) {
       console.error("Failed to fetch phase data", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedProject) {
+      fetchUserSubmission(selectedProject.id);
+    }
+  }, [selectedProject?.id]);
+
+  const fetchUserSubmission = async (projectId: number) => {
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const res = await fetch('/api/submissions/user', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const subs = await res.json();
+        const existing = subs.find((s: any) => s.project_id === projectId);
+        if (existing) {
+          setSubmission({
+            github_url: existing.github_url || '',
+            live_url: existing.live_url || '',
+            description: existing.description || ''
+          });
+        } else {
+          setSubmission({ github_url: '', live_url: '', description: '' });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch submission", err);
+    }
+  };
+
+  const handleProjectSubmission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProject) return;
+    setIsSubmitting(true);
+    setSubmissionStatus('idle');
+
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch('/api/submission', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          projectId: selectedProject.id,
+          phaseId: phaseId,
+          githubUrl: submission.github_url,
+          liveUrl: submission.live_url,
+          description: submission.description
+        })
+      });
+
+      if (response.ok) {
+        setSubmissionStatus('success');
+      } else {
+        setSubmissionStatus('error');
+      }
+    } catch (err) {
+      setSubmissionStatus('error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -343,6 +428,83 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
                        Ask AI Tutor
                     </button>
                   </div>
+
+                  {selectedProject.is_completed && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="glass p-8 rounded-[2.5rem] border-emerald-100 bg-white shadow-xl shadow-emerald-500/5 ring-1 ring-emerald-500/20"
+                    >
+                      <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <Trophy className="text-amber-500 w-5 h-5" />
+                        Project Submission
+                      </h3>
+                      
+                      <form onSubmit={handleProjectSubmission} className="space-y-4">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">GitHub URL</label>
+                          <input 
+                            type="url"
+                            placeholder="https://github.com/vibelab/project"
+                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                            value={submission.github_url}
+                            onChange={(e) => setSubmission(s => ({ ...s, github_url: e.target.value }))}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Live URL (Optional)</label>
+                          <input 
+                            type="url"
+                            placeholder="https://project.vercel.app"
+                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                            value={submission.live_url}
+                            onChange={(e) => setSubmission(s => ({ ...s, live_url: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Brief Description</label>
+                          <textarea 
+                            placeholder="What challenges did you face? How did you solve them?"
+                            rows={3}
+                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all resize-none"
+                            value={submission.description}
+                            onChange={(e) => setSubmission(s => ({ ...s, description: e.target.value }))}
+                          />
+                        </div>
+
+                        <button 
+                          disabled={isSubmitting}
+                          className={`w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                            submissionStatus === 'success' 
+                              ? 'bg-emerald-500 text-white' 
+                              : 'bg-slate-900 text-white hover:bg-slate-800'
+                          }`}
+                        >
+                          {isSubmitting ? (
+                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                          ) : submissionStatus === 'success' ? (
+                            <>
+                              <CheckCircle2 className="w-5 h-5" />
+                              Update Submission
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-5 h-5" />
+                              Submit Project
+                            </>
+                          )}
+                        </button>
+
+                        {submissionStatus === 'error' && (
+                          <p className="text-rose-500 text-[10px] font-bold text-center">Failed to save submission. Try again.</p>
+                        )}
+                        {submissionStatus === 'success' && (
+                          <p className="text-emerald-500 text-[10px] font-bold text-center">Submission successful! You can update it anytime.</p>
+                        )}
+                      </form>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             ) : (

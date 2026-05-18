@@ -230,6 +230,23 @@ const getPool = async () => {
           )
         `);
 
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS project_submissions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            project_id INT NOT NULL,
+            phase_id INT NOT NULL,
+            github_url VARCHAR(255),
+            live_url VARCHAR(255),
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY user_project_submission (user_id, project_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (project_id) REFERENCES phase_projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (phase_id) REFERENCES phases(id) ON DELETE CASCADE
+          )
+        `);
+
         // Seed initial phases if empty
         const [phaseCount]: any = await connection.execute('SELECT COUNT(*) as count FROM phases');
         if (phaseCount[0].count === 0) {
@@ -730,6 +747,45 @@ app.post('/api/progress/update', authenticateToken, async (req: any, res) => {
   } catch (error: any) {
     console.error('Progress Update Error:', error);
     res.status(500).json({ error: 'Failed to update progress' });
+  }
+});
+
+app.post('/api/submission', authenticateToken, async (req: any, res) => {
+  const { projectId, phaseId, githubUrl, liveUrl, description } = req.body;
+  if (!projectId || !phaseId) return res.status(400).json({ error: 'Project ID and Phase ID are required' });
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    await p.execute(
+      `INSERT INTO project_submissions (user_id, project_id, phase_id, github_url, live_url, description) 
+       VALUES (?, ?, ?, ?, ?, ?) 
+       ON DUPLICATE KEY UPDATE github_url = VALUES(github_url), live_url = VALUES(live_url), description = VALUES(description)`,
+      [req.user.userId, projectId, phaseId, githubUrl, liveUrl, description]
+    );
+
+    res.json({ success: true, message: 'Submission saved successfully' });
+  } catch (error: any) {
+    console.error('Submission Error:', error);
+    res.status(500).json({ error: 'Failed to save submission' });
+  }
+});
+
+app.get('/api/submissions/user', authenticateToken, async (req: any, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [rows]: any = await p.execute(
+      'SELECT s.*, p.title as project_title FROM project_submissions s JOIN phase_projects p ON s.project_id = p.id WHERE s.user_id = ? ORDER BY s.created_at DESC',
+      [req.user.userId]
+    );
+
+    res.json(rows);
+  } catch (error: any) {
+    console.error('Fetch Submissions Error:', error);
+    res.status(500).json({ error: 'Failed to fetch submissions' });
   }
 });
 
