@@ -247,6 +247,18 @@ const getPool = async () => {
           )
         `);
 
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS badges (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            phase_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY user_phase_badge (user_id, phase_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (phase_id) REFERENCES phases(id) ON DELETE CASCADE
+          )
+        `);
+
         // Seed initial phases if empty
         const [phaseCount]: any = await connection.execute('SELECT COUNT(*) as count FROM phases');
         if (phaseCount[0].count === 0) {
@@ -786,6 +798,74 @@ app.get('/api/submissions/user', authenticateToken, async (req: any, res) => {
   } catch (error: any) {
     console.error('Fetch Submissions Error:', error);
     res.status(500).json({ error: 'Failed to fetch submissions' });
+  }
+});
+
+app.post('/api/phase/:id/certify', authenticateToken, async (req: any, res) => {
+  const { id } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // 1. Check if all projects in this phase are completed
+    const [allProjects]: any = await p.execute('SELECT id FROM phase_projects WHERE phase_id = ?', [id]);
+    if (allProjects.length === 0) return res.status(400).json({ error: 'No projects in this phase' });
+
+    const projectIds = allProjects.map((ap: any) => ap.id);
+    const [completed]: any = await p.execute(
+      'SELECT COUNT(*) as count FROM user_project_progress WHERE user_id = ? AND project_id IN (?) AND is_completed = 1',
+      [req.user.userId, projectIds]
+    );
+
+    if (completed[0].count < allProjects.length) {
+      return res.status(400).json({ error: 'Complete all projects to earn certification.' });
+    }
+
+    // 2. Create Badge
+    await p.execute(
+      'INSERT IGNORE INTO badges (user_id, phase_id) VALUES (?, ?)',
+      [req.user.userId, id]
+    );
+
+    // 3. Update Phase Progress to completed
+    await p.execute(
+      'INSERT INTO user_phase_progress (user_id, phase_id, status, progress_percentage) VALUES (?, ?, "completed", 100) ON DUPLICATE KEY UPDATE status = "completed", progress_percentage = 100',
+      [req.user.userId, id]
+    );
+
+    // 4. Unlock Next Phase
+    const [currentPhase]: any = await p.execute('SELECT order_index FROM phases WHERE id = ?', [id]);
+    if (currentPhase.length > 0) {
+      const nextOrder = currentPhase[0].order_index + 1;
+      const [nextPhase]: any = await p.execute('SELECT id FROM phases WHERE order_index = ?', [nextOrder]);
+      if (nextPhase.length > 0) {
+        await p.execute(
+          'INSERT IGNORE INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, "active")',
+          [req.user.userId, nextPhase[0].id]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Phase certified! Badge earned.' });
+  } catch (error: any) {
+    console.error('Certification Error:', error);
+    res.status(500).json({ error: 'Failed to certify phase' });
+  }
+});
+
+app.get('/api/badges/user', authenticateToken, async (req: any, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [rows]: any = await p.execute(
+      'SELECT b.*, p.name as phase_name FROM badges b JOIN phases p ON b.phase_id = p.id WHERE b.user_id = ? ORDER BY b.created_at DESC',
+      [req.user.userId]
+    );
+
+    res.json(rows);
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch badges' });
   }
 });
 

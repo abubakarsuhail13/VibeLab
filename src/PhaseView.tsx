@@ -57,11 +57,13 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
   const [submission, setSubmission] = useState<Submission>({ github_url: '', live_url: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isCertifying, setIsCertifying] = useState(false);
+  const [hasBadge, setHasBadge] = useState(false);
 
   const fetchPhaseData = async () => {
     try {
       const token = localStorage.getItem('vibelab_token');
-      const [phaseRes, projectsRes, submissionsRes] = await Promise.all([
+      const [phaseRes, projectsRes, submissionsRes, badgesRes] = await Promise.all([
         fetch(`/api/phase/${phaseId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
@@ -69,6 +71,9 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         fetch('/api/submissions/user', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch('/api/badges/user', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -78,17 +83,34 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
         const projectsData = await projectsRes.json();
         setProjects(projectsData);
         
-        if (submissionsRes.ok) {
-          const userSubmissions = await submissionsRes.json();
-          // We can populate submission state if the selected project is already submitted
-          // But since we just fetched all projects, we'll wait for selection to populate form
-          return userSubmissions; // pass it back if needed
+        if (badgesRes.ok) {
+          const badges = await badgesRes.json();
+          setHasBadge(badges.some((b: any) => b.phase_id === phaseId));
         }
       }
     } catch (err) {
       console.error("Failed to fetch phase data", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCertify = async () => {
+    setIsCertifying(true);
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch(`/api/phase/${phaseId}/certify`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setHasBadge(true);
+        fetchPhaseData(); // refresh state
+      }
+    } catch (err) {
+      console.error("Failed to certify", err);
+    } finally {
+      setIsCertifying(false);
     }
   };
 
@@ -233,14 +255,37 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-display font-bold text-slate-900">{phase.name}</h1>
-              {phase.status === 'completed' && <Trophy className="text-amber-500 w-6 h-6" />}
+              {hasBadge && (
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100 shadow-sm">
+                  <Trophy className="w-3 h-3" />
+                  Certified
+                </span>
+              )}
               {phase.status === 'locked' && <Lock className="text-slate-400 w-5 h-5" />}
             </div>
             <p className="text-slate-500 font-medium">{phase.description}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200">
+        <div className="flex items-center gap-4">
+          {phase.progress_percentage === 100 && !hasBadge && (
+             <motion.button 
+               whileHover={{ scale: 1.02 }}
+               whileTap={{ scale: 0.98 }}
+               onClick={handleCertify}
+               disabled={isCertifying}
+               className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-amber-500/20 flex items-center gap-2"
+             >
+               {isCertifying ? (
+                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+               ) : (
+                 <Sparkles className="w-4 h-4" />
+               )}
+               Claim Certificate
+             </motion.button>
+          )}
+
+          <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200">
           {[
             { id: 'learn', label: 'Learn', icon: <BookOpen className="w-4 h-4" /> },
             { id: 'build', label: 'Build', icon: <Code2 className="w-4 h-4" /> },
@@ -261,6 +306,7 @@ export default function PhaseView({ phaseId, onBack }: PhaseViewProps) {
           ))}
         </div>
       </div>
+    </div>
 
       <AnimatePresence mode="wait">
         {activeTab === 'learn' && (

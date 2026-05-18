@@ -41,12 +41,13 @@ interface Phase {
 
 export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardProps) {
   const [uploading, setUploading] = useState(false);
-  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions' | 'certificates'>('overview');
   const [selectedPhaseId, setSelectedPhaseId] = useState<number | null>(null);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loadingPhases, setLoadingPhases] = useState(true);
   const [progressData, setProgressData] = useState<{ phaseProgress: any[], projectProgress: any[] } | null>(null);
   const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
+  const [badges, setBadges] = useState<any[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,15 +59,17 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
     setLoadingPhases(true);
     try {
       const token = localStorage.getItem('vibelab_token');
-      const [phasesRes, progressRes, subsRes] = await Promise.all([
+      const [phasesRes, progressRes, subsRes, badgesRes] = await Promise.all([
         fetch('/api/phases', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/progress', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/submissions/user', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/submissions/user', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/badges/user', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       
       if (phasesRes.ok) setPhases(await phasesRes.json());
       if (progressRes.ok) setProgressData(await progressRes.json());
       if (subsRes.ok) setUserSubmissions(await subsRes.json());
+      if (badgesRes.ok) setBadges(await badgesRes.json());
     } catch (err) {
       console.error("Failed to fetch dashboard data", err);
     } finally {
@@ -91,8 +94,8 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
   const stats = [
     { label: "Active Projects", value: activeProjects.toString(), icon: <Rocket className="w-5 h-5 text-cyan-500" />, bg: "bg-cyan-50" },
     { label: "Projects Completed", value: completedProjects.toString(), icon: <Star className="w-5 h-5 text-amber-500" />, bg: "bg-amber-50" },
-    { label: "Total Progress", value: `${totalPhaseProgress}%`, icon: <Trophy className="w-5 h-5 text-indigo-500" />, bg: "bg-indigo-50" },
-    { label: "Learning Path", value: "7 Phases", icon: <LayoutDashboard className="w-5 h-5 text-emerald-500" />, bg: "bg-emerald-50" },
+    { label: "Certifications", value: badges.length.toString(), icon: <Trophy className="w-5 h-5 text-indigo-500" />, bg: "bg-indigo-50" },
+    { label: "Total Progress", value: `${totalPhaseProgress}%`, icon: <Zap className="w-5 h-5 text-emerald-500" />, bg: "bg-emerald-50" },
   ];
 
   const underwayProjects = progressData?.projectProgress.filter(p => !p.is_completed).map(p => {
@@ -208,8 +211,18 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
               activeView === 'submissions' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
-            <Trophy className="w-5 h-5" />
+            <Github className="w-5 h-5" />
             My Submissions
+          </button>
+
+          <button 
+            onClick={() => setActiveView('certificates')}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+              activeView === 'certificates' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <Trophy className="w-5 h-5" />
+            Certificates
           </button>
 
           <div className="pt-6 pb-2 px-4">
@@ -503,6 +516,67 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                     </div>
                   )}
                 </div>
+              </motion.div>
+            ) : activeView === 'certificates' ? (
+              <motion.div
+                key="certificates"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="max-w-5xl mx-auto"
+              >
+                <div className="flex items-center justify-between mb-12">
+                   <div>
+                    <h1 className="text-4xl font-display font-bold text-slate-900 mb-2">Certifications</h1>
+                    <p className="text-slate-500 font-medium">Verified credentials for completed learning phases.</p>
+                  </div>
+                  <div className="w-16 h-16 bg-amber-50 rounded-[2rem] flex items-center justify-center shadow-lg shadow-amber-500/10">
+                    <Trophy className="w-8 h-8 text-amber-500" />
+                  </div>
+                </div>
+
+                {badges.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {badges.map((badge, i) => (
+                      <motion.div 
+                        key={badge.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="group relative"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all text-center">
+                          <div className="w-24 h-24 bg-gradient-to-br from-amber-100 to-orange-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                            <Trophy className="w-10 h-10 text-amber-500" />
+                          </div>
+                          <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight uppercase tracking-widest">{badge.phase_name}</h3>
+                          <div className="flex items-center justify-center gap-2 mb-6">
+                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">Verified</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(badge.created_at).getFullYear()}</span>
+                          </div>
+                          <button className="w-full py-3 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 duration-300 shadow-xl shadow-slate-900/20">
+                            Download Proof
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-24 text-center rounded-[3rem] bg-slate-50 border-2 border-dashed border-slate-200">
+                    <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6">
+                       <Trophy className="w-10 h-10 text-slate-200" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Greatness awaits</h3>
+                    <p className="text-slate-500 max-w-sm mx-auto font-medium">Complete all projects in a phase to unlock your first verified certification badge.</p>
+                    <button 
+                      onClick={() => setActiveView('overview')}
+                      className="mt-8 px-8 py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
+                    >
+                      Start Learning
+                    </button>
+                  </div>
+                )}
               </motion.div>
             ) : (
               <motion.div
