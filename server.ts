@@ -465,6 +465,19 @@ app.post('/api/auth/register', async (req, res) => {
     );
 
     const userId = result.insertId;
+
+    // Activate the first phase for the new user automatically
+    try {
+      const [firstPhase]: any = await p.execute('SELECT id FROM phases ORDER BY order_index ASC LIMIT 1');
+      if (firstPhase.length > 0) {
+        await p.execute(
+          'INSERT IGNORE INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, "active")',
+          [userId, firstPhase[0].id]
+        );
+      }
+    } catch (onboardingErr) {
+      console.error('Onboarding Error:', onboardingErr);
+    }
     
     // Send Verification Email
     const baseUrl = process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app';
@@ -943,7 +956,7 @@ app.get('/api/user/:userId/profile', async (req, res) => {
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
-    const [rows]: any = await p.execute('SELECT id, name, avatar_url, role, created_at FROM users WHERE id = ?', [userId]);
+    const [rows]: any = await p.execute('SELECT id, name, avatar_url, role, country, bio, github_username, created_at FROM users WHERE id = ?', [userId]);
     if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
     res.json(rows[0]);
   } catch (error) {

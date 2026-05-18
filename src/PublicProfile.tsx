@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Trophy, Github, Link as LinkIcon, CheckCircle2, User, Calendar, ExternalLink } from 'lucide-react';
+import { Trophy, Github, Link as LinkIcon, CheckCircle2, User, Calendar, ExternalLink, Globe } from 'lucide-react';
 
 interface PublicProfileProps {
   userId: string;
@@ -23,7 +23,8 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
         ]);
 
         if (profileRes.ok) {
-          setProfile(await profileRes.json());
+          const profileData = await profileRes.json();
+          setProfile(profileData);
           setSubmissions(await subsRes.json());
           setBadges(await badgesRes.json());
         } else {
@@ -94,6 +95,16 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
                       <Calendar className="w-4 h-4" />
                       Joined {new Date(profile.created_at).toLocaleDateString()}
                     </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs">
+                      <Globe size={14} className="text-slate-400" />
+                      {profile.country || 'Worldwide'}
+                    </div>
+                    {profile.github_username && (
+                      <a href={`https://github.com/${profile.github_username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 text-white rounded-full text-xs hover:bg-slate-800 transition-colors">
+                        <Github size={14} />
+                        @{profile.github_username}
+                      </a>
+                    )}
                     <div className="flex items-center gap-1.5">
                       <Trophy className="w-4 h-4 text-amber-500" />
                       {badges.length} Certifications
@@ -109,6 +120,15 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
           
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-12">
+            {profile.bio && (
+              <section>
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 px-1">About Builder</h2>
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                   <p className="text-slate-600 leading-relaxed font-medium">{profile.bio}</p>
+                </div>
+              </section>
+            )}
+
             <section>
               <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3">
                 <Github size={24} className="text-slate-400" />
