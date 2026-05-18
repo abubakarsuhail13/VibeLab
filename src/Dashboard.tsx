@@ -25,6 +25,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import PhaseView from "./PhaseView";
+import Leaderboard from "./Leaderboard";
 
 interface DashboardProps {
   user: any;
@@ -42,7 +43,7 @@ interface Phase {
 
 export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardProps) {
   const [uploading, setUploading] = useState(false);
-  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions' | 'certificates'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions' | 'certificates' | 'leaderboard' | 'settings'>('overview');
   const [selectedPhaseId, setSelectedPhaseId] = useState<number | null>(null);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loadingPhases, setLoadingPhases] = useState(true);
@@ -224,6 +225,26 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
           >
             <Trophy className="w-5 h-5" />
             Certificates
+          </button>
+
+          <button 
+            onClick={() => setActiveView('leaderboard')}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+              activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            Leaderboard
+          </button>
+
+          <button 
+            onClick={() => setActiveView('settings')}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+              activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+            Settings
           </button>
 
           <div className="pt-6 pb-2 px-4">
@@ -457,6 +478,15 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                   </div>
                 </div>
               </motion.div>
+            ) : activeView === 'leaderboard' ? (
+              <motion.div
+                key="leaderboard"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Leaderboard />
+              </motion.div>
             ) : activeView === 'submissions' ? (
               <motion.div
                 key="submissions"
@@ -530,6 +560,115 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                       </button>
                     </div>
                   )}
+                </div>
+              </motion.div>
+            ) : activeView === 'settings' ? (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <div className="flex items-center justify-between mb-12">
+                   <div>
+                    <h1 className="text-4xl font-display font-bold text-slate-900 mb-2">Profile Settings</h1>
+                    <p className="text-slate-500 font-medium">Customize your public presence and preferences.</p>
+                  </div>
+                  <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-900">
+                    <Settings className="w-6 h-6" />
+                  </div>
+                </div>
+
+                <div className="bg-white p-8 md:p-12 rounded-[3rem] border border-slate-200 shadow-sm max-w-2xl">
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const updates = {
+                      name: formData.get('name'),
+                      country: formData.get('country'),
+                      bio: formData.get('bio'),
+                      github_username: formData.get('github_username')
+                    };
+                    
+                    try {
+                      const token = localStorage.getItem('vibelab_token');
+                      const res = await fetch('/api/user/profile', {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(updates)
+                      });
+                      if (res.ok) {
+                        const updatedUser = { ...user, ...updates };
+                        localStorage.setItem('vibelab_user', JSON.stringify(updatedUser));
+                        onUpdateUser(updatedUser);
+                        alert('Profile updated successfully!');
+                      } else {
+                        const data = await res.json();
+                        alert(data.error || 'Update failed');
+                      }
+                    } catch (err) {
+                      alert('Error updating profile');
+                    }
+                  }} className="space-y-8">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Display Name</label>
+                       <input 
+                        name="name"
+                        defaultValue={user?.name}
+                        placeholder="Your full name"
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-slate-900 transition-all font-medium"
+                       />
+                    </div>
+
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Region / Country</label>
+                       <select 
+                        name="country"
+                        defaultValue={user?.country || 'Worldwide'}
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-slate-900 transition-all font-medium appearance-none"
+                       >
+                         {['Worldwide', 'United States', 'United Kingdom', 'India', 'Germany', 'Canada', 'Nigeria', 'Singapore', 'Australia'].map(c => (
+                           <option key={c} value={c}>{c}</option>
+                         ))}
+                       </select>
+                    </div>
+
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Short Bio</label>
+                       <textarea 
+                        name="bio"
+                        defaultValue={user?.bio}
+                        placeholder="Tell the community about your build journey..."
+                        rows={4}
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-slate-900 transition-all font-medium resize-none"
+                       />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">GitHub Username</label>
+                          <div className="relative">
+                             <Github className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                             <input 
+                              name="github_username"
+                              defaultValue={user?.github_username}
+                              placeholder="username"
+                              className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-slate-900 transition-all font-medium"
+                             />
+                          </div>
+                       </div>
+                    </div>
+
+                    <button 
+                      type="submit"
+                      className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98]"
+                    >
+                      Save Changes
+                    </button>
+                  </form>
                 </div>
               </motion.div>
             ) : activeView === 'certificates' ? (

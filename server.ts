@@ -338,6 +338,15 @@ const getPool = async () => {
         if (!columnNames.includes('avatar_url')) {
           await connection.execute('ALTER TABLE users ADD COLUMN avatar_url LONGTEXT');
         }
+        if (!columnNames.includes('country')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN country VARCHAR(100) DEFAULT "Worldwide"');
+        }
+        if (!columnNames.includes('bio')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN bio TEXT');
+        }
+        if (!columnNames.includes('github_username')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN github_username VARCHAR(100)');
+        }
 
         console.log('DB Debug: Tables verified/created.');
       } catch (tableErr: any) {
@@ -598,6 +607,23 @@ app.post('/api/user/upload-avatar', authenticateToken, upload.single('avatar'), 
     res.json({ success: true, avatarUrl });
   } catch (error) {
     res.status(500).json({ error: 'Avatar upload failed' });
+  }
+});
+
+app.patch('/api/user/profile', authenticateToken, async (req: any, res) => {
+  const { name, country, bio, github_username } = req.body;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    await p.execute(
+      'UPDATE users SET name = ?, country = ?, bio = ?, github_username = ? WHERE id = ?',
+      [name, country, bio, github_username, req.user.userId]
+    );
+
+    res.json({ success: true, message: 'Profile updated' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 
@@ -866,6 +892,49 @@ app.get('/api/badges/user', authenticateToken, async (req: any, res) => {
     res.json(rows);
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to fetch badges' });
+  }
+});
+
+app.get('/api/leaderboard', async (req, res) => {
+  const { period, country } = req.query;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    let query = `
+      SELECT 
+        u.id, 
+        u.name, 
+        u.avatar_url, 
+        u.country,
+        COUNT(DISTINCT b.id) as points_badges,
+        COUNT(DISTINCT s.id) as points_submissions,
+        (SELECT COUNT(*) FROM user_phase_progress WHERE user_id = u.id AND status = 'completed') as points_phases,
+        (COUNT(DISTINCT b.id) * 100 + COUNT(DISTINCT s.id) * 20 + (SELECT COUNT(*) FROM user_phase_progress WHERE user_id = u.id AND status = 'completed') * 50) as total_score
+      FROM users u
+      LEFT JOIN badges b ON u.id = b.user_id ${period === 'monthly' ? 'AND b.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)' : ''}
+      LEFT JOIN project_submissions s ON u.id = s.user_id ${period === 'monthly' ? 'AND s.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)' : ''}
+      WHERE 1=1
+    `;
+
+    const params: any[] = [];
+    if (country && country !== 'Worldwide') {
+      query += ' AND u.country = ?';
+      params.push(country);
+    }
+
+    query += `
+      GROUP BY u.id
+      HAVING total_score > 0
+      ORDER BY total_score DESC
+      LIMIT 50
+    `;
+
+    const [rows] = await p.execute(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Leaderboard Error:', error);
+    res.status(500).json({ error: 'Failed to fetch leaderboard' });
   }
 });
 
