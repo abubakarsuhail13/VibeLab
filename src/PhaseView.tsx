@@ -161,6 +161,23 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const handleProjectSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProject) return;
+
+    if (!submission.github_url) {
+      alert("GitHub URL is required");
+      return;
+    }
+
+    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+    if (!urlPattern.test(submission.github_url)) {
+      alert("Please enter a valid GitHub URL");
+      return;
+    }
+    
+    if (submission.live_url && !urlPattern.test(submission.live_url)) {
+      alert("Please enter a valid Live Demo URL");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmissionStatus('idle');
 
@@ -433,7 +450,16 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                         </div>
                       </div>
                       <h2 className="text-3xl font-display font-bold text-slate-900 mb-4">{selectedProject.title}</h2>
-                      <p className="text-slate-500 font-medium mb-10 leading-relaxed">{selectedProject.description}</p>
+                      <p className="text-slate-500 font-medium mb-8 leading-relaxed">{selectedProject.description}</p>
+
+                      <div className="mb-10 p-6 rounded-3xl bg-slate-50 border border-slate-100 flex flex-wrap gap-3">
+                         <div className="w-full text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Stack Requirements</div>
+                         {selectedProject.requirements.map((req, i) => (
+                           <span key={i} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 shadow-sm">
+                             {req}
+                           </span>
+                         ))}
+                      </div>
 
                       <div className="space-y-4">
                         <div className="flex items-center justify-between mb-4">
