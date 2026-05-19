@@ -57,7 +57,7 @@ router.get('/phase/:id/projects', authenticateToken, async (req: any, res) => {
 
     const [projects]: any = await p.execute('SELECT * FROM phase_projects WHERE phase_id = ?', [id]);
     const [progress]: any = await p.execute(
-      'SELECT project_id, completed_steps, is_completed FROM user_project_progress WHERE user_id = ?',
+      'SELECT project_id, completed_steps, is_completed, last_active_step FROM user_project_progress WHERE user_id = ?',
       [req.user.userId]
     );
 
@@ -66,6 +66,7 @@ router.get('/phase/:id/projects', authenticateToken, async (req: any, res) => {
       return {
         ...project,
         completed_steps: userProgress ? userProgress.completed_steps : [],
+        last_active_step: userProgress ? userProgress.last_active_step : 0,
         is_completed: userProgress ? !!userProgress.is_completed : false
       };
     });
@@ -77,7 +78,7 @@ router.get('/phase/:id/projects', authenticateToken, async (req: any, res) => {
 });
 
 router.post('/progress/update', authenticateToken, async (req: any, res) => {
-  const { projectId, completedSteps, isCompleted } = req.body;
+  const { projectId, completedSteps, isCompleted, lastActiveStep } = req.body;
   if (!projectId) return res.status(400).json({ error: 'Project ID required' });
 
   try {
@@ -87,10 +88,10 @@ router.post('/progress/update', authenticateToken, async (req: any, res) => {
     console.log(`[DEBUG] Updating progress for User ${req.user.userId}, Project ${projectId}`);
 
     await p.execute(
-      `INSERT INTO user_project_progress (user_id, project_id, completed_steps, is_completed) 
-       VALUES (?, ?, ?, ?) 
-       ON DUPLICATE KEY UPDATE completed_steps = VALUES(completed_steps), is_completed = VALUES(is_completed)`,
-      [req.user.userId, projectId, JSON.stringify(completedSteps || []), isCompleted ? 1 : 0]
+      `INSERT INTO user_project_progress (user_id, project_id, completed_steps, is_completed, last_active_step) 
+       VALUES (?, ?, ?, ?, ?) 
+       ON DUPLICATE KEY UPDATE completed_steps = VALUES(completed_steps), is_completed = VALUES(is_completed), last_active_step = VALUES(last_active_step)`,
+      [req.user.userId, projectId, JSON.stringify(completedSteps || []), isCompleted ? 1 : 0, lastActiveStep || 0]
     );
 
     const [project]: any = await p.execute('SELECT phase_id FROM phase_projects WHERE id = ?', [projectId]);

@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import Editor from 'react-simple-code-editor';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-markup';
+import 'prismjs/components/prism-css';
 import { 
   CheckCircle2, 
   Circle, 
@@ -14,7 +21,16 @@ import {
   Sparkles,
   Zap,
   Info,
-  Star
+  Star,
+  MessageSquare,
+  Send,
+  X,
+  ExternalLink,
+  ChevronLeft,
+  Download,
+  Copy,
+  Check,
+  Lightbulb
 } from "lucide-react";
 
 interface Phase {
@@ -35,6 +51,14 @@ interface Project {
   steps: { title: string; desc: string }[];
   completed_steps: number[];
   is_completed: boolean;
+  tutorial_data?: {
+    step: number;
+    content: string;
+    starterCode?: string;
+    exampleCode?: string;
+    instructions: string;
+  }[];
+  last_active_step?: number;
 }
 
 interface Submission {
@@ -62,6 +86,89 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [hasBadge, setHasBadge] = useState(false);
   const [selectedResource, setSelectedResource] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [submitProjectId, setSubmitProjectId] = useState<number | null>(null);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [code, setCode] = useState('');
+  const [isTutorOpen, setIsTutorOpen] = useState(false);
+  const [tutorMessages, setTutorMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
+  const [tutorLoading, setTutorLoading] = useState(false);
+  const [tutorInput, setTutorInput] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (selectedProject) {
+      setCurrentStepIndex(selectedProject.last_active_step || 0);
+      const stepData = selectedProject.tutorial_data?.find(s => s.step === (selectedProject.last_active_step || 0));
+      setCode(stepData?.starterCode || '');
+    }
+  }, [selectedProject?.id]);
+
+  const handleStepChange = async (index: number) => {
+    if (!selectedProject) return;
+    setCurrentStepIndex(index);
+    const stepData = selectedProject.tutorial_data?.find(s => s.step === index);
+    setCode(stepData?.starterCode || '');
+    
+    // Save last active step
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      await fetch('/api/progress/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          projectId: selectedProject.id,
+          completedSteps: selectedProject.completed_steps,
+          isCompleted: selectedProject.is_completed,
+          lastActiveStep: index
+        })
+      });
+    } catch (err) {
+      console.error("Failed to save active step", err);
+    }
+  };
+
+  const handleAskTutor = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!tutorInput.trim() || !selectedProject) return;
+
+    const userMsg = { role: 'user' as const, content: tutorInput };
+    setTutorMessages(prev => [...prev, userMsg]);
+    setTutorInput('');
+    setTutorLoading(true);
+
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const res = await fetch('/api/tutor/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          question: userMsg.content,
+          context: {
+            project: selectedProject.title,
+            step: selectedProject.steps[currentStepIndex]?.title,
+            code: code
+          }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setTutorMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
+      } else {
+        setTutorMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting to my central brain. Please check your internet or try again later!" }]);
+      }
+    } catch (err) {
+      setTutorMessages(prev => [...prev, { role: 'assistant', content: "Error connecting to AI Tutor." }]);
+    } finally {
+      setTutorLoading(false);
+    }
+  };
 
   const fetchPhaseData = async () => {
     try {
@@ -88,7 +195,8 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           ...p,
           requirements: typeof p.requirements === 'string' ? JSON.parse(p.requirements) : p.requirements,
           steps: typeof p.steps === 'string' ? JSON.parse(p.steps) : p.steps,
-          completed_steps: typeof p.completed_steps === 'string' ? JSON.parse(p.completed_steps) : p.completed_steps
+          completed_steps: typeof p.completed_steps === 'string' ? JSON.parse(p.completed_steps) : p.completed_steps,
+          tutorial_data: typeof p.tutorial_data === 'string' ? JSON.parse(p.tutorial_data) : p.tutorial_data
         }));
         setProjects(parsedProjects);
         
@@ -240,7 +348,8 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
         body: JSON.stringify({
           projectId,
           completedSteps: newCompletedSteps,
-          isCompleted
+          isCompleted,
+          lastActiveStep: currentStepIndex
         })
       });
 
@@ -252,6 +361,10 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             : p
         ));
         
+        if (selectedProject?.id === projectId) {
+          setSelectedProject(prev => prev ? { ...prev, completed_steps: newCompletedSteps, is_completed: isCompleted } : null);
+        }
+
         // Refresh phase progress
         const phaseRes = await fetch(`/api/phase/${phaseId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -419,203 +532,395 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
+            className="h-full"
           >
             {selectedProject ? (
-              <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
+              <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col overflow-hidden sm:p-4">
+                {/* Header Bar */}
+                <div className="bg-slate-900/50 backdrop-blur-md border-b border-white/5 p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
                     <button 
                       onClick={() => setSelectedProject(null)}
-                      className="absolute top-8 left-8 text-slate-400 hover:text-slate-900 flex items-center gap-2 text-xs font-black uppercase tracking-widest"
+                      className="p-2 hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-white"
                     >
-                      <ArrowLeft className="w-4 h-4" /> Back to projects
+                      <ArrowLeft className="w-5 h-5" />
                     </button>
-
-                    <div className="mt-12">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="px-3 py-1 bg-cyan-100 text-cyan-600 rounded-full text-[10px] font-black uppercase tracking-widest leading-loose">
-                          {selectedProject.difficulty}
+                    <div>
+                      <h2 className="text-white font-bold leading-none mb-1">{selectedProject.title}</h2>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1 w-24 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div 
+                             className="h-full bg-cyan-500"
+                             initial={{ width: 0 }}
+                             animate={{ width: `${(selectedProject.completed_steps.length / selectedProject.steps.length) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
+                           {Math.round((selectedProject.completed_steps.length / selectedProject.steps.length) * 100)}% Complete
                         </span>
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-32 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
-                            <motion.div 
-                              className="h-full bg-cyan-500"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${(selectedProject.completed_steps.length / selectedProject.steps.length) * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            {Math.round((selectedProject.completed_steps.length / selectedProject.steps.length) * 100)}% Complete
-                          </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setIsTutorOpen(!isTutorOpen)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isTutorOpen ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'}`}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      AI Tutor
+                    </button>
+                    {selectedProject.is_completed && (
+                       <button 
+                         onClick={() => setActiveTab('progress')} // Navigate to submission
+                         className="px-6 py-2 bg-emerald-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                       >
+                         <Trophy className="w-4 h-4" />
+                         Submit Project
+                       </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Main Builder Area */}
+                <div className="flex-1 flex overflow-hidden">
+                  {/* Sidebar: Steps & Instructions */}
+                  <div className="w-80 sm:w-96 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                       <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Project Guide</h3>
+                       <span className="text-xs font-bold text-slate-500">{currentStepIndex + 1} / {selectedProject.steps.length}</span>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin">
+                      {/* Current Step Content */}
+                      <div>
+                        <h4 className="text-xl font-bold text-slate-900 mb-3">{selectedProject.steps[currentStepIndex].title}</h4>
+                        <div className="prose prose-sm prose-slate">
+                           <p className="text-slate-600 leading-relaxed">
+                             {selectedProject.tutorial_data?.find(s => s.step === currentStepIndex)?.content || selectedProject.steps[currentStepIndex].desc}
+                           </p>
                         </div>
                       </div>
-                      <h2 className="text-3xl font-display font-bold text-slate-900 mb-4">{selectedProject.title}</h2>
-                      <p className="text-slate-500 font-medium mb-8 leading-relaxed">{selectedProject.description}</p>
 
-                      <div className="mb-10 p-6 rounded-3xl bg-slate-50 border border-slate-100 flex flex-wrap gap-3">
-                         <div className="w-full text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Stack Requirements</div>
-                         {selectedProject.requirements.map((req, i) => (
-                           <span key={i} className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 shadow-sm">
-                             {req}
-                           </span>
-                         ))}
+                      <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
+                         <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                           <Zap className="w-3 h-3 text-amber-500" />
+                           Your Tasks
+                         </h5>
+                         <div className="space-y-4">
+                            {selectedProject.tutorial_data?.find(s => s.step === currentStepIndex)?.instructions.split('\n').map((inst, i) => (
+                              <div key={i} className="flex gap-3 text-sm text-slate-600 font-medium leading-relaxed">
+                                <div className="w-5 h-5 rounded-md bg-white border-2 border-slate-200 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">
+                                  {i + 1}
+                                </div>
+                                {inst.replace(/^\d+\.\s*/, '')}
+                              </div>
+                            ))}
+                         </div>
                       </div>
 
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-bold text-slate-900 uppercase tracking-widest text-[10px]">Build Steps</h3>
-                          <span className="text-xs font-bold text-slate-400">
-                            {selectedProject.completed_steps.length} / {selectedProject.steps.length}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-4">
+                      {/* Step Navigation List */}
+                      <div className="pt-8 border-t border-slate-100">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Build Roadmap</h3>
+                        <div className="space-y-2">
                           {selectedProject.steps.map((step, i) => (
-                            <div 
+                            <button 
                               key={i}
-                              className={`p-6 rounded-2xl border transition-all ${
-                                selectedProject.completed_steps.includes(i) 
-                                  ? 'bg-emerald-50 border-emerald-100' 
-                                  : 'bg-slate-50 border-slate-100'
+                              onClick={() => handleStepChange(i)}
+                              className={`w-full p-4 rounded-2xl flex items-center gap-4 transition-all group ${
+                                i === currentStepIndex 
+                                  ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/10' 
+                                  : 'hover:bg-slate-50 text-slate-500'
                               }`}
                             >
-                              <div className="flex items-start gap-4">
-                                <button 
-                                  onClick={() => handleStepToggle(selectedProject.id, i)}
-                                  className={`mt-1 shrink-0 ${
-                                    selectedProject.completed_steps.includes(i) 
-                                      ? 'text-emerald-500' 
-                                      : 'text-slate-300 hover:text-slate-500'
-                                  }`}
-                                >
-                                  {selectedProject.completed_steps.includes(i) ? (
-                                    <CheckCircle2 className="w-6 h-6" />
-                                  ) : (
-                                    <Circle className="w-6 h-6" />
-                                  )}
-                                </button>
-                                <div>
-                                  <h4 className={`font-bold transition-all ${
-                                    selectedProject.completed_steps.includes(i) 
-                                      ? 'text-emerald-900 line-through opacity-60' 
-                                      : 'text-slate-900'
-                                  }`}>
-                                    {step.title}
-                                  </h4>
-                                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">{step.desc}</p>
-                                </div>
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border-2 transition-all ${
+                                i === currentStepIndex 
+                                  ? 'border-white/20 bg-white/10' 
+                                  : selectedProject.completed_steps.includes(i)
+                                    ? 'border-emerald-100 bg-emerald-50 text-emerald-500'
+                                    : 'border-slate-100 bg-white group-hover:border-slate-200'
+                              }`}>
+                                {selectedProject.completed_steps.includes(i) ? (
+                                  <CheckCircle2 className="w-4 h-4" />
+                                ) : (
+                                  <span className="text-[10px] font-bold">{i + 1}</span>
+                                )}
                               </div>
-                            </div>
+                              <div className="text-left overflow-hidden">
+                                <div className={`text-xs font-bold leading-tight truncate ${i === currentStepIndex ? 'text-white' : 'text-slate-900'}`}>
+                                  {step.title}
+                                </div>
+                                {i === currentStepIndex && (
+                                  <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="text-[10px] text-slate-400 mt-1 font-medium"
+                                  >
+                                    Active Now
+                                  </motion.div>
+                                )}
+                              </div>
+                            </button>
                           ))}
                         </div>
                       </div>
                     </div>
+
+                    <div className="p-6 border-t border-slate-100 bg-slate-50/50">
+                       <button 
+                         onClick={() => handleStepToggle(selectedProject.id, currentStepIndex)}
+                         className={`w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                           selectedProject.completed_steps.includes(currentStepIndex)
+                             ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100'
+                             : 'bg-slate-900 text-white hover:bg-slate-800'
+                         }`}
+                       >
+                         {selectedProject.completed_steps.includes(currentStepIndex) ? (
+                           <>
+                             <CheckCircle2 className="w-5 h-5" />
+                             Completed
+                           </>
+                         ) : (
+                           <>
+                             <Circle className="w-5 h-5" />
+                             Complete Step {currentStepIndex + 1}
+                           </>
+                         )}
+                       </button>
+
+                       {/* Simple Navigation between steps */}
+                       <div className="grid grid-cols-2 gap-3 mt-4">
+                          <button 
+                            disabled={currentStepIndex === 0}
+                            onClick={() => handleStepChange(currentStepIndex - 1)}
+                            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-slate-400 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30 text-xs font-bold"
+                          >
+                             <ChevronLeft className="w-4 h-4" /> Previous
+                          </button>
+                          <button 
+                            disabled={currentStepIndex === selectedProject.steps.length - 1}
+                            onClick={() => handleStepChange(currentStepIndex + 1)}
+                            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-slate-400 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30 text-xs font-bold"
+                          >
+                             Next <ChevronRight className="w-4 h-4" />
+                          </button>
+                       </div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-6">
-                  <div className="glass p-8 rounded-[2.5rem] border-slate-200 bg-white shadow-sm">
-                    <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
-                      <Info className="text-blue-500 w-5 h-5" />
-                      Requirements
-                    </h3>
-                    <ul className="space-y-3">
-                      {selectedProject.requirements.map((req, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5" />
-                          <span className="text-sm font-medium text-slate-600">{req}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white">
-                    <h3 className="text-xl font-bold mb-4">Stuck?</h3>
-                    <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                      Our AI Tutor is available 24/7 to help you troubleshoot your code or explain complex concepts.
-                    </p>
-                    <button className="w-full bg-white text-slate-900 py-3 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
-                       Ask AI Tutor
-                    </button>
-                  </div>
-
-                  {selectedProject.is_completed && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="glass p-8 rounded-[2.5rem] border-emerald-100 bg-white shadow-xl shadow-emerald-500/5 ring-1 ring-emerald-500/20"
-                    >
-                      <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
-                        <Trophy className="text-amber-500 w-5 h-5" />
-                        Project Submission
-                      </h3>
-                      
-                      <form onSubmit={handleProjectSubmission} className="space-y-4">
-                        <div>
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">GitHub URL</label>
-                          <input 
-                            type="url"
-                            placeholder="https://github.com/vibelab/project"
-                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
-                            value={submission.github_url}
-                            onChange={(e) => setSubmission(s => ({ ...s, github_url: e.target.value }))}
-                            required
-                          />
+                  {/* Main Interaction Area: Editor + Preview */}
+                  <div className="flex-1 flex flex-col bg-slate-950 relative">
+                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(30,58,138,0.1),_transparent_70%)] pointer-events-none" />
+                     
+                     {/* Editor Tabs/Header */}
+                     <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-900/50 relative z-10">
+                        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
+                           <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-md">Editor</span>
+                           <span className="px-3 py-1 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-md hover:text-white cursor-pointer">Preview</span>
                         </div>
-                        <div>
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Live URL (Optional)</label>
-                          <input 
-                            type="url"
-                            placeholder="https://project.vercel.app"
-                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
-                            value={submission.live_url}
-                            onChange={(e) => setSubmission(s => ({ ...s, live_url: e.target.value }))}
-                          />
+                        <div className="flex items-center gap-3">
+                           <button 
+                             onClick={() => {
+                               navigator.clipboard.writeText(code);
+                               setCopied(true);
+                               setTimeout(() => setCopied(false), 2000);
+                             }}
+                             className="flex items-center gap-1.5 text-slate-400 hover:text-white text-[10px] font-bold uppercase transition-colors"
+                           >
+                              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copied ? 'Copied' : 'Copy Template'}
+                           </button>
                         </div>
-                        <div>
-                          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Brief Description</label>
-                          <textarea 
-                            placeholder="What challenges did you face? How did you solve them?"
-                            rows={3}
-                            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-all resize-none"
-                            value={submission.description}
-                            onChange={(e) => setSubmission(s => ({ ...s, description: e.target.value }))}
-                          />
-                        </div>
+                     </div>
 
-                        <button 
-                          disabled={isSubmitting}
-                          className={`w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-                            submissionStatus === 'success' 
-                              ? 'bg-emerald-500 text-white' 
-                              : 'bg-slate-900 text-white hover:bg-slate-800'
-                          }`}
+                     {/* The Editor */}
+                     <div className="flex-1 relative overflow-hidden flex flex-col p-4 sm:p-8">
+                       <div className="flex-1 bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col group transition-all hover:border-white/20">
+                          <div className="flex-1 overflow-auto scrollbar-thin p-1">
+                            <Editor
+                              value={code}
+                              onValueChange={setCode}
+                              highlight={code => Prism.highlight(code, Prism.languages.markup || Prism.languages.javascript, 'html')}
+                              padding={24}
+                              style={{
+                                fontFamily: '"Fira code", "Fira Mono", monospace',
+                                fontSize: 13,
+                                minHeight: '100%',
+                                backgroundColor: 'transparent',
+                                color: '#e2e8f0',
+                              }}
+                              className="focus:outline-none"
+                            />
+                          </div>
+                       </div>
+                       
+                       {/* Hint Floating Box */}
+                       <AnimatePresence>
+                         {currentStepIndex === 0 && (
+                           <motion.div 
+                             initial={{ opacity: 0, y: 10 }}
+                             animate={{ opacity: 1, y: 0 }}
+                             className="absolute bottom-16 right-16 max-w-xs bg-indigo-600 text-white p-5 rounded-[2rem] shadow-2xl z-20 hidden lg:block"
+                           >
+                             <div className="flex items-start gap-4">
+                               <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                                 <Lightbulb className="w-5 h-5" />
+                               </div>
+                               <div>
+                                 <h5 className="font-bold text-sm mb-1">Getting Started</h5>
+                                 <p className="text-[11px] leading-relaxed text-indigo-100">Click the "Copy Template" button above to get the starter code for your folder!</p>
+                               </div>
+                               <button className="text-white/40 hover:text-white"><X className="w-4 h-4" /></button>
+                             </div>
+                           </motion.div>
+                         )}
+                       </AnimatePresence>
+                     </div>
+
+                     {/* Submission Bar Visibility Check */}
+                     {selectedProject.completed_steps.length === selectedProject.steps.length && (
+                        <motion.div 
+                          initial={{ y: 100 }}
+                          animate={{ y: 0 }}
+                          className="absolute bottom-8 left-8 right-8 bg-emerald-500 rounded-3xl p-6 shadow-2xl flex items-center justify-between z-30"
                         >
-                          {isSubmitting ? (
-                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                          ) : submissionStatus === 'success' ? (
-                            <>
-                              <CheckCircle2 className="w-5 h-5" />
-                              Update Submission
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-5 h-5" />
-                              Submit Project
-                            </>
-                          )}
-                        </button>
-
-                        {submissionStatus === 'error' && (
-                          <p className="text-rose-500 text-[10px] font-bold text-center">Failed to save submission. Try again.</p>
-                        )}
-                        {submissionStatus === 'success' && (
-                          <p className="text-emerald-500 text-[10px] font-bold text-center">Submission successful! You can update it anytime.</p>
-                        )}
-                      </form>
-                    </motion.div>
-                  )}
+                           <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                                 <Trophy className="text-white w-6 h-6" />
+                              </div>
+                              <div>
+                                 <h4 className="text-white font-bold leading-none mb-1">Excellent Work! Build Complete.</h4>
+                                 <p className="text-emerald-100 text-xs">You've finished all steps. Ready to share your work?</p>
+                              </div>
+                           </div>
+                           <button 
+                             onClick={() => {
+                               setSelectedProject(null);
+                               setActiveTab('progress');
+                               // We'll also need logic to select the project in the progress tab submission form
+                             }}
+                             className="px-8 py-3 bg-white text-emerald-600 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-600/10 hover:scale-105 transition-all"
+                           >
+                              Next: Submit & Verify
+                           </button>
+                        </motion.div>
+                     )}
+                  </div>
                 </div>
+
+                {/* AI Tutor Sidebar / Overlay */}
+                <AnimatePresence>
+                  {isTutorOpen && (
+                    <>
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsTutorOpen(false)}
+                        className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40"
+                      />
+                      <motion.div 
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="fixed top-0 right-0 h-full w-full sm:w-[450px] bg-white shadow-2xl z-50 flex flex-col"
+                      >
+                         <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <div className="flex items-center gap-3">
+                               <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
+                                  <Sparkles className="w-6 h-6" />
+                               </div>
+                               <div>
+                                  <h3 className="font-bold text-slate-900 leading-none mb-1">VibeLab AI Tutor</h3>
+                                  <div className="flex items-center gap-1.5">
+                                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Online & Ready</span>
+                                  </div>
+                               </div>
+                            </div>
+                            <button onClick={() => setIsTutorOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                               <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                         </div>
+
+                         <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-thin">
+                            {tutorMessages.length === 0 && (
+                               <div className="text-center py-12 px-6">
+                                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-500 border-2 border-dashed border-slate-200">
+                                     <MessageSquare className="w-8 h-8" />
+                                  </div>
+                                  <h4 className="font-bold text-slate-900 mb-2">Hello! How can I help?</h4>
+                                  <p className="text-slate-500 text-sm leading-relaxed">
+                                     I'm here to help you with the "{selectedProject.steps[currentStepIndex].title}" step. Ask me about the code, concepts, or if you're stuck!
+                                  </p>
+                                  <div className="mt-8 flex flex-wrap justify-center gap-2">
+                                     {["Explain this step", "Help with my code", "Show me an example"].map((hint, i) => (
+                                        <button 
+                                          key={i}
+                                          onClick={() => {
+                                            setTutorInput(hint);
+                                          }}
+                                          className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-xs font-bold text-slate-600 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600 transition-all"
+                                        >
+                                           {hint}
+                                        </button>
+                                     ))}
+                                  </div>
+                               </div>
+                            )}
+                            {tutorMessages.map((msg, i) => (
+                               <motion.div 
+                                 key={i}
+                                 initial={{ opacity: 0, y: 10 }}
+                                 animate={{ opacity: 1, y: 0 }}
+                                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                               >
+                                  <div className={`max-w-[85%] rounded-[2rem] p-5 text-sm leading-relaxed ${
+                                    msg.role === 'user' 
+                                      ? 'bg-slate-900 text-white shadow-lg' 
+                                      : 'bg-slate-50 text-slate-700 border border-slate-100'
+                                  }`}>
+                                     {msg.content}
+                                  </div>
+                               </motion.div>
+                            ))}
+                            {tutorLoading && (
+                               <div className="flex justify-start">
+                                  <div className="bg-slate-50 border border-slate-100 rounded-full px-6 py-4 flex gap-2">
+                                     <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                     <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                     <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
+                                  </div>
+                               </div>
+                            )}
+                         </div>
+
+                         <div className="p-8 border-t border-slate-100 bg-white">
+                            <form onSubmit={handleAskTutor} className="relative">
+                               <input 
+                                 type="text"
+                                 placeholder="Type your question..."
+                                 className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-6 pr-14 py-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
+                                 value={tutorInput}
+                                 onChange={e => setTutorInput(e.target.value)}
+                               />
+                               <button 
+                                 type="submit"
+                                 disabled={!tutorInput.trim() || tutorLoading}
+                                 className="absolute right-2 top-2 w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20 hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100"
+                               >
+                                  <Send className="w-5 h-5" />
+                               </button>
+                            </form>
+                            <p className="text-[10px] text-slate-400 text-center mt-4 font-medium uppercase tracking-widest">
+                               Powered by Gemini Flash 3
+                            </p>
+                         </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -683,33 +988,129 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             exit={{ opacity: 0, y: -20 }}
             className="grid lg:grid-cols-2 gap-8"
           >
-            <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
-              <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
-                <BarChart3 className="text-indigo-500 w-6 h-6" />
-                Phase Stats
-              </h2>
-              
-              <div className="space-y-10 relative z-10">
-                <div className="text-center p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 ring-4 ring-white shadow-inner">
-                  <div className="text-6xl font-display font-black text-slate-900 mb-2">{phase.progress_percentage}%</div>
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Phase Completion</p>
-                </div>
+            <div className="space-y-8">
+              <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
+                <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
+                  <BarChart3 className="text-indigo-500 w-6 h-6" />
+                  Phase Stats
+                </h2>
+                
+                <div className="space-y-10 relative z-10">
+                  <div className="text-center p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 ring-4 ring-white shadow-inner">
+                    <div className="text-6xl font-display font-black text-slate-900 mb-2">{phase.progress_percentage}%</div>
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Phase Completion</p>
+                  </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
-                    <div className="text-2xl font-bold text-slate-900 mb-1">
-                      {projects.filter(p => projects.some(sp => sp.id === p.id && sp.completed_steps.length === sp.steps.length)).length} / {projects.length}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
+                      <div className="text-2xl font-bold text-slate-900 mb-1">
+                        {projects.filter(p => p.completed_steps.length === p.steps.length).length} / {projects.length}
+                      </div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projects Finished</p>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projects Finished</p>
-                  </div>
-                  <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
-                    <div className="text-2xl font-bold text-slate-900 mb-1">
-                       {projects.reduce((acc, p) => acc + (p.completed_steps?.length || 0), 0)}
+                    <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
+                      <div className="text-2xl font-bold text-slate-900 mb-1">
+                        {projects.reduce((acc, p) => acc + (p.completed_steps?.length || 0), 0)}
+                      </div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Steps Completed</p>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Steps Completed</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Submission Section */}
+              <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
+                 <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
+                   <Code2 className="text-emerald-500 w-6 h-6" />
+                   Project Submissions
+                 </h2>
+                 
+                 <div className="space-y-4 relative z-10">
+                   {projects.filter(p => p.completed_steps.length === p.steps.length).length === 0 ? (
+                     <div className="p-8 text-center bg-slate-50 rounded-3xl border border-slate-100">
+                        <p className="text-sm text-slate-500">Finish at least one project in the Build tab to enable submission!</p>
+                     </div>
+                   ) : (
+                     projects.filter(p => p.completed_steps.length === p.steps.length).map(proj => {
+                        const isSelected = submitProjectId === proj.id;
+                        return (
+                          <div key={proj.id} className={`rounded-3xl border transition-all ${isSelected ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-100 bg-white'}`}>
+                             <div className="p-6 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                   <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                      <CheckCircle2 className="w-5 h-5" />
+                                   </div>
+                                   <div>
+                                      <h4 className="font-bold text-slate-900 leading-none mb-1">{proj.title}</h4>
+                                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Ready for Review</p>
+                                   </div>
+                                </div>
+                                <button 
+                                  onClick={() => setSubmitProjectId(isSelected ? null : proj.id)}
+                                  className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${isSelected ? 'bg-white text-slate-400 border border-slate-200' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'}`}
+                                >
+                                   {isSelected ? 'Cancel' : 'Submit Now'}
+                                </button>
+                             </div>
+
+                             {isSelected && (
+                               <motion.div 
+                                 initial={{ height: 0, opacity: 0 }}
+                                 animate={{ height: 'auto', opacity: 1 }}
+                                 className="px-6 pb-6 pt-2 border-t border-emerald-100"
+                               >
+                                 <form 
+                                   onSubmit={(e) => {
+                                     e.preventDefault();
+                                     setSelectedProject(proj); // Required as handleProjectSubmission uses it
+                                     handleProjectSubmission(e);
+                                   }} 
+                                   className="space-y-4 mt-4"
+                                 >
+                                   <div>
+                                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">GitHub URL</label>
+                                     <input 
+                                       type="url"
+                                       placeholder="https://github.com/vibelab/project"
+                                       className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                                       value={submission.github_url}
+                                       onChange={(e) => setSubmission(s => ({ ...s, github_url: e.target.value }))}
+                                       required
+                                     />
+                                   </div>
+                                   <div>
+                                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Live Demo URL</label>
+                                     <input 
+                                       type="url"
+                                       placeholder="https://vibelab-demo.vercel.app"
+                                       className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                                       value={submission.live_url}
+                                       onChange={(e) => setSubmission(s => ({ ...s, live_url: e.target.value }))}
+                                     />
+                                   </div>
+                                   <button 
+                                     disabled={isSubmitting}
+                                     className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all"
+                                   >
+                                      {isSubmitting ? (
+                                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                      ) : (
+                                        <>
+                                          <Sparkles className="w-4 h-4" />
+                                          Confirm Submission
+                                        </>
+                                      )}
+                                   </button>
+                                   {submissionStatus === 'success' && <p className="text-[10px] font-bold text-emerald-500 text-center uppercase tracking-widest">Saved Successfully!</p>}
+                                 </form>
+                               </motion.div>
+                             )}
+                          </div>
+                        );
+                     })
+                   )}
+                 </div>
               </div>
             </div>
 
@@ -758,15 +1159,15 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                    <motion.div 
                      initial={{ opacity: 0, y: 10 }}
                      animate={{ opacity: 1, y: 0 }}
-                     className="p-6 rounded-3xl bg-indigo-50 border border-indigo-100 text-center"
+                     className="p-6 rounded-3xl bg-indigo-50 border border-indigo-100 text-center shadow-xl shadow-indigo-100"
                    >
-                     <p className="text-sm font-bold text-indigo-600 mb-3">You are eligible for certification!</p>
+                     <p className="text-sm font-bold text-indigo-700 mb-3">You've mastered this phase!</p>
                      <button 
                        onClick={handleCertify}
                        disabled={isCertifying}
-                       className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200"
+                       className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all"
                      >
-                       Claim Your Certificate
+                       {isCertifying ? 'Processing...' : 'Claim Phase Certificate'}
                      </button>
                    </motion.div>
                 )}

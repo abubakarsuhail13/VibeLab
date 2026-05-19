@@ -3,6 +3,7 @@ import authRoutes from './auth.js';
 import userRoutes from './user.js';
 import learningRoutes from './learning.js';
 import publicRoutes from './public.js';
+import tutorRoutes from './tutor.js';
 
 const router = express.Router();
 
@@ -12,6 +13,7 @@ router.use('/auth', authRoutes);
 
 // Protected routes (middleware applied within modules or here if preferred)
 router.use('/user', userRoutes);
+router.use('/tutor', tutorRoutes);
 router.use('/', learningRoutes);
 
 export default router;

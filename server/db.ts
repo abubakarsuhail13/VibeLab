@@ -169,8 +169,63 @@ export const getPool = async () => {
         
         const projectsByPhase: Record<number, any[][]> = {
           1: [
-            ['Personal Portfolio Website', 'Build a stunning, responsive personal portfolio website to showcase your future projects.', 'Beginner', ['HTML5', 'CSS3', 'Vercel Deployment'], [{title:'Create homepage',desc:'Initialize your repository and set up a basic HTML structure.'},{title:'Add navigation',desc:'Create About, Projects, and Contact sections with smooth scrolling.'},{title:'Add project showcase section',desc:'Implement a clean grid to display your work.'},{title:'Make responsive',desc:'Ensure the design looks great on mobile and desktop.'},{title:'Deploy project',desc:'Connect your GitHub repo to Vercel and deploy your live site.'}]],
-            ['Interactive Task Manager', 'Create a robust task management application with local storage and advanced filtering.', 'Intermediate', ['JavaScript ES6', 'LocalStorage', 'CSS Variables'], [{title:'Build task input UI',desc:'Create a functional input field and add button.'},{title:'Create task list',desc:'Build the mechanism to display and manage multiple tasks.'},{title:'Add local storage',desc:'Save task state to the browser’s local storage.'},{title:'Add filters',desc:'Allow users to filter tasks by status or category.'},{title:'Polish UI',desc:'Apply advanced CSS techniques for a professional finish.'}]]
+            ['Personal Portfolio Website', 'Build a stunning, responsive personal portfolio website to showcase your future projects.', 'Beginner', ['HTML5', 'CSS3', 'Vercel Deployment'], [
+              {title:'Create homepage',desc:'Initialize your repository and set up a basic HTML structure.'},
+              {title:'Add navigation',desc:'Create About, Projects, and Contact sections with smooth scrolling.'},
+              {title:'Add project showcase section',desc:'Implement a clean grid to display your work.'},
+              {title:'Make responsive',desc:'Ensure the design looks great on mobile and desktop.'},
+              {title:'Deploy project',desc:'Connect your GitHub repo to Vercel and deploy your live site.'}
+            ], [
+              {
+                step: 0,
+                content: 'Welcome to your first project! We will start by creating the core structure of your website. This involves setting up your index.html file and linking a stylesheet.',
+                starterCode: '<!DOCTYPE html>\n<html>\n<head>\n  <title>My Portfolio</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>',
+                instructions: '1. Create a folder named "portfolio".\n2. Create "index.html".\n3. Copy the starter code provided.'
+              },
+              {
+                step: 1,
+                content: 'Navigation is key for UX. Using HTML5 <nav> tags and CSS Flexbox is the modern way to build headers.',
+                starterCode: '<nav>\n  <ul>\n    <li><a href="#about">About</a></li>\n    <li><a href="#projects">Work</a></li>\n    <li><a href="#contact">Contact</a></li>\n  </ul>\n</nav>',
+                instructions: '1. Add a <nav> element to your body.\n2. Use an unordered list for links.'
+              },
+              {
+                step: 2,
+                content: 'Displaying your work requires a grid layout. CSS Grid is perfect for this.',
+                starterCode: '.project-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));\n  gap: 2rem;\n}',
+                instructions: '1. Create a section with class "project-grid".\n2. Add project cards inside.'
+              },
+              {
+                step: 3,
+                content: 'Most users view websites on mobile. Media queries allow you to adapt your layout.',
+                starterCode: '@media (max-width: 768px) {\n  .nav-links {\n    display: none;\n  }\n}',
+                instructions: '1. Use @media queries in your CSS.\n2. Test by resizing your browser.'
+              },
+              {
+                step: 4,
+                content: 'Final step! We will push this to GitHub and link it to Vercel for a live URL.',
+                instructions: '1. Initialize git: `git init`.\n2. Push to GitHub.\n3. Import project on Vercel dashboard.'
+              }
+            ]],
+            ['Interactive Task Manager', 'Create a robust task management application with local storage and advanced filtering.', 'Intermediate', ['JavaScript ES6', 'LocalStorage', 'CSS Variables'], [
+              {title:'Build task input UI',desc:'Create a functional input field and add button.'},
+              {title:'Create task list',desc:'Build the mechanism to display and manage multiple tasks.'},
+              {title:'Add local storage',desc:'Save task state to the browser’s local storage.'},
+              {title:'Add filters',desc:'Allow users to filter tasks by status or category.'},
+              {title:'Polish UI',desc:'Apply advanced CSS techniques for a professional finish.'}
+            ], [
+              {
+                step: 0,
+                content: 'Let\'s start with the UI. A clean input field and a clear "Add" button are essential.',
+                starterCode: '<input type="text" id="taskInput" placeholder="Add a new task...">\n<button id="addBtn">Add Task</button>',
+                instructions: '1. Create an input with id "taskInput".\n2. Create a button with id "addBtn".'
+              },
+              {
+                step: 1,
+                content: 'Use JavaScript to handle button clicks and append tasks to a list.',
+                starterCode: 'const addBtn = document.getElementById("addBtn");\naddBtn.addEventListener("click", () => {\n  const task = taskInput.value;\n  renderTask(task);\n});',
+                instructions: '1. Select elements using DOM API.\n2. Create an event listener.'
+              }
+            ]]
           ],
           2: [
             ['React Dashboard', 'Build a modern analytics dashboard with React.', 'Intermediate', ['React', 'Tailwind', 'Recharts'], [{title:'Setup',desc:'Vite + React'},{title:'Comps',desc:'Sidebar + Charts'},{title:'Data',desc:'Mock stats'}]]
@@ -198,8 +253,8 @@ export const getPool = async () => {
             const phaseProjects = projectsByPhase[phase.order_index] || [];
             for (const pDetails of phaseProjects) {
               await connection.execute(
-                'INSERT INTO phase_projects (phase_id, title, description, difficulty, requirements, steps) VALUES (?, ?, ?, ?, ?, ?)',
-                [phase.id, pDetails[0], pDetails[1], pDetails[2], JSON.stringify(pDetails[3]), JSON.stringify(pDetails[4])]
+                'INSERT INTO phase_projects (phase_id, title, description, difficulty, requirements, steps, tutorial_data) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [phase.id, pDetails[0], pDetails[1], pDetails[2], JSON.stringify(pDetails[3]), JSON.stringify(pDetails[4]), JSON.stringify(pDetails[5] || [])]
               );
             }
           }
@@ -244,6 +299,19 @@ export const getPool = async () => {
         }
         if (!columnNames.includes('github_username')) {
           await connection.execute('ALTER TABLE users ADD COLUMN github_username VARCHAR(100)');
+        }
+
+        // New interactive columns
+        const [ppColumns]: any = await connection.execute('SHOW COLUMNS FROM phase_projects');
+        const ppColumnNames = ppColumns.map((c: any) => c.Field);
+        if (!ppColumnNames.includes('tutorial_data')) {
+          await connection.execute('ALTER TABLE phase_projects ADD COLUMN tutorial_data JSON');
+        }
+
+        const [uppColumns]: any = await connection.execute('SHOW COLUMNS FROM user_project_progress');
+        const uppColumnNames = uppColumns.map((c: any) => c.Field);
+        if (!uppColumnNames.includes('last_active_step')) {
+          await connection.execute('ALTER TABLE user_project_progress ADD COLUMN last_active_step INT DEFAULT 0');
         }
 
         console.log('DB Debug: Tables verified/created.');
