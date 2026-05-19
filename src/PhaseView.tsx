@@ -60,6 +60,8 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [isCertifying, setIsCertifying] = useState(false);
   const [hasBadge, setHasBadge] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const fetchPhaseData = async () => {
     try {
@@ -106,6 +108,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
       });
       if (response.ok) {
         setHasBadge(true);
+        setShowSuccessModal(true);
         fetchPhaseData(); // refresh state
         onProgress?.(); // Refresh dashboard/sidebar
       } else {
@@ -343,10 +346,16 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                       { title: "Best Practices", desc: "Write clean, maintainable, and efficient code." },
                       { title: "AI Workflows", desc: "Learn how to use AI to speed up your development." },
                     ].map((concept, i) => (
-                      <div key={i} className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                        <h4 className="font-bold text-slate-900 mb-2">{concept.title}</h4>
+                      <motion.div 
+                        key={i} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-200 hover:bg-white hover:shadow-md transition-all cursor-default group"
+                      >
+                        <h4 className="font-bold text-slate-900 mb-2 group-hover:text-cyan-600 transition-colors">{concept.title}</h4>
                         <p className="text-sm text-slate-500 leading-relaxed">{concept.desc}</p>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
@@ -366,9 +375,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     "Design: Layout Patterns",
                     "Interactive: Logic Lab"
                   ].map((res, i) => (
-                    <button key={i} className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-cyan-200 hover:bg-slate-50 transition-all group">
+                    <button 
+                      key={i} 
+                      onClick={() => setSelectedResource(res)}
+                      className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-cyan-200 hover:bg-slate-50 transition-all group shadow-sm active:scale-95"
+                    >
                       <span className="text-sm font-bold text-slate-600 group-hover:text-cyan-600">{res}</span>
-                      <ChevronRight className="w-4 h-4 text-slate-300" />
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
                     </button>
                   ))}
                 </div>
@@ -626,28 +639,29 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             exit={{ opacity: 0, y: -20 }}
             className="grid lg:grid-cols-2 gap-8"
           >
-            <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
-              <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+            <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
+              <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
                 <BarChart3 className="text-indigo-500 w-6 h-6" />
                 Phase Stats
               </h2>
               
-              <div className="space-y-10">
-                <div className="text-center p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100">
+              <div className="space-y-10 relative z-10">
+                <div className="text-center p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 ring-4 ring-white shadow-inner">
                   <div className="text-6xl font-display font-black text-slate-900 mb-2">{phase.progress_percentage}%</div>
                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Phase Completion</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="p-6 rounded-2xl border border-slate-100 text-center">
+                  <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
                     <div className="text-2xl font-bold text-slate-900 mb-1">
-                      {projects.filter(p => p.is_completed).length} / {projects.length}
+                      {projects.filter(p => projects.some(sp => sp.id === p.id && sp.completed_steps.length === sp.steps.length)).length} / {projects.length}
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projects Finished</p>
                   </div>
-                  <div className="p-6 rounded-2xl border border-slate-100 text-center">
+                  <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
                     <div className="text-2xl font-bold text-slate-900 mb-1">
-                       {projects.reduce((acc, p) => acc + p.completed_steps.length, 0)}
+                       {projects.reduce((acc, p) => acc + (p.completed_steps?.length || 0), 0)}
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Steps Completed</p>
                   </div>
@@ -655,29 +669,151 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               </div>
             </div>
 
-            <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
-              <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+            <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
+              <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
                 <Trophy className="text-amber-500 w-6 h-6" />
                 Phase Rewards
               </h2>
               
-              <div className="space-y-6">
+              <div className="space-y-6 relative z-10">
                 {[
-                  { title: "Foundations Badge", desc: "Awarded for completing all projects in this phase.", locked: phase.status !== 'completed' },
-                  { title: "Verified Skills", desc: "Skills from this phase are added to your digital profile.", locked: phase.status !== 'completed' },
+                  { title: "Foundations Badge", desc: "Awarded for completing all projects in this phase.", locked: phase.status !== 'completed', icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" /> },
+                  { title: "Verified Skills", desc: "Skills from this phase are added to your digital profile.", locked: phase.status !== 'completed', icon: <Sparkles className="w-8 h-8 text-cyan-400" /> },
                 ].map((reward, i) => (
-                  <div key={i} className={`p-6 rounded-2xl border flex items-center gap-6 transition-all ${reward.locked ? 'opacity-50 grayscale' : 'bg-slate-50 border-slate-100'}`}>
-                    <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-                      <Star className={`w-8 h-8 ${reward.locked ? 'text-slate-200' : 'text-amber-400 fill-amber-400'}`} />
+                  <div key={i} className={`p-6 rounded-3xl border flex items-center gap-6 transition-all ${reward.locked ? 'opacity-40 grayscale bg-slate-50 border-slate-100' : 'bg-white border-slate-200 shadow-lg ring-1 ring-slate-100'}`}>
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${reward.locked ? 'bg-slate-200' : 'bg-gradient-to-br from-slate-50 to-white shadow-inner'}`}>
+                      {React.cloneElement(reward.icon as React.ReactElement, { className: `${(reward.icon as React.ReactElement).props.className} ${reward.locked ? 'text-slate-400 !fill-none' : ''}` })}
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-900 leading-tight">{reward.title}</h4>
                       <p className="text-sm text-slate-500 mt-1">{reward.desc}</p>
+                      {!reward.locked && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                           Claimed
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
+
+                {!hasBadge && phase.progress_percentage === 100 && (
+                   <motion.div 
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     className="p-6 rounded-3xl bg-indigo-50 border border-indigo-100 text-center"
+                   >
+                     <p className="text-sm font-bold text-indigo-600 mb-3">You are eligible for certification!</p>
+                     <button 
+                       onClick={handleCertify}
+                       disabled={isCertifying}
+                       className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200"
+                     >
+                       Claim Your Certificate
+                     </button>
+                   </motion.div>
+                )}
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {selectedResource && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setSelectedResource(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-[2.5rem] p-10 max-w-2xl w-full shadow-2xl overflow-hidden relative"
+              onClick={e => e.stopPropagation()}
+            >
+               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 to-indigo-500" />
+               <div className="flex items-center justify-between mb-8">
+                 <h2 className="text-2xl font-bold text-slate-900">{selectedResource}</h2>
+                 <button 
+                   onClick={() => setSelectedResource(null)}
+                   className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                 >
+                   <ArrowLeft className="w-5 h-5 text-slate-400 rotate-90" />
+                 </button>
+               </div>
+
+               <div className="aspect-video bg-slate-100 rounded-3xl flex flex-col items-center justify-center text-slate-400 mb-8 border-2 border-dashed border-slate-200">
+                  <Play className="w-12 h-12 mb-4 opacity-20" />
+                  <p className="text-sm font-medium">Resource content preview for Phase 1</p>
+                  <p className="text-[10px] uppercase tracking-widest font-black mt-2">Locked to VibeLab premium</p>
+               </div>
+
+               <div className="space-y-4">
+                 <p className="text-slate-600 leading-relaxed">
+                   This resource covers essential concepts required for the {phase.name.split(':')[1]?.trim()} module. 
+                   Review the content carefully as these topics will be directly applied in your builds.
+                 </p>
+                 <div className="flex gap-3">
+                   <button className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-lg shadow-slate-900/10">
+                     Download PDF
+                   </button>
+                   <button className="flex-1 py-3 bg-slate-50 text-slate-600 border border-slate-100 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all">
+                     External Link
+                   </button>
+                 </div>
+               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            onClick={() => setShowSuccessModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 40 }}
+              className="bg-white rounded-[3rem] p-12 max-w-lg w-full shadow-2xl text-center relative overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 animate-gradient" />
+               <div className="w-24 h-24 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8 ring-8 ring-amber-50/50">
+                 <Trophy className="w-12 h-12 text-amber-500" />
+               </div>
+               
+               <h2 className="text-3xl font-display font-bold text-slate-900 mb-4">Congratulations!</h2>
+               <p className="text-slate-600 mb-8 leading-relaxed">
+                 You have successfully completed all projects and requirements for <strong>{phase.name}</strong>. 
+                 Your badge has been issued and your digital profile is updated.
+               </p>
+
+               <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 mb-8">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">New Reward Unlocked</p>
+                 <div className="flex items-center justify-center gap-3">
+                   <Star className="text-amber-400 fill-amber-400 w-5 h-5" />
+                   <span className="font-bold text-slate-900">Foundations Phase Badge</span>
+                 </div>
+               </div>
+
+               <button 
+                 onClick={() => {
+                   setShowSuccessModal(false);
+                   onBack();
+                 }}
+                 className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95"
+               >
+                 Continue to Next Phase
+               </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
