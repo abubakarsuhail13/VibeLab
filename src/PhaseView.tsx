@@ -84,7 +84,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
       if (phaseRes.ok && projectsRes.ok) {
         setPhase(await phaseRes.json());
         const projectsData = await projectsRes.json();
-        setProjects(projectsData);
+        const parsedProjects = projectsData.map((p: any) => ({
+          ...p,
+          requirements: typeof p.requirements === 'string' ? JSON.parse(p.requirements) : p.requirements,
+          steps: typeof p.steps === 'string' ? JSON.parse(p.steps) : p.steps,
+          completed_steps: typeof p.completed_steps === 'string' ? JSON.parse(p.completed_steps) : p.completed_steps
+        }));
+        setProjects(parsedProjects);
         
         if (badgesRes.ok) {
           const badges = await badgesRes.json();
@@ -413,9 +419,21 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                         <span className="px-3 py-1 bg-cyan-100 text-cyan-600 rounded-full text-[10px] font-black uppercase tracking-widest leading-loose">
                           {selectedProject.difficulty}
                         </span>
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-32 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+                            <motion.div 
+                              className="h-full bg-cyan-500"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(selectedProject.completed_steps.length / selectedProject.steps.length) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            {Math.round((selectedProject.completed_steps.length / selectedProject.steps.length) * 100)}% Complete
+                          </span>
+                        </div>
                       </div>
                       <h2 className="text-3xl font-display font-bold text-slate-900 mb-4">{selectedProject.title}</h2>
-                      <p className="text-slate-500 font-medium mb-10">{selectedProject.description}</p>
+                      <p className="text-slate-500 font-medium mb-10 leading-relaxed">{selectedProject.description}</p>
 
                       <div className="space-y-4">
                         <div className="flex items-center justify-between mb-4">
@@ -678,22 +696,35 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               
               <div className="space-y-6 relative z-10">
                 {[
-                  { title: "Foundations Badge", desc: "Awarded for completing all projects in this phase.", locked: phase.status !== 'completed', icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" /> },
-                  { title: "Verified Skills", desc: "Skills from this phase are added to your digital profile.", locked: phase.status !== 'completed', icon: <Sparkles className="w-8 h-8 text-cyan-400" /> },
+                  { title: "Foundations Badge", desc: "Awarded for completing all projects in this phase.", locked: !hasBadge, icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" /> },
+                  { title: "Verified Skills", desc: "Skills from this phase are added to your digital profile.", locked: !hasBadge, icon: <Sparkles className="w-8 h-8 text-cyan-400" />, skills: ["Project Lifecycle", "Architecture", "Best Practices", "AI Workflows"] },
                 ].map((reward, i) => (
-                  <div key={i} className={`p-6 rounded-3xl border flex items-center gap-6 transition-all ${reward.locked ? 'opacity-40 grayscale bg-slate-50 border-slate-100' : 'bg-white border-slate-200 shadow-lg ring-1 ring-slate-100'}`}>
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${reward.locked ? 'bg-slate-200' : 'bg-gradient-to-br from-slate-50 to-white shadow-inner'}`}>
-                      {React.cloneElement(reward.icon as React.ReactElement, { className: `${(reward.icon as React.ReactElement).props.className} ${reward.locked ? 'text-slate-400 !fill-none' : ''}` })}
+                  <div key={i} className={`p-6 rounded-3xl border flex flex-col gap-6 transition-all ${reward.locked ? 'opacity-40 grayscale bg-slate-50 border-slate-100' : 'bg-white border-slate-200 shadow-lg ring-1 ring-slate-100'}`}>
+                    <div className="flex items-center gap-6">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${reward.locked ? 'bg-slate-200' : 'bg-gradient-to-br from-slate-50 to-white shadow-inner'}`}>
+                        {React.cloneElement(reward.icon as React.ReactElement, { className: `${(reward.icon as React.ReactElement).props.className} ${reward.locked ? 'text-slate-400 !fill-none' : ''}` })}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 leading-tight">{reward.title}</h4>
+                        <p className="text-sm text-slate-500 mt-1">{reward.desc}</p>
+                        {!reward.locked && (
+                          <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                             Claimed
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 leading-tight">{reward.title}</h4>
-                      <p className="text-sm text-slate-500 mt-1">{reward.desc}</p>
-                      {!reward.locked && (
-                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
-                           Claimed
-                        </div>
-                      )}
-                    </div>
+                    
+                    {reward.skills && !reward.locked && (
+                      <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
+                        {reward.skills.map((skill, si) => (
+                          <span key={si} className="px-3 py-1 bg-cyan-50 text-cyan-600 rounded-lg text-xs font-bold border border-cyan-100 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
 
