@@ -487,16 +487,18 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-clamp-1 max-w-[120px]">Current Build</span>
                                  </div>
                               </div>
-                              <button 
-                                onClick={() => {
-                                  const activeP = phases.find(p => p.status === 'active');
-                                  if (activeP) handlePhaseClick(activeP.id);
-                                }}
-                                className="hidden md:flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 group"
-                              >
-                                Continue Path
-                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                              </button>
+                              {phases.some(p => p.status === 'active') && (
+                                <button 
+                                  onClick={() => {
+                                    const activeP = phases.find(p => p.status === 'active');
+                                    if (activeP) handlePhaseClick(activeP.id);
+                                  }}
+                                  className="hidden md:flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 group animate-fade-in"
+                                >
+                                  Continue Path
+                                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                              )}
                            </div>
                         </div>
                       </div>
