@@ -86,6 +86,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [selectedResource, setSelectedResource] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submitProjectId, setSubmitProjectId] = useState<number | null>(null);
+  const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [code, setCode] = useState('');
   const [isTutorOpen, setIsTutorOpen] = useState(false);
@@ -296,6 +297,11 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
         });
         setProjects(parsedProjects);
         
+        if (submissionsRes.ok) {
+          const subs = await submissionsRes.json();
+          setUserSubmissions(subs);
+        }
+
         if (badgesRes.ok) {
           const badges = await badgesRes.json();
           setHasBadge(badges.some((b: any) => b.phase_id === phaseId));
@@ -333,38 +339,25 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   };
 
   useEffect(() => {
-    if (selectedProject) {
-      fetchUserSubmission(selectedProject.id);
-    }
-  }, [selectedProject?.id]);
-
-  const fetchUserSubmission = async (projectId: number) => {
-    try {
-      const token = localStorage.getItem('vibelab_token');
-      const res = await fetch('/api/user/submissions', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const subs = await res.json();
-        const existing = subs.find((s: any) => s.project_id === projectId);
-        if (existing) {
-          setSubmission({
-            github_url: existing.github_url || '',
-            live_url: existing.live_url || '',
-            description: existing.description || ''
-          });
-        } else {
-          setSubmission({ github_url: '', live_url: '', description: '' });
-        }
+    const targetId = submitProjectId || selectedProject?.id;
+    if (targetId) {
+      const existing = userSubmissions.find((s: any) => s.project_id === targetId);
+      if (existing) {
+        setSubmission({
+          github_url: existing.github_url || '',
+          live_url: existing.live_url || '',
+          description: existing.description || ''
+        });
+      } else {
+        setSubmission({ github_url: '', live_url: '', description: '' });
       }
-    } catch (err) {
-      console.error("Failed to fetch submission", err);
     }
-  };
+  }, [selectedProject?.id, submitProjectId, userSubmissions]);
 
-  const handleProjectSubmission = async (e: React.FormEvent) => {
+  const handleProjectSubmission = async (e: React.FormEvent, projOverride?: any) => {
     e.preventDefault();
-    if (!selectedProject) return;
+    const proj = projOverride || selectedProject;
+    if (!proj) return;
 
     if (!submission.github_url) {
       alert("GitHub URL is required");
@@ -394,7 +387,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          projectId: selectedProject.id,
+          projectId: proj.id,
           phaseId: phaseId,
           githubUrl: submission.github_url,
           liveUrl: submission.live_url,
@@ -404,6 +397,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
 
       if (response.ok) {
         setSubmissionStatus('success');
+        fetchPhaseData(); // Recalculate project list & submissions
         onProgress?.();
       } else {
         setSubmissionStatus('error');
@@ -1232,6 +1226,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                    ) : (
                      projects.filter(p => p.completed_steps.length === p.steps.length).map(proj => {
                         const isSelected = submitProjectId === proj.id;
+                        const existingSub = userSubmissions.find((s: any) => s.project_id === proj.id);
                         return (
                           <div key={proj.id} className={`rounded-3xl border transition-all ${isSelected ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-100 bg-white'}`}>
                              <div className="p-6 flex items-center justify-between">
@@ -1241,14 +1236,18 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                    </div>
                                    <div>
                                       <h4 className="font-bold text-slate-900 leading-none mb-1">{proj.title}</h4>
-                                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Ready for Review</p>
+                                      {existingSub ? (
+                                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Submitted &amp; Ready for Review</p>
+                                      ) : (
+                                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Ready to Submit</p>
+                                      )}
                                    </div>
                                 </div>
                                 <button 
                                   onClick={() => setSubmitProjectId(isSelected ? null : proj.id)}
-                                  className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${isSelected ? 'bg-white text-slate-400 border border-slate-200' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'}`}
+                                  className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${isSelected ? 'bg-white text-slate-400 border border-slate-200' : (existingSub ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/10')}`}
                                 >
-                                   {isSelected ? 'Cancel' : 'Submit Now'}
+                                   {isSelected ? 'Cancel' : (existingSub ? 'Edit Submission' : 'Submit Now')}
                                 </button>
                              </div>
 
@@ -1261,8 +1260,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                  <form 
                                    onSubmit={(e) => {
                                      e.preventDefault();
-                                     setSelectedProject(proj); // Required as handleProjectSubmission uses it
-                                     handleProjectSubmission(e);
+                                     handleProjectSubmission(e, proj);
                                    }} 
                                    className="space-y-4 mt-4"
                                  >
