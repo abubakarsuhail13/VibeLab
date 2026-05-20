@@ -112,11 +112,21 @@ export const getPool = async () => {
             project_id INT NOT NULL,
             completed_steps JSON,
             is_completed TINYINT DEFAULT 0,
+            last_active_step INT DEFAULT 0,
+            code_state JSON,
             UNIQUE KEY user_project (user_id, project_id),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (project_id) REFERENCES phase_projects(id) ON DELETE CASCADE
           )
         `);
+
+        // Migration helper for existing DB instances
+        try {
+          await connection.execute(`ALTER TABLE user_project_progress ADD COLUMN last_active_step INT DEFAULT 0`);
+        } catch (_) {}
+        try {
+          await connection.execute(`ALTER TABLE user_project_progress ADD COLUMN code_state JSON`);
+        } catch (_) {}
 
         await connection.execute(`
           CREATE TABLE IF NOT EXISTS project_submissions (

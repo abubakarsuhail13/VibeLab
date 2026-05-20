@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import Editor from 'react-simple-code-editor';
-import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css';
-import 'prismjs/components/prism-clike';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-markup';
-import 'prismjs/components/prism-css';
+import MonacoEditor from '@monaco-editor/react';
 import { 
   CheckCircle2, 
   Circle, 
@@ -30,7 +24,11 @@ import {
   Download,
   Copy,
   Check,
-  Lightbulb
+  Lightbulb,
+  Monitor,
+  Smartphone,
+  Tablet,
+  RotateCw
 } from "lucide-react";
 
 interface Phase {
@@ -59,6 +57,7 @@ interface Project {
     instructions: string;
   }[];
   last_active_step?: number;
+  code_state?: Record<number, string>;
 }
 
 interface Submission {
@@ -95,21 +94,99 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [tutorInput, setTutorInput] = useState('');
   const [copied, setCopied] = useState(false);
 
+  const [projectCodeState, setProjectCodeState] = useState<Record<number, string>>({});
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
   useEffect(() => {
     if (selectedProject) {
-      setCurrentStepIndex(selectedProject.last_active_step || 0);
-      const stepData = selectedProject.tutorial_data?.find(s => s.step === (selectedProject.last_active_step || 0));
-      setCode(stepData?.starterCode || '');
+      const activeStep = selectedProject.last_active_step || 0;
+      setCurrentStepIndex(activeStep);
+      
+      const savedCodeState = selectedProject.code_state || {};
+      setProjectCodeState(savedCodeState);
+
+      const stepData = selectedProject.tutorial_data?.find(s => s.step === activeStep);
+      const loaded = savedCodeState[activeStep] !== undefined 
+        ? savedCodeState[activeStep] 
+        : (stepData?.starterCode || '');
+      setCode(loaded);
     }
   }, [selectedProject?.id]);
 
+  // Debounced real-time autosave
+  useEffect(() => {
+    if (!selectedProject || code === '') return;
+
+    const stepData = selectedProject.tutorial_data?.find(s => s.step === currentStepIndex);
+    const lastSavedOfCurrentStep = projectCodeState[currentStepIndex];
+    const originalStarter = stepData?.starterCode || '';
+    
+    // Ignore if not modified from last state or original
+    if (code === (lastSavedOfCurrentStep !== undefined ? lastSavedOfCurrentStep : originalStarter)) {
+      return;
+    }
+
+    setSaveStatus('saving');
+    const timer = setTimeout(async () => {
+      const updatedCodeState = {
+        ...projectCodeState,
+        [currentStepIndex]: code
+      };
+      setProjectCodeState(updatedCodeState);
+
+      try {
+        const token = localStorage.getItem('vibelab_token');
+        const response = await fetch('/api/progress/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            projectId: selectedProject.id,
+            completedSteps: selectedProject.completed_steps,
+            isCompleted: selectedProject.is_completed,
+            lastActiveStep: currentStepIndex,
+            codeState: updatedCodeState
+          })
+        });
+
+        if (response.ok) {
+          setSaveStatus('saved');
+          setProjects(prev => prev.map(p => 
+            p.id === selectedProject.id 
+              ? { ...p, code_state: updatedCodeState } 
+              : p
+          ));
+        } else {
+          setSaveStatus('idle');
+        }
+      } catch (err) {
+        console.error("Autosave failed", err);
+        setSaveStatus('idle');
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [code, currentStepIndex, selectedProject?.id]);
+
   const handleStepChange = async (index: number) => {
     if (!selectedProject) return;
+
+    const updatedCodeState = {
+      ...projectCodeState,
+      [currentStepIndex]: code
+    };
+    setProjectCodeState(updatedCodeState);
+
     setCurrentStepIndex(index);
     const stepData = selectedProject.tutorial_data?.find(s => s.step === index);
-    setCode(stepData?.starterCode || '');
+    const loadedCode = updatedCodeState[index] !== undefined 
+      ? updatedCodeState[index] 
+      : (stepData?.starterCode || '');
+    setCode(loadedCode);
     
-    // Save last active step
     try {
       const token = localStorage.getItem('vibelab_token');
       await fetch('/api/progress/update', {
@@ -122,7 +199,8 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           projectId: selectedProject.id,
           completedSteps: selectedProject.completed_steps,
           isCompleted: selectedProject.is_completed,
-          lastActiveStep: index
+          lastActiveStep: index,
+          codeState: updatedCodeState
         })
       });
     } catch (err) {
@@ -191,13 +269,20 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
       if (phaseRes.ok && projectsRes.ok) {
         setPhase(await phaseRes.json());
         const projectsData = await projectsRes.json();
-        const parsedProjects = projectsData.map((p: any) => ({
-          ...p,
-          requirements: typeof p.requirements === 'string' ? JSON.parse(p.requirements) : p.requirements,
-          steps: typeof p.steps === 'string' ? JSON.parse(p.steps) : p.steps,
-          completed_steps: typeof p.completed_steps === 'string' ? JSON.parse(p.completed_steps) : p.completed_steps,
-          tutorial_data: typeof p.tutorial_data === 'string' ? JSON.parse(p.tutorial_data) : p.tutorial_data
-        }));
+        const parsedProjects = projectsData.map((p: any) => {
+          let codeState = p.code_state || {};
+          if (typeof codeState === 'string') {
+            try { codeState = JSON.parse(codeState); } catch (_) { codeState = {}; }
+          }
+          return {
+            ...p,
+            requirements: typeof p.requirements === 'string' ? JSON.parse(p.requirements) : p.requirements,
+            steps: typeof p.steps === 'string' ? JSON.parse(p.steps) : p.steps,
+            completed_steps: typeof p.completed_steps === 'string' ? JSON.parse(p.completed_steps) : p.completed_steps,
+            tutorial_data: typeof p.tutorial_data === 'string' ? JSON.parse(p.tutorial_data) : p.tutorial_data,
+            code_state: codeState
+          };
+        });
         setProjects(parsedProjects);
         
         if (badgesRes.ok) {
@@ -349,7 +434,8 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           projectId,
           completedSteps: newCompletedSteps,
           isCompleted,
-          lastActiveStep: currentStepIndex
+          lastActiveStep: currentStepIndex,
+          codeState: projectCodeState
         })
       });
 
@@ -582,10 +668,10 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   </div>
                 </div>
 
-                {/* Main Builder Area */}
-                <div className="flex-1 flex overflow-hidden">
+                {/* Main Builder Area: Three Panels layout */}
+                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-950">
                   {/* Sidebar: Steps & Instructions */}
-                  <div className="w-80 sm:w-96 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
+                  <div className="w-full lg:w-96 bg-white border-r border-slate-200 flex flex-col overflow-hidden shrink-0 z-10">
                     <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Project Guide</h3>
                        <span className="text-xs font-bold text-slate-500">{currentStepIndex + 1} / {selectedProject.steps.length}</span>
@@ -708,17 +794,41 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     </div>
                   </div>
 
-                  {/* Main Interaction Area: Editor + Preview */}
-                  <div className="flex-1 flex flex-col bg-slate-950 relative">
-                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(30,58,138,0.1),_transparent_70%)] pointer-events-none" />
-                     
-                     {/* Editor Tabs/Header */}
-                     <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-900/50 relative z-10">
-                        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
-                           <span className="px-3 py-1 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-md">Editor</span>
-                           <span className="px-3 py-1 text-slate-500 text-[10px] font-black uppercase tracking-widest rounded-md hover:text-white cursor-pointer">Preview</span>
-                        </div>
+                  {/* Center Panel: Code Workspace (Monaco Editor) */}
+                  <div className="flex-1 flex flex-col border-r border-white/5 bg-slate-900 overflow-hidden relative">
+                     {/* Editor Settings / Header */}
+                     <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-950/80 relative z-10 font-mono">
                         <div className="flex items-center gap-3">
+                           <span className="px-2.5 py-1 bg-white/5 text-cyan-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-white/5">
+                              index.html
+                           </span>
+                           {saveStatus === 'saving' && (
+                             <span className="flex items-center gap-1.5 text-slate-500 text-[10px]">
+                               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                               Saving...
+                             </span>
+                           )}
+                           {saveStatus === 'saved' && (
+                             <span className="flex items-center gap-1 text-emerald-400 text-[10px]">
+                               <CheckCircle2 className="w-3.5 h-3.5" />
+                               Autosaved
+                             </span>
+                           )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                           <button 
+                             onClick={() => {
+                               const stepData = selectedProject.tutorial_data?.find(s => s.step === currentStepIndex);
+                               const starter = stepData?.starterCode || '';
+                               setCode(starter);
+                               saveStatus !== 'saving' && setSaveStatus('saving');
+                             }}
+                             className="flex items-center gap-1 text-slate-400 hover:text-slate-200 text-[10px] font-bold uppercase transition-colors"
+                             title="Revert template changes to default starter code"
+                           >
+                              <RotateCw className="w-3 h-3" />
+                              Reset Template
+                           </button>
                            <button 
                              onClick={() => {
                                navigator.clipboard.writeText(code);
@@ -728,80 +838,155 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                              className="flex items-center gap-1.5 text-slate-400 hover:text-white text-[10px] font-bold uppercase transition-colors"
                            >
                               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                              {copied ? 'Copied' : 'Copy Template'}
+                              Copy starter
                            </button>
                         </div>
                      </div>
 
-                     {/* The Editor */}
-                     <div className="flex-1 relative overflow-hidden flex flex-col p-4 sm:p-8">
-                       <div className="flex-1 bg-slate-900/80 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex flex-col group transition-all hover:border-white/20">
-                          <div className="flex-1 overflow-auto scrollbar-thin p-1">
-                            <Editor
-                              value={code}
-                              onValueChange={setCode}
-                              highlight={code => Prism.highlight(code, Prism.languages.markup || Prism.languages.javascript, 'html')}
-                              padding={24}
-                              style={{
-                                fontFamily: '"Fira code", "Fira Mono", monospace',
-                                fontSize: 13,
-                                minHeight: '100%',
-                                backgroundColor: 'transparent',
-                                color: '#e2e8f0',
-                              }}
-                              className="focus:outline-none"
-                            />
-                          </div>
-                       </div>
-                       
-                       {/* Hint Floating Box */}
-                       <AnimatePresence>
-                         {currentStepIndex === 0 && (
-                           <motion.div 
-                             initial={{ opacity: 0, y: 10 }}
-                             animate={{ opacity: 1, y: 0 }}
-                             className="absolute bottom-16 right-16 max-w-xs bg-indigo-600 text-white p-5 rounded-[2rem] shadow-2xl z-20 hidden lg:block"
+                     {/* The Monaco Editor container */}
+                     <div className="flex-1 relative overflow-hidden flex flex-col pt-2 bg-slate-900">
+                        <MonacoEditor
+                          theme="vs-dark"
+                          language="html"
+                          value={code}
+                          onChange={(newVal) => setCode(newVal || '')}
+                          options={{
+                            minimap: { enabled: false },
+                            fontSize: 13,
+                            lineNumbers: "on",
+                            fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
+                            cursorBlinking: "smooth",
+                            smoothScrolling: true,
+                            wordWrap: "on",
+                            padding: { top: 16, bottom: 16 }
+                          }}
+                        />
+                     </div>
+                  </div>
+
+                  {/* Right Panel: Live Educational Preview Simulator */}
+                  <div className="w-full lg:w-[42%] flex flex-col bg-slate-950 relative overflow-hidden border-t lg:border-t-0 border-white/5 shrink-0 z-10">
+                     <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-950/80 font-mono font-bold uppercase tracking-widest">
+                        {/* Device Emulation Selection */}
+                        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
+                           <button 
+                             onClick={() => setPreviewDevice('desktop')}
+                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'desktop' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                             title="Fluid Full Screen size"
                            >
-                             <div className="flex items-start gap-4">
-                               <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                                 <Lightbulb className="w-5 h-5" />
-                               </div>
-                               <div>
-                                 <h5 className="font-bold text-sm mb-1">Getting Started</h5>
-                                 <p className="text-[11px] leading-relaxed text-indigo-100">Click the "Copy Template" button above to get the starter code for your folder!</p>
-                               </div>
-                               <button className="text-white/40 hover:text-white"><X className="w-4 h-4" /></button>
-                             </div>
-                           </motion.div>
-                         )}
-                       </AnimatePresence>
+                             <Monitor className="w-3.5 h-3.5" />
+                           </button>
+                           <button 
+                             onClick={() => setPreviewDevice('tablet')}
+                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'tablet' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                             title="Emulate Tablet size (768px)"
+                           >
+                             <Tablet className="w-3.5 h-3.5" />
+                           </button>
+                           <button 
+                             onClick={() => setPreviewDevice('mobile')}
+                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'mobile' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                             title="Emulate Mobile size (375px)"
+                           >
+                             <Smartphone className="w-3.5 h-3.5" />
+                           </button>
+                        </div>
+
+                        {/* Middle Dimension Info Tag */}
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider hidden sm:inline">
+                          {previewDevice === 'desktop' && "Fluid Preview"}
+                          {previewDevice === 'tablet' && "768px (iPad Air)"}
+                          {previewDevice === 'mobile' && "375px (iPhone 15)"}
+                        </span>
+
+                        {/* Open Full Sandbox executing page inside Blob URL */}
+                        <button 
+                          onClick={() => {
+                            const blob = new Blob([code], { type: 'text/html' });
+                            const blobUrl = URL.createObjectURL(blob);
+                            window.open(blobUrl, '_blank');
+                          }}
+                          className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400 hover:text-white transition-all bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5 active:scale-95"
+                        >
+                           <ExternalLink className="w-3 h-3" />
+                           Sandbox Page
+                        </button>
                      </div>
 
-                     {/* Submission Bar Visibility Check */}
+                     {/* Previews Area with centered simulator frames */}
+                     <div className="flex-1 p-6 flex items-center justify-center bg-slate-900/40 overflow-hidden relative">
+                         <div className="w-full h-full flex items-center justify-center overflow-auto">
+                            {previewDevice === 'desktop' && (
+                               <div className="w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden relative">
+                                  <iframe
+                                    srcDoc={code}
+                                    title="Fluid Preview Workspace"
+                                    className="w-full h-full border-0"
+                                    sandbox="allow-scripts"
+                                  />
+                               </div>
+                            )}
+
+                            {previewDevice === 'tablet' && (
+                               <div className="w-[768px] max-w-full h-full bg-white rounded-3xl shadow-2xl border-[10px] border-slate-800 flex flex-col shrink-0">
+                                  <div className="h-6 w-full bg-slate-800 flex items-center justify-center">
+                                    <div className="w-12 h-1 bg-slate-700 rounded-full" />
+                                  </div>
+                                  <div className="flex-1 bg-white relative">
+                                     <iframe
+                                       srcDoc={code}
+                                       title="Tablet Simulation"
+                                       className="w-full h-full border-0"
+                                       sandbox="allow-scripts"
+                                     />
+                                  </div>
+                               </div>
+                            )}
+
+                            {previewDevice === 'mobile' && (
+                               <div className="w-[375px] max-w-full h-[640px] bg-white rounded-[2.5rem] shadow-2xl border-[12px] border-slate-800 flex flex-col relative shrink-0">
+                                  <div className="absolute top-0 inset-x-0 h-6 bg-slate-800 flex items-center justify-center z-20">
+                                    <div className="w-20 h-4 bg-black rounded-b-xl flex items-center justify-center">
+                                      <div className="w-2 h-2 rounded-full bg-white/10" />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 bg-white rounded-[1.8rem] overflow-hidden relative pt-6">
+                                     <iframe
+                                       srcDoc={code}
+                                       title="Smartphone Simulation"
+                                       className="w-full h-full border-0"
+                                       sandbox="allow-scripts"
+                                     />
+                                  </div>
+                               </div>
+                            )}
+                         </div>
+                     </div>
+
+                     {/* Submission Floating Notification Overlay when all checked */}
                      {selectedProject.completed_steps.length === selectedProject.steps.length && (
                         <motion.div 
-                          initial={{ y: 100 }}
-                          animate={{ y: 0 }}
-                          className="absolute bottom-8 left-8 right-8 bg-emerald-500 rounded-3xl p-6 shadow-2xl flex items-center justify-between z-30"
+                          initial={{ y: 80, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          className="absolute bottom-6 left-6 right-6 bg-emerald-500 rounded-2xl p-5 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 z-20 border border-emerald-400"
                         >
-                           <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                                 <Trophy className="text-white w-6 h-6" />
+                           <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                                 <Trophy className="text-white w-5 h-5" />
                               </div>
-                              <div>
-                                 <h4 className="text-white font-bold leading-none mb-1">Excellent Work! Build Complete.</h4>
-                                 <p className="text-emerald-100 text-xs">You've finished all steps. Ready to share your work?</p>
+                              <div className="text-center sm:text-left">
+                                 <h4 className="text-white font-bold text-sm leading-tight leading-none mb-0.5 animate-pulse">Perfect! All steps completed.</h4>
+                                 <p className="text-emerald-100 text-[11px]">Submission panel opened in the Progress overview.</p>
                               </div>
                            </div>
                            <button 
                              onClick={() => {
                                setSelectedProject(null);
                                setActiveTab('progress');
-                               // We'll also need logic to select the project in the progress tab submission form
                              }}
-                             className="px-8 py-3 bg-white text-emerald-600 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-600/10 hover:scale-105 transition-all"
+                             className="w-full sm:w-auto px-6 py-2.5 bg-white text-emerald-600 rounded-xl font-bold text-xs shadow-lg hover:scale-105 transition-all"
                            >
-                              Next: Submit & Verify
+                              Next: Submit urls
                            </button>
                         </motion.div>
                      )}
