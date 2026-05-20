@@ -98,6 +98,23 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
+  const getCodeForStep = (index: number, codeState: Record<number, string>) => {
+    if (codeState[index] !== undefined && codeState[index] !== '') {
+      return codeState[index];
+    }
+    for (let i = index - 1; i >= 0; i--) {
+      if (codeState[i] !== undefined && codeState[i] !== '') {
+        return codeState[i];
+      }
+    }
+    const stepData = selectedProject?.tutorial_data?.find((s: any) => s.step === index);
+    if (stepData?.starterCode) {
+      return stepData.starterCode;
+    }
+    const firstStep = selectedProject?.tutorial_data?.find((s: any) => s.step === 0);
+    return firstStep?.starterCode || '';
+  };
+
   useEffect(() => {
     if (selectedProject) {
       const activeStep = selectedProject.last_active_step || 0;
@@ -106,10 +123,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
       const savedCodeState = selectedProject.code_state || {};
       setProjectCodeState(savedCodeState);
 
-      const stepData = selectedProject.tutorial_data?.find(s => s.step === activeStep);
-      const loaded = savedCodeState[activeStep] !== undefined 
-        ? savedCodeState[activeStep] 
-        : (stepData?.starterCode || '');
+      const loaded = getCodeForStep(activeStep, savedCodeState);
       setCode(loaded);
     }
   }, [selectedProject?.id]);
@@ -181,10 +195,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
     setProjectCodeState(updatedCodeState);
 
     setCurrentStepIndex(index);
-    const stepData = selectedProject.tutorial_data?.find(s => s.step === index);
-    const loadedCode = updatedCodeState[index] !== undefined 
-      ? updatedCodeState[index] 
-      : (stepData?.starterCode || '');
+    const loadedCode = getCodeForStep(index, updatedCodeState);
     setCode(loadedCode);
     
     try {
@@ -694,7 +705,9 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                            Your Tasks
                          </h5>
                          <div className="space-y-4">
-                            {selectedProject.tutorial_data?.find(s => s.step === currentStepIndex)?.instructions.split('\n').map((inst, i) => (
+                            {(selectedProject.tutorial_data?.find(s => s.step === currentStepIndex)?.instructions || 
+                              `1. Review the requirement descriptions for "${selectedProject.steps[currentStepIndex]?.title}".\n2. Open the code workspace and implement the relevant features.\n3. Verify your results on the dynamic visual preview on the right.\n4. Complete the current step and proceed to the next milestone in your Build Roadmap.`)
+                              .split('\n').map((inst, i) => (
                               <div key={i} className="flex gap-3 text-sm text-slate-600 font-medium leading-relaxed">
                                 <div className="w-5 h-5 rounded-md bg-white border-2 border-slate-200 flex-shrink-0 flex items-center justify-center text-[10px] font-bold">
                                   {i + 1}

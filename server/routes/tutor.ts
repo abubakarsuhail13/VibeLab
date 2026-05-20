@@ -29,7 +29,7 @@ router.post('/ask', authenticateToken, async (req: any, res) => {
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3.5-flash",
       contents: prompt,
     });
 
