@@ -114,9 +114,10 @@ router.post('/progress/update', authenticateToken, async (req: any, res) => {
       
       if (totalProjects > 0) {
         const projectIds = allProjects.map((ap: any) => ap.id);
+        const placeholders = projectIds.map(() => '?').join(',');
         const [completedInPhase]: any = await p.execute(
-          'SELECT COUNT(*) as count FROM user_project_progress WHERE user_id = ? AND project_id IN (?) AND is_completed = 1',
-          [req.user.userId, projectIds]
+          `SELECT COUNT(*) as count FROM user_project_progress WHERE user_id = ? AND project_id IN (${placeholders}) AND is_completed = 1`,
+          [req.user.userId, ...projectIds]
         );
         
         const completedCount = completedInPhase[0].count;
@@ -197,9 +198,10 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
     if (allProjects.length === 0) return res.status(400).json({ error: 'No projects found in this phase' });
 
     const projectIds = allProjects.map((ap: any) => ap.id);
+    const placeholders = projectIds.map(() => '?').join(',');
     const [completed]: any = await p.execute(
-      'SELECT COUNT(*) as count FROM user_project_progress WHERE user_id = ? AND project_id IN (?) AND is_completed = 1',
-      [req.user.userId, projectIds]
+      `SELECT COUNT(*) as count FROM user_project_progress WHERE user_id = ? AND project_id IN (${placeholders}) AND is_completed = 1`,
+      [req.user.userId, ...projectIds]
     );
 
     if (completed[0].count < allProjects.length) {
@@ -209,8 +211,8 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
 
     // 2. Check all projects submitted
     const [submissions]: any = await p.execute(
-      'SELECT COUNT(*) as count FROM project_submissions WHERE user_id = ? AND project_id IN (?)',
-      [req.user.userId, projectIds]
+      `SELECT COUNT(*) as count FROM project_submissions WHERE user_id = ? AND project_id IN (${placeholders})`,
+      [req.user.userId, ...projectIds]
     );
 
     if (submissions[0].count < allProjects.length) {
