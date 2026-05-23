@@ -26,9 +26,26 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = cryptoRandomString({ length: 32, type: 'url-safe' });
 
+    // Generate permanent VL-ID
+    const year = new Date().getFullYear();
+    const [countRes]: any = await p.execute(
+      'SELECT COUNT(*) as total FROM users WHERE YEAR(created_at) = ?',
+      [year]
+    );
+    const nextVal = (countRes[0].total + 1).toString().padStart(5, '0');
+    let vlId = `VL-${year}-${nextVal}`;
+
+    let counter = 1;
+    while (true) {
+      const [checkRes]: any = await p.execute('SELECT id FROM users WHERE vl_id = ?', [vlId]);
+      if (checkRes.length === 0) break;
+      vlId = `VL-${year}-${(countRes[0].total + 1 + counter).toString().padStart(5, '0')}`;
+      counter++;
+    }
+
     const [result]: any = await p.execute(
-      'INSERT INTO users (name, email, password, role, verification_token) VALUES (?, ?, ?, ?, ?)',
-      [name, email, hashedPassword, role, verificationToken]
+      'INSERT INTO users (name, email, password, role, verification_token, vl_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, role, verificationToken, vlId]
     );
 
     const userId = result.insertId;
@@ -52,6 +69,7 @@ router.post('/register', async (req, res) => {
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b;">
           <h1 style="color: #0ea5e9;">Welcome to VibeLab, ${name}!</h1>
+          <p>Your permanent Student ID is: <strong style="font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${vlId}</strong></p>
           <p>Please verify your email address to activate your account and start your learning journey.</p>
           <a href="${baseUrl}/verify-email?token=${verificationToken}" 
              style="display: inline-block; background: #0ea5e9; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
@@ -113,7 +131,8 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        avatar_url: user.avatar_url
+        avatar_url: user.avatar_url,
+        vl_id: user.vl_id
       }
     });
   } catch (error: any) {
@@ -214,6 +233,165 @@ router.post('/reset-password', async (req, res) => {
     res.json({ success: true, message: 'Password reset successful! You can now log in with your new password.' });
   } catch (error) {
     res.status(500).json({ error: 'Password reset failed' });
+  }
+});
+
+// GitHub OAuth Redirect Endpoint
+router.get('/github', (req: any, res) => {
+  const client_id = process.env.GITHUB_CLIENT_ID;
+  if (!client_id) {
+    return res.status(500).json({ error: 'GitHub OAuth is not configured in the workspace.' });
+  }
+  const baseUrl = process.env.VITE_APP_URL || `${req.protocol}://${req.get('host')}`;
+  const redirect_uri = `${baseUrl}/api/auth/github/callback`;
+  const githubUrl = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&scope=read:user,user:email`;
+  res.redirect(githubUrl);
+});
+
+// GitHub OAuth Callback Endpoint
+router.get('/github/callback', async (req: any, res) => {
+  const { code } = req.query;
+  if (!code) {
+    return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=no_code_provided');
+  }
+  
+  try {
+    const client_id = process.env.GITHUB_CLIENT_ID;
+    const client_secret = process.env.GITHUB_CLIENT_SECRET;
+    const baseUrl = process.env.VITE_APP_URL || `${req.protocol}://${req.get('host')}`;
+    const redirect_uri = `${baseUrl}/api/auth/github/callback`;
+    
+    // 1. Exchange OAuth code for an access token
+    const tokenUrl = 'https://github.com/login/oauth/access_token';
+    const tokenRes = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        client_id,
+        client_secret,
+        code,
+        redirect_uri
+      })
+    });
+    
+    const tokenData: any = await tokenRes.json();
+    if (!tokenData.access_token) {
+      console.error('[OAuth] Failed to retrieve access token:', tokenData);
+      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=token_failed');
+    }
+    
+    const accessToken = tokenData.access_token;
+    
+    // 2. Query basic GitHub user parameters
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'User-Agent': 'VibeLab-App'
+      }
+    });
+    const ghUser: any = await userRes.json();
+    
+    // 3. Query all registered github email lists
+    const emailsRes = await fetch('https://api.github.com/user/emails', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'User-Agent': 'VibeLab-App'
+      }
+    });
+    const ghEmails: any[] = await emailsRes.json();
+    const primaryEmailObj = Array.isArray(ghEmails) ? (ghEmails.find((e: any) => e.primary) || ghEmails[0]) : null;
+    const email = primaryEmailObj ? primaryEmailObj.email : `${ghUser.login}@github-vibelab.io`;
+    
+    if (!email) {
+      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=no_email_returned');
+    }
+    
+    const p = await getPool();
+    if (!p) {
+      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=db_failed');
+    }
+    
+    // 4. Trace if user email is registered or if a new user registration is needed
+    const [rows]: any = await p.execute('SELECT * FROM users WHERE email = ?', [email]);
+    let user = null;
+    
+    if (rows.length > 0) {
+      user = rows[0];
+      // Sync github properties if empty or unlinked
+      await p.execute(
+        'UPDATE users SET github_handle = ?, github_url = ?, avatar_url = COALESCE(avatar_url, ?) WHERE id = ?',
+        [ghUser.login, ghUser.html_url, ghUser.avatar_url || '', user.id]
+      );
+      // Fetch updated user to get vl_id and everything
+      const [updatedRows]: any = await p.execute('SELECT * FROM users WHERE id = ?', [user.id]);
+      user = updatedRows[0];
+    } else {
+      // Setup dynamic secure hash password for GitHub user accounts
+      const { randomBytes } = await import('crypto');
+      const randomPassword = randomBytes(16).toString('hex');
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      
+      const year = new Date().getFullYear();
+      const [countRes]: any = await p.execute(
+        'SELECT COUNT(*) as total FROM users WHERE YEAR(created_at) = ?',
+        [year]
+      );
+      const nextVal = (countRes[0].total + 1).toString().padStart(5, '0');
+      let vlId = `VL-${year}-${nextVal}`;
+      
+      let counter = 1;
+      while (true) {
+        const [checkRes]: any = await p.execute('SELECT id FROM users WHERE vl_id = ?', [vlId]);
+        if (checkRes.length === 0) break;
+        vlId = `VL-${year}-${(countRes[0].total + 1 + counter).toString().padStart(5, '0')}`;
+        counter++;
+      }
+      
+      const [insertRes]: any = await p.execute(
+        'INSERT INTO users (name, email, password, role, is_verified, github_handle, github_url, avatar_url, vl_id) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)',
+        [ghUser.name || ghUser.login, email, hashedPassword, 'student', ghUser.login, ghUser.html_url, ghUser.avatar_url, vlId]
+      );
+      
+      const newUserId = insertRes.insertId;
+      try {
+        const [firstPhase]: any = await p.execute('SELECT id FROM phases ORDER BY order_index ASC LIMIT 1');
+        if (firstPhase.length > 0) {
+          await p.execute(
+            'INSERT IGNORE INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, "active")',
+            [newUserId, firstPhase[0].id]
+          );
+        }
+      } catch (obErr) {
+        console.error('Onboarding Error:', obErr);
+      }
+      
+      const [userRow]: any = await p.execute('SELECT * FROM users WHERE id = ?', [newUserId]);
+      user = userRow[0];
+    }
+    
+    // 5. Generate validation JWT session
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    const userParam = encodeURIComponent(JSON.stringify({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar_url: user.avatar_url,
+      vl_id: user.vl_id
+    }));
+    
+    res.redirect(`${process.env.VITE_APP_URL || baseUrl}/login?token=${token}&user=${userParam}`);
+  } catch (err: any) {
+    console.error('[OAuth] Error in callback:', err);
+    return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=callback_exception');
   }
 });
 

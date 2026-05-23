@@ -38,6 +38,7 @@ interface Phase {
   order_index: number;
   status: 'locked' | 'active' | 'completed';
   progress_percentage: number;
+  topics_checklist?: string[];
 }
 
 interface Project {
@@ -98,6 +99,25 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [projectCodeState, setProjectCodeState] = useState<Record<number, string>>({});
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+
+  // Dynamic curriculum states
+  const [resources, setResources] = useState<any[]>([]);
+  const [checkedTopics, setCheckedTopics] = useState<string[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [previousQuizAttempt, setPreviousQuizAttempt] = useState<any>(null);
+  const [habitLogs, setHabitLogs] = useState<any[]>([]);
+  
+  // Interactive quiz states
+  const [quizActive, setQuizActive] = useState(false);
+  const [selectedQuizAnswers, setSelectedQuizAnswers] = useState<Record<number, number>>({});
+  const [quizSubmitting, setQuizSubmitting] = useState(false);
+  const [quizResult, setQuizResult] = useState<{ score: number, passed: boolean, correctCount: number, totalQuestions: number } | null>(null);
+  const [quizErrorMsg, setQuizErrorMsg] = useState('');
+
+  // Daily tracker logging states
+  const [learnMinutes, setLearnMinutes] = useState(15);
+  const [buildMinutes, setBuildMinutes] = useState(30);
+  const [isLoggingHabit, setIsLoggingHabit] = useState(false);
 
   const getCodeForStep = (index: number, codeState: Record<number, string>) => {
     if (codeState[index] !== undefined && codeState[index] !== '') {
@@ -220,6 +240,201 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
     }
   };
 
+  const getTopicsForPhase = (orderIndex: number) => {
+    switch (orderIndex) {
+      case 1:
+        return [
+          "Python Syntax & Language Basics",
+          "Scripting, Libraries & Native Code Modules",
+          "External API Integrations & Requests",
+          "Fundamental Web Server Architectures",
+          "Command Line Operations & OS Utilities",
+          "Pristine System Error and Exception Handling"
+        ];
+      case 2:
+        return [
+          "React Declarative UI, Component States & Props",
+          "Tailwind CSS Layout Utility Structures",
+          "React Hooks Lifecycle, UseState & UseEffect",
+          "Integrating Async Web API Fetch Requests",
+          "High Contrast Form Validation Patterns",
+          "Fluid Design & Mobile-First Device Rendering"
+        ];
+      case 3:
+        return [
+          "Express.js Config, Middleware Pipeline & Handling",
+          "RESTful Architectural Route Endpoints & Params",
+          "Stateless User Authentication & JWT Bearer Guards",
+          "Secured Server CORS Setup & Domain Rules",
+          "Centralized Error Pipelines & Fail-Safe Modulators",
+          "Optimized Production Compilation Builders"
+        ];
+      case 4:
+        return [
+          "Relational Model Concepts, Key Rules & Constraints",
+          "Complex Joining Queries, Nesting & Set Aggregations",
+          "Pristationary DB Seeding, Mocking & Migration Engines",
+          "Configuring Connection Pools & Max Ingress Rules",
+          "Adding DB Indexes & Execution Profiler Plans",
+          "Secure Raw MySQL Binding Placeholder Arguments"
+        ];
+      case 5:
+        return [
+          "Integrating Enterprise Google GenAI SDK Connectors",
+          "Constructing Specialized System Instruction Contexts",
+          "Prompt Conditioning, Temperature & Content Boundaries",
+          "Dynamic Stream Yield Readers & Real-Time Typing UI",
+          "Strict JSON Schema Output Enforcement Protocols",
+          "Designing Cognitive Semantic Search Systems with Vectors"
+        ];
+      case 6:
+        return [
+          "Federated Microservice Meshes & Gateway Routing",
+          "Decoupled Async Event Brokers & Task Queues",
+          "Containerizing Micro-Servers with Custom Docker Core",
+          "Multi-Tier In-Memory Caching Strategies",
+          "OWASP Top 10 Web Safety Protections & Firewalls",
+          "Autonomous Load Modulators & Gateway Ingress"
+        ];
+      case 7:
+        return [
+          "Packaging Complete Multi-Project Portfolios",
+          "Acing Technical whiteboard Sessions & Algorithmic Drills",
+          "Simulating Live Pair Programming Interviews",
+          "Crafting ATS-Optimized Technical Resumes",
+          "Continuous Delivery (CI/CD) and Cloud Deployment Pipelines",
+          "Networking inside of the Modern Engineering Ecosystem"
+        ];
+      default:
+        return [
+          "Mastering Modern Technical Systems Engineering Architecture",
+          "Deploying Cloud Services of Scaled Distributed Nodes",
+          "Ecosystem Security Audits, Monitoring Alerts & Logs"
+        ];
+    }
+  };
+
+  const handleTopicCheckToggle = async (topic: string) => {
+    const updated = checkedTopics.includes(topic)
+      ? checkedTopics.filter(t => t !== topic)
+      : [...checkedTopics, topic];
+
+    setCheckedTopics(updated);
+
+    try {
+      const token = localStorage.getItem('vibe_token') || localStorage.getItem('vibelab_token');
+      await fetch(`/api/phase/${phaseId}/checklist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ checklist: updated })
+      });
+      onProgress?.();
+    } catch (err) {
+      console.error("Failed to save checklist", err);
+    }
+  };
+
+  const handleLogHabit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingHabit(true);
+    try {
+      const token = localStorage.getItem('vibe_token') || localStorage.getItem('vibelab_token');
+      const today = new Date().toISOString().split('T')[0];
+      const res = await fetch('/api/habits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          logDate: today,
+          learnMinutes,
+          buildMinutes
+        })
+      });
+
+      if (res.ok) {
+        // Refresh habits log
+        const updatedLogsRes = await fetch('/api/habits', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (updatedLogsRes.ok) {
+          setHabitLogs(await updatedLogsRes.json());
+        }
+        alert("Daily effort logged successfully! Keep building!");
+      } else {
+        alert("Unable to log effort.");
+      }
+    } catch (err) {
+      console.error("Habit log error:", err);
+    } finally {
+      setIsLoggingHabit(false);
+    }
+  };
+
+  const handleQuizSubmitFinal = async () => {
+    if (Object.keys(selectedQuizAnswers).length === 0) {
+      alert("Please select answers before submitting!");
+      return;
+    }
+
+    setQuizSubmitting(true);
+    setQuizErrorMsg('');
+    try {
+      const token = localStorage.getItem('vibe_token') || localStorage.getItem('vibelab_token');
+      const answersArray = Object.entries(selectedQuizAnswers).map(([qId, sIdx]) => ({
+        questionId: parseInt(qId),
+        selectedIndex: sIdx
+      }));
+
+      const res = await fetch(`/api/phase/${phaseId}/quiz/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ answers: answersArray })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setQuizResult(data);
+        if (data.passed) {
+          // Re-fetch quiz data to update best attempt status
+          const qRes = await fetch(`/api/phase/${phaseId}/quiz`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (qRes.ok) {
+            const qData = await qRes.json();
+            setPreviousQuizAttempt(qData.previousAttempt || null);
+          }
+          // Also fetch phase details
+          const phaseRes = await fetch(`/api/phase/${phaseId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (phaseRes.ok) {
+            setPhase(await phaseRes.json());
+          }
+          onProgress?.();
+        }
+      } else {
+        const errorData = await res.json();
+        if (errorData.cooldown) {
+          setQuizErrorMsg(errorData.message);
+        } else {
+          setQuizErrorMsg(errorData.error || "Failed to submit answers.");
+        }
+      }
+    } catch (err) {
+      setQuizErrorMsg("Error submitting quiz details.");
+    } finally {
+      setQuizSubmitting(false);
+    }
+  };
+
   const handleAskTutor = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!tutorInput.trim() || !selectedProject) return;
@@ -279,7 +494,10 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
       ]);
 
       if (phaseRes.ok && projectsRes.ok) {
-        setPhase(await phaseRes.json());
+        const phaseData = await phaseRes.json();
+        setPhase(phaseData);
+        setCheckedTopics(phaseData.topics_checklist || []);
+        
         const projectsData = await projectsRes.json();
         const parsedProjects = projectsData.map((p: any) => {
           let codeState = p.code_state || {};
@@ -305,6 +523,29 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
         if (badgesRes.ok) {
           const badges = await badgesRes.json();
           setHasBadge(badges.some((b: any) => b.phase_id === phaseId));
+        }
+
+        // Fetch curriculum resources, quizzes and logged habits
+        try {
+          const [resRes, quizRes, habitsRes] = await Promise.all([
+            fetch(`/api/phase/${phaseId}/resources`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`/api/phase/${phaseId}/quiz`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`/api/habits`, { headers: { 'Authorization': `Bearer ${token}` } })
+          ]);
+          
+          if (resRes.ok) {
+            setResources(await resRes.json());
+          }
+          if (quizRes.ok) {
+            const qData = await quizRes.json();
+            setQuizQuestions(qData.questions || []);
+            setPreviousQuizAttempt(qData.previousAttempt || null);
+          }
+          if (habitsRes.ok) {
+            setHabitLogs(await habitsRes.json());
+          }
+        } catch (e) {
+          console.error("Curriculum dynamic datasets failed to fetch", e);
         }
       }
     } catch (err) {
@@ -478,6 +719,18 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
 
   if (!phase) return <div>Phase not found</div>;
 
+  const parseOptions = (optionsField: any) => {
+    if (!optionsField) return [];
+    if (typeof optionsField === 'string') {
+      try {
+        return JSON.parse(optionsField);
+      } catch (e) {
+        return [];
+      }
+    }
+    return optionsField;
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
@@ -529,13 +782,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             { id: 'progress', label: 'Progress', icon: <BarChart3 className="w-4 h-4" /> },
           ].map((tab) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                activeTab === tab.id 
-                  ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
-                  : 'text-slate-500 hover:bg-slate-50'
-              }`}
+               key={tab.id}
+               onClick={() => setActiveTab(tab.id as any)}
+               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                 activeTab === tab.id 
+                   ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
+                   : 'text-slate-500 hover:bg-slate-50'
+               }`}
             >
               {tab.icon}
               {tab.label}
@@ -552,67 +805,301 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="grid lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-8"
           >
+            {/* Left Content Side */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
-                <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
-                  <Sparkles className="text-cyan-500 w-6 h-6" />
-                  Core Concepts
-                </h2>
-                <div className="prose prose-slate max-w-none">
-                  <p className="text-lg text-slate-600 leading-relaxed mb-8">
-                    In this phase, you will dive deep into the fundamental building blocks of {phase.name.split(':')[1]?.trim() || 'the subject'}. 
-                    We focus on practical application rather than just theory.
-                  </p>
-                  
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {[
-                      { title: "Project Lifecycle", desc: "Understand how to manage a project from start to finish." },
-                      { title: "Architecture", desc: "Learn the high-level structure of modern applications." },
-                      { title: "Best Practices", desc: "Write clean, maintainable, and efficient code." },
-                      { title: "AI Workflows", desc: "Learn how to use AI to speed up your development." },
-                    ].map((concept, i) => (
-                      <motion.div 
-                        key={i} 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-200 hover:bg-white hover:shadow-md transition-all cursor-default group"
-                      >
-                        <h4 className="font-bold text-slate-900 mb-2 group-hover:text-cyan-600 transition-colors">{concept.title}</h4>
-                        <p className="text-sm text-slate-500 leading-relaxed">{concept.desc}</p>
-                      </motion.div>
-                    ))}
+              
+              {/* Honest Topics Progress Checklist */}
+              <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
+                      <Sparkles className="text-cyan-500 w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Curriculum Checklist</h2>
+                      <p className="text-xs text-slate-500 font-medium">Verify your understanding of these critical core concepts.</p>
+                    </div>
                   </div>
+                  <span className="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-600 rounded-full">
+                    {checkedTopics.length} / {getTopicsForPhase(phase.order_index).length} Core Checked
+                  </span>
                 </div>
+
+                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mb-8">
+                  <motion.div 
+                    className="h-full bg-cyan-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(checkedTopics.length / Math.max(1, getTopicsForPhase(phase.order_index).length)) * 100}%` }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {getTopicsForPhase(phase.order_index).map((topic, i) => {
+                    const isChecked = checkedTopics.includes(topic);
+                    return (
+                      <motion.div 
+                        key={i}
+                        whileHover={{ y: -2 }}
+                        onClick={() => handleTopicCheckToggle(topic)}
+                        className={`p-5 rounded-2xl border transition-all cursor-pointer flex items-start gap-4 ${
+                          isChecked 
+                            ? 'bg-slate-50/50 border-emerald-500/25 ring-1 ring-emerald-500/5 shadow-sm' 
+                            : 'bg-white border-slate-200/60 hover:border-slate-300 shadow-sm'
+                        }`}
+                      >
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border-2 mt-0.5 transition-all ${
+                          isChecked 
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-500' 
+                            : 'border-slate-300 bg-white text-transparent group-hover:border-slate-400'
+                        }`}>
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        </div>
+                        <div>
+                          <h4 className={`text-sm font-bold leading-snug ${isChecked ? 'text-slate-500 line-through' : 'text-slate-900'}`}>{topic}</h4>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Course Trivia Quiz Segment */}
+              <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                      <Trophy className="text-indigo-600 w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Phase Theory Challenge</h2>
+                      <p className="text-xs text-slate-500 font-medium">Verify your high theoretical proficiency with a 10-question quiz.</p>
+                    </div>
+                  </div>
+
+                  {previousQuizAttempt && (
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${
+                      previousQuizAttempt.passed 
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
+                        : 'bg-rose-50 border-rose-100 text-rose-700'
+                    }`}>
+                      Best Score: {previousQuizAttempt.score}% {previousQuizAttempt.passed ? 'PASSED' : 'RETRY'}
+                    </span>
+                  )}
+                </div>
+
+                {quizActive ? (
+                  /* Active Quiz Simulation Container */
+                  <div className="space-y-8 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                    <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Question Quiz Sheet</span>
+                      <button 
+                        onClick={() => {
+                          setQuizActive(false);
+                          setSelectedQuizAnswers({});
+                          setQuizResult(null);
+                        }}
+                        className="text-xs font-bold text-rose-600 hover:underline"
+                      >
+                        Cancel Quiz
+                      </button>
+                    </div>
+
+                    {quizQuestions.length > 0 ? (
+                      <div className="space-y-8">
+                        {quizQuestions.map((qIndex, index) => {
+                          const options = parseOptions(qIndex.options);
+                          return (
+                            <div key={qIndex.id} className="space-y-3">
+                              <p className="font-bold text-slate-900 text-base">
+                                {index + 1}. {qIndex.question}
+                              </p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {options.map((opt: string, optIdx: number) => {
+                                  const isSelected = selectedQuizAnswers[qIndex.id] === optIdx;
+                                  return (
+                                    <button
+                                      key={optIdx}
+                                      type="button"
+                                      onClick={() => setSelectedQuizAnswers(prev => ({ ...prev, [qIndex.id]: optIdx }))}
+                                      className={`p-4 rounded-xl border text-left text-sm font-medium transition-all ${
+                                        isSelected 
+                                          ? 'bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/10' 
+                                          : 'bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50'
+                                      }`}
+                                    >
+                                      {opt}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {quizResult && (
+                          <div className={`p-6 rounded-2xl border ${
+                            quizResult.passed 
+                              ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                              : 'bg-rose-50 border-rose-100 text-rose-800'
+                          }`}>
+                            <h4 className="font-bold text-lg mb-1">{quizResult.passed ? 'Congratulations!' : 'Practice makes perfect.'}</h4>
+                            <p className="text-sm">
+                              You scored <strong>{quizResult.score}%</strong>. ({quizResult.correctCount} of {quizResult.totalQuestions} questions correct). 
+                              {quizResult.passed ? ' You have satisfied the theoretical condition for Phase Certification!' : ' You must score 70% or higher to pass. You can retry immediately!'}
+                            </p>
+                          </div>
+                        )}
+
+                        {quizErrorMsg && (
+                          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-sm font-medium">
+                            {quizErrorMsg}
+                          </div>
+                        )}
+
+                        <div className="pt-4 border-t border-slate-200/65 flex flex-col sm:flex-row items-center justify-between gap-4">
+                          <p className="text-xs text-slate-500 font-medium font-display">All answers are validated automatically on our Node.js servers.</p>
+                          <button
+                            type="button"
+                            disabled={quizSubmitting || Object.keys(selectedQuizAnswers).length < quizQuestions.length}
+                            onClick={handleQuizSubmitFinal}
+                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 font-bold text-white text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-40 active:scale-95 flex items-center gap-2"
+                          >
+                            {quizSubmitting ? (
+                              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4" />
+                            )}
+                            Grade Quiz
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500 font-medium text-center py-6">There are no quiz questions seeded for this phase yet.</p>
+                    )}
+                  </div>
+                ) : (
+                  /* Standard Inactive Quiz State Screen */
+                  <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 text-center flex flex-col items-center justify-center space-y-4">
+                    <Trophy className="w-10 h-10 text-slate-300" />
+                    <div>
+                      <h4 className="font-bold text-slate-900">Quiz Challenge</h4>
+                      <p className="text-slate-500 text-xs font-medium max-w-md mx-auto leading-relaxed mt-1">
+                        Consists of randomized questions covering core concepts in this phase. Pass threshold is 70%. Once passed, a secure 24-hour retake cooldown locks further attempts.
+                      </p>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setQuizActive(true);
+                        setQuizResult(null);
+                        setSelectedQuizAnswers({});
+                        setQuizErrorMsg('');
+                      }}
+                      className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
+                    >
+                      Start Trivia Quiz
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
+            {/* Right Side Column */}
             <div className="space-y-6">
+              
+              {/* Dynamic Flash Resources list */}
               <div className="glass p-8 rounded-[2.5rem] border-slate-200 bg-white shadow-sm">
-                <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
                   <Zap className="text-amber-500 w-5 h-5" />
                   Flash Resources
                 </h3>
-                <div className="space-y-4">
-                  {[
-                    "Cheatsheet: Core Syntax",
-                    "Video: Architecture Overview",
-                    "Design: Layout Patterns",
-                    "Interactive: Logic Lab"
-                  ].map((res, i) => (
-                    <button 
-                      key={i} 
-                      onClick={() => setSelectedResource(res)}
+                <div className="space-y-3">
+                  {resources.length > 0 ? resources.map((res, i) => (
+                    <a 
+                      key={res.id || i} 
+                      href={res.url || "#"}
+                      target="_blank" 
+                      rel="noopener noreferrer"
                       className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-cyan-200 hover:bg-slate-50 transition-all group shadow-sm active:scale-95"
                     >
-                      <span className="text-sm font-bold text-slate-600 group-hover:text-cyan-600">{res}</span>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
-                    </button>
-                  ))}
+                      <div>
+                        <span className="text-sm font-bold text-slate-800 group-hover:text-cyan-600 block leading-tight">{res.title}</span>
+                        <span className="text-[10px] text-slate-400 font-medium block mt-0.5 uppercase tracking-wider">{res.resource_type || 'Reading'}</span>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-cyan-400 shrink-0" />
+                    </a>
+                  )) : (
+                    <div className="text-center py-6 border border-dashed border-slate-200 bg-slate-50 rounded-xl">
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No dynamic custom resources added yet.</p>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Habit tracking construction hours logs */}
+              <div className="glass p-8 rounded-[2.5rem] border-slate-200 bg-white shadow-sm">
+                <form onSubmit={handleLogHabit} className="space-y-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                      <BookOpen className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900">Daily Build Log</h3>
+                      <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Save build minutes effort</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Read (min)</label>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={learnMinutes}
+                        onChange={(e) => setLearnMinutes(parseInt(e.target.value) || 0)}
+                        className="w-full p-3 rounded-xl border border-slate-200 font-mono text-sm bg-slate-50 text-slate-800 focus:outline-none focus:border-cyan-500 transition-colors"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Build (min)</label>
+                      <input 
+                        type="number"
+                        min="0"
+                        value={buildMinutes}
+                        onChange={(e) => setBuildMinutes(parseInt(e.target.value) || 0)}
+                        className="w-full p-3 rounded-xl border border-slate-200 font-mono text-sm bg-slate-50 text-slate-800 focus:outline-none focus:border-cyan-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={isLoggingHabit || (learnMinutes === 0 && buildMinutes === 0)}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-colors disabled:opacity-50"
+                  >
+                    {isLoggingHabit ? "Saving minutes..." : "Log Effort Minutes"}
+                  </button>
+                </form>
+
+                {/* Micro history review list */}
+                {habitLogs.length > 0 && (
+                  <div className="mt-6 pt-4 border-t border-slate-100">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Recent Build Logs</h4>
+                    <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                      {habitLogs.slice(-4).reverse().map((log, i) => (
+                        <div key={i} className="flex items-center justify-between text-xs p-2 bg-slate-50 rounded-lg text-slate-600 font-mono font-medium">
+                          <span>{new Date(log.log_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>
+                          <span>📚 {log.learn_minutes}m • 💻 {log.build_minutes}m</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
           </motion.div>
         )}

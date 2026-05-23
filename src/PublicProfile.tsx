@@ -16,19 +16,33 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profileRes, subsRes, badgesRes] = await Promise.all([
-          fetch(`/api/user/${userId}/profile`),
-          fetch(`/api/user/${userId}/submissions`),
-          fetch(`/api/user/${userId}/badges`)
-        ]);
-
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          setProfile(profileData);
-          setSubmissions(await subsRes.json());
-          setBadges(await badgesRes.json());
+        if (userId.startsWith('VL-')) {
+          // New unified public profile endpoint
+          const res = await fetch(`/api/profile/${userId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setProfile(data.user);
+            setSubmissions(data.submissions || []);
+            setBadges(data.badges || []);
+          } else {
+            setError(true);
+          }
         } else {
-          setError(true);
+          // Traditional incremental endpoints for backwards compatibility
+          const [profileRes, subsRes, badgesRes] = await Promise.all([
+            fetch(`/api/user/${userId}/profile`),
+            fetch(`/api/user/${userId}/submissions`),
+            fetch(`/api/user/${userId}/badges`)
+          ]);
+  
+          if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            setProfile(profileData);
+            setSubmissions(await subsRes.json());
+            setBadges(await badgesRes.json());
+          } else {
+            setError(true);
+          }
         }
       } catch (err) {
         setError(true);
@@ -344,7 +358,7 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
             <div className="px-4 text-center">
                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Verification Artifact ID</p>
                <code className="text-[10px] font-mono text-slate-300 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-                 VB-{userId.padStart(6, '0')}-{Date.now().toString().slice(-6)}
+                 VB-{(profile?.vl_id || userId).replace('VL-', '')}
                </code>
             </div>
 

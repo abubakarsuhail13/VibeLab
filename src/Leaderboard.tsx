@@ -114,7 +114,7 @@ export default function Leaderboard() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
                   className="px-8 py-6 grid grid-cols-12 gap-4 items-center hover:bg-slate-50/50 transition-colors group cursor-pointer"
-                  onClick={() => window.open(`/verify/${leader.id}`, '_blank')}
+                  onClick={() => window.open(`/verify/${leader.vl_id || leader.id}`, '_blank')}
                 >
                   <div className="col-span-1 font-mono text-sm text-slate-400">#{i + 4}</div>
                   <div className="col-span-6 flex items-center gap-4">
@@ -129,19 +129,19 @@ export default function Leaderboard() {
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">{leader.name}</h4>
-                      <p className="text-[10px] text-slate-400 font-medium">{leader.country}</p>
+                      <p className="text-[10px] text-slate-400 font-medium">{leader.country} • {leader.vl_id}</p>
                     </div>
                   </div>
                   <div className="col-span-2 text-center">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-xs font-bold border border-amber-100">
                       <Trophy size={12} />
-                      {leader.points_badges}
+                      {leader.badges_count} Badge{leader.badges_count !== 1 ? 's' : ''}
                     </span>
                   </div>
                   <div className="col-span-3 text-right flex items-center justify-end gap-4">
                     <div className="text-right">
-                       <span className="block text-lg font-black text-slate-900">{leader.total_score.toLocaleString()}</span>
-                       <span className="block text-[10px] text-slate-400 font-medium">{leader.points_submissions} submissions</span>
+                       <span className="block text-lg font-black text-slate-900">{leader.badges_count} Badge{leader.badges_count !== 1 ? 's' : ''}</span>
+                       <span className="block text-[10px] text-slate-400 font-medium">{leader.projects_count} submission{leader.projects_count !== 1 ? 's' : ''}</span>
                     </div>
                     <ChevronRight size={16} className="text-slate-300 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -174,7 +174,7 @@ function PodiumSpot({ leader, rank, color, icon, delay, featured = false }: any)
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay, duration: 0.5 }}
           className={`flex flex-col items-center group cursor-pointer ${featured ? 'order-first md:order-none' : ''}`}
-          onClick={() => window.open(`/verify/${leader.id}`, '_blank')}
+          onClick={() => window.open(`/verify/${leader.vl_id || leader.id}`, '_blank')}
         >
             <div className="relative mb-6">
                 <div className={`w-${featured ? '32' : '24'} h-${featured ? '32' : '24'} rounded-[2.5rem] bg-white p-2 shadow-2xl ring-4 ring-white relative z-10 group-hover:scale-105 transition-transform`}>
@@ -202,7 +202,7 @@ function PodiumSpot({ leader, rank, color, icon, delay, featured = false }: any)
                 </div>
                 <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
                    <TrendingUp size={14} className="text-emerald-500" />
-                   <span className="text-sm font-black text-slate-900">{leader.total_score.toLocaleString()}</span>
+                   <span className="text-sm font-black text-slate-900">{leader.badges_count} Badge{leader.badges_count !== 1 ? 's' : ''}</span>
                 </div>
             </div>
         </motion.div>

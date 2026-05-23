@@ -86,21 +86,23 @@ router.post('/contact', async (req, res) => {
 });
 
 router.get('/leaderboard', async (req, res) => {
-  const { period, country } = req.query;
+  const { country } = req.query;
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
     let query = `
       SELECT 
-        u.id, u.name, u.avatar_url, u.country,
-        COUNT(DISTINCT b.id) as points_badges,
-        COUNT(DISTINCT s.id) as points_submissions,
-        (SELECT COUNT(*) FROM user_phase_progress WHERE user_id = u.id AND status = 'completed') as points_phases,
-        (COUNT(DISTINCT b.id) * 100 + COUNT(DISTINCT s.id) * 20 + (SELECT COUNT(*) FROM user_phase_progress WHERE user_id = u.id AND status = 'completed') * 50) as total_score
+        u.id, 
+        u.name, 
+        u.avatar_url, 
+        u.country, 
+        u.vl_id,
+        u.current_role,
+        u.created_at as registration_date,
+        (SELECT COUNT(*) FROM badges WHERE user_id = u.id) as badges_count,
+        (SELECT COUNT(*) FROM project_submissions WHERE user_id = u.id) as projects_count
       FROM users u
-      LEFT JOIN badges b ON u.id = b.user_id ${period === 'monthly' ? 'AND b.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)' : ''}
-      LEFT JOIN project_submissions s ON u.id = s.user_id ${period === 'monthly' ? 'AND s.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)' : ''}
       WHERE 1=1
     `;
 
@@ -109,21 +111,146 @@ router.get('/leaderboard', async (req, res) => {
       query += ' AND u.country = ?';
       params.push(country);
     }
-    query += ' GROUP BY u.id HAVING total_score > 0 ORDER BY total_score DESC LIMIT 50';
+    
+    query += ' ORDER BY badges_count DESC, projects_count DESC, u.created_at ASC LIMIT 100';
 
     const [rows] = await p.execute(query, params);
     res.json(rows);
   } catch (error) {
+    console.error('Leaderboard error:', error);
     res.status(500).json({ error: 'Failed to fetch leaderboard' });
   }
 });
 
+// GET Public Profile by permanent vl_id (no auth required)
+router.get('/profile/:vl_id', async (req, res) => {
+  const { vl_id } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // Find user by VL-ID
+    const [userRows]: any = await p.execute(
+      'SELECT id, name, email, avatar_url, role, country, bio, github_url, github_handle, linkedin_url, current_role, created_at FROM users WHERE vl_id = ?',
+      [vl_id]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'Learner profile not found' });
+    }
+
+    const user = userRows[0];
+
+    // Find current active phase
+    const [activePhaseRows]: any = await p.execute(
+      `SELECT p.id, p.name, p.order_index 
+       FROM user_phase_progress upp 
+       JOIN phases p ON upp.phase_id = p.id 
+       WHERE upp.user_id = ? AND upp.status = 'active' 
+       ORDER BY p.order_index DESC LIMIT 1`,
+      [user.id]
+    );
+    const activePhase = activePhaseRows.length > 0 ? activePhaseRows[0] : null;
+
+    // Find visual bento-grid badges
+    const [badgeRows]: any = await p.execute(
+      `SELECT b.id, b.earned_at, b.certificate_url, p.id as phase_id, p.name as phase_name, p.order_index 
+       FROM badges b 
+       JOIN phases p ON b.phase_id = p.id 
+       WHERE b.user_id = ? 
+       ORDER BY p.order_index ASC`,
+      [user.id]
+    );
+
+    // Find completed project submissions
+    const [subRows]: any = await p.execute(
+      `SELECT s.id, s.github_url, s.live_url, s.description, s.created_at, p.title as project_title, ph.name as phase_name 
+       FROM project_submissions s 
+       JOIN phase_projects p ON s.project_id = p.id 
+       JOIN phases ph ON s.phase_id = ph.id 
+       WHERE s.user_id = ? 
+       ORDER BY s.created_at DESC`,
+      [user.id]
+    );
+
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        avatar_url: user.avatar_url,
+        role: user.role,
+        country: user.country,
+        bio: user.bio,
+        github_url: user.github_url,
+        github_handle: user.github_handle,
+        linkedin_url: user.linkedin_url,
+        current_role: user.current_role,
+        vl_id,
+        registration_date: user.created_at
+      },
+      activePhase,
+      badges: badgeRows,
+      submissions: subRows
+    });
+  } catch (err: any) {
+    console.error('Public profile fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve public profile.' });
+  }
+});
+
+// Employer Verification Portal (no auth required)
+router.get('/verify/:vl_id', async (req, res) => {
+  const { vl_id } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // Validate student existence
+    const [userRows]: any = await p.execute(
+      'SELECT id, name FROM users WHERE vl_id = ?',
+      [vl_id]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'Student ID not found in VibeLab register.' });
+    }
+
+    const student = userRows[0];
+
+    // Get certified badges
+    const [badgeRows]: any = await p.execute(
+      `SELECT b.id, b.earned_at, b.certificate_url, p.name as phase_title, p.order_index 
+       FROM badges b 
+       JOIN phases p ON b.phase_id = p.id 
+       WHERE b.user_id = ? 
+       ORDER BY p.order_index ASC`,
+      [student.id]
+    );
+
+    res.json({
+      studentName: student.name,
+      vlId: vl_id,
+      accomplishments: badgeRows.map((b: any) => ({
+        phaseCode: `PHASE-${b.order_index}`,
+        phaseTitle: b.phase_title,
+        dateCertified: b.earned_at,
+        certificateUrl: b.certificate_url,
+        status: 'Verified'
+      }))
+    });
+  } catch (err: any) {
+    console.error('Verification portal fetch error:', err);
+    res.status(500).json({ error: 'Failed to retrieve employer verification details.' });
+  }
+});
+
+// Backwards compatibility list
 router.get('/user/:userId/profile', async (req, res) => {
   const { userId } = req.params;
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
-    const [rows]: any = await p.execute('SELECT id, name, avatar_url, role, country, bio, github_username, created_at FROM users WHERE id = ?', [userId]);
+    const [rows]: any = await p.execute('SELECT id, name, avatar_url, role, country, bio, linkedin_url, github_url, github_handle, current_role, vl_id, created_at FROM users WHERE id = ?', [userId]);
     if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
     res.json(rows[0]);
   } catch (error) {
@@ -152,7 +279,7 @@ router.get('/user/:userId/badges', async (req, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     const [rows]: any = await p.execute(
-      'SELECT b.*, p.name as phase_name FROM badges b JOIN phases p ON b.phase_id = p.id WHERE b.user_id = ? ORDER BY b.created_at DESC',
+      'SELECT b.*, p.name as phase_name FROM badges b JOIN phases p ON b.phase_id = p.id WHERE b.user_id = ? ORDER BY b.earned_at DESC',
       [userId]
     );
     res.json(rows);

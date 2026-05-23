@@ -150,110 +150,176 @@ export const getPool = async () => {
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
             phase_id INT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            certificate_url TEXT,
             UNIQUE KEY user_phase_badge (user_id, phase_id),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (phase_id) REFERENCES phases(id) ON DELETE CASCADE
           )
         `);
 
-        // Seed initial phases if empty
-        const [phaseCount]: any = await connection.execute('SELECT COUNT(*) as count FROM phases');
-        if (phaseCount[0].count === 0) {
+        // Create Quiz content and habits tracking tables
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS quiz_questions (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            phase_id INT NOT NULL,
+            question TEXT NOT NULL,
+            options JSON NOT NULL,
+            correct_index INT NOT NULL,
+            FOREIGN KEY (phase_id) REFERENCES phases(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS quiz_attempts (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            phase_id INT NOT NULL,
+            score INT NOT NULL,
+            passed BOOLEAN NOT NULL,
+            attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (phase_id) REFERENCES phases(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS habit_logs (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            log_date DATE NOT NULL,
+            learn_minutes INT DEFAULT 0,
+            build_minutes INT DEFAULT 0,
+            logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_user_day (user_id, log_date),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS phase_resources (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            phase_id INT NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            type ENUM('video','book','repo','article') NOT NULL,
+            url TEXT NOT NULL,
+            FOREIGN KEY (phase_id) REFERENCES phases(id) ON DELETE CASCADE
+          )
+        `);
+
+        // Check and reconstruct the curriculum if it does not match Python-first v2 spec
+        await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
+        const [pCheck]: any = await connection.execute('SELECT name FROM phases WHERE order_index = 1');
+        const needsCurriculumReset = pCheck.length === 0 || !pCheck[0].name.toLowerCase().includes('python');
+        
+        if (needsCurriculumReset) {
+          console.log('Curriculum is outdated. Resetting and updating to VibeLab AI Skills path...');
+          await connection.execute('TRUNCATE TABLE phase_resources');
+          await connection.execute('TRUNCATE TABLE quiz_questions');
+          await connection.execute('TRUNCATE TABLE phase_projects');
+          await connection.execute('TRUNCATE TABLE phases');
+          
           const initialPhases = [
-            ['Phase 1: Foundations', 'Master the core concepts of software engineering and web fundamentals.', 1, 0],
-            ['Phase 2: Modern Frontend', 'Learn React, Tailwind CSS, and state management.', 2, 1],
-            ['Phase 3: Backend & APIs', 'Build robust server-side logic and RESTful APIs.', 3, 1],
-            ['Phase 4: Database Mastery', 'Design and optimize data structures for scale.', 4, 1],
-            ['Phase 5: AI Integration', 'Implement LLMs and generative AI features into apps.', 5, 1],
-            ['Phase 6: Fullstack Architectures', 'Design end-to-end systems that handle production loads.', 6, 1],
-            ['Phase 7: Career & Portfolio', 'Final projects and interview preparation.', 7, 1]
+            ['Phase 1 — Learn Python', 'Master Python variables, functions, HTTP requests, APIs, JSON handling, and OOP.', 1, 0],
+            ['Phase 2 — LLMs & AI Fundamentals', 'Delve into tokens, context windows, embeddings, prompt engineering, RAG, and vector databases.', 2, 1],
+            ['Phase 3 — Build Projects', 'Build full applications chaining LLM calls, handling data pipelines, and integrating AI into clean UX.', 3, 1],
+            ['Phase 4 — Learn AI Agents', 'Understand Model Context Protocol (MCP), tool-calling, agent memory, and multi-agent system pipelines.', 4, 1],
+            ['Phase 5 — Read Papers', 'Explore deep theoretical fundamentals of ReAct, Toolformer, Tree of Thoughts, Reflexion, and classic surveys.', 5, 1],
+            ['Phase 6 — Courses', 'Earn practical validation inside DeepLearning.AI or LangChain for LLMs/Agents, completing interactive capstones.', 6, 1],
+            ['Phase 7 — Deployment', 'Publish containerized services with FastAPI, Docker, CI/CD, and serverless Cloud tools.', 7, 1]
           ];
           for (const phase of initialPhases) {
             await connection.execute('INSERT INTO phases (name, description, order_index, is_locked_default) VALUES (?, ?, ?, ?)', phase);
           }
         }
+        await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
 
         // Seed initial projects for all phases if they are missing
         const [allPhases]: any = await connection.execute('SELECT id, order_index FROM phases ORDER BY order_index');
         
         const projectsByPhase: Record<number, any[][]> = {
           1: [
-            ['Personal Portfolio Website', 'Build a stunning, responsive personal portfolio website to showcase your future projects.', 'Beginner', ['HTML5', 'CSS3', 'Vercel Deployment'], [
-              {title:'Create homepage',desc:'Initialize your repository and set up a basic HTML structure.'},
-              {title:'Add navigation',desc:'Create About, Projects, and Contact sections with smooth scrolling.'},
-              {title:'Add project showcase section',desc:'Implement a clean grid to display your work.'},
-              {title:'Make responsive',desc:'Ensure the design looks great on mobile and desktop.'},
-              {title:'Deploy project',desc:'Connect your GitHub repo to Vercel and deploy your live site.'}
+            ['CLI Todo App', 'Build a Command Line Interface todo list using Python scripts, saving output state to standard file streams.', 'Beginner', ['Python Basics', 'File Handing', 'Argparse'], [
+              {title:'Setup project setup',desc:'Configure Python virtual environment and create main file.'},
+              {title:'Add functional CRUD tasks',desc:'Write core functions to add, review, and remove tasks.'},
+              {title:'File serialization',desc:'Save tasks list locally in JSON format.'}
             ], [
               {
                 step: 0,
-                content: 'Welcome to your first project! We will start by creating the core structure of your website. This involves setting up your index.html file and linking a stylesheet.',
-                starterCode: '<!DOCTYPE html>\n<html>\n<head>\n  <title>My Portfolio</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>',
-                instructions: '1. Create a folder named "portfolio".\n2. Create "index.html".\n3. Copy the starter code provided.'
-              },
-              {
-                step: 1,
-                content: 'Navigation is key for UX. Using HTML5 <nav> tags and CSS Flexbox is the modern way to build headers.',
-                starterCode: '<nav>\n  <ul>\n    <li><a href="#about">About</a></li>\n    <li><a href="#projects">Work</a></li>\n    <li><a href="#contact">Contact</a></li>\n  </ul>\n</nav>',
-                instructions: '1. Add a <nav> element to your body.\n2. Use an unordered list for links.'
-              },
-              {
-                step: 2,
-                content: 'Displaying your work requires a grid layout. CSS Grid is perfect for this.',
-                starterCode: '.project-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));\n  gap: 2rem;\n}',
-                instructions: '1. Create a section with class "project-grid".\n2. Add project cards inside.'
-              },
-              {
-                step: 3,
-                content: 'Most users view websites on mobile. Media queries allow you to adapt your layout.',
-                starterCode: '@media (max-width: 768px) {\n  .nav-links {\n    display: none;\n  }\n}',
-                instructions: '1. Use @media queries in your CSS.\n2. Test by resizing your browser.'
-              },
-              {
-                step: 4,
-                content: 'Final step! We will push this to GitHub and link it to Vercel for a live URL.',
-                instructions: '1. Initialize git: `git init`.\n2. Push to GitHub.\n3. Import project on Vercel dashboard.'
+                content: 'Welcome to Python Development! We will draft a simple Command-Line interface list first.',
+                starterCode: 'def main():\n    print("Task: CLI Todo App Initialized!")\n\nif __name__ == "__main__":\n    main()',
+                instructions: '1. Save the starter code.\n2. Execute in your Python local CLI.'
               }
             ]],
-            ['Interactive Task Manager', 'Create a robust task management application with local storage and advanced filtering.', 'Intermediate', ['JavaScript ES6', 'LocalStorage', 'CSS Variables'], [
-              {title:'Build task input UI',desc:'Create a functional input field and add button.'},
-              {title:'Create task list',desc:'Build the mechanism to display and manage multiple tasks.'},
-              {title:'Add local storage',desc:'Save task state to the browser’s local storage.'},
-              {title:'Add filters',desc:'Allow users to filter tasks by status or category.'},
-              {title:'Polish UI',desc:'Apply advanced CSS techniques for a professional finish.'}
-            ], [
-              {
-                step: 0,
-                content: 'Let\'s start with the UI. A clean input field and a clear "Add" button are essential.',
-                starterCode: '<input type="text" id="taskInput" placeholder="Add a new task...">\n<button id="addBtn">Add Task</button>',
-                instructions: '1. Create an input with id "taskInput".\n2. Create a button with id "addBtn".'
-              },
-              {
-                step: 1,
-                content: 'Use JavaScript to handle button clicks and append tasks to a list.',
-                starterCode: 'const addBtn = document.getElementById("addBtn");\naddBtn.addEventListener("click", () => {\n  const task = taskInput.value;\n  renderTask(task);\n});',
-                instructions: '1. Select elements using DOM API.\n2. Create an event listener.'
-              }
+            ['Weather API App', 'Interact with OpenWeather REST APIs to retrieve and parse atmospheric results based on query inputs.', 'Beginner', ['APIs', 'requests', 'JSON Parsing'], [
+              {title:'API credentials key',desc:'Initialize request configs and API params.'},
+              {title:'Send query requests',desc:'Query REST endpoints and decode incoming headers.'}
+            ]],
+            ['File Organizer Script', 'Automate workflow management by reading locally populated file paths and directory trees.', 'Intermediate', ['os', 'shutil', 'Automation'], [
+              {title:'Path mapping',desc:'Write loops searching folders and grouping by extensions.'}
+            ]],
+            ['Web Scraper', 'Parse online data fields and capture documents seamlessly using requests and BeautifulSoup.', 'Intermediate', ['BeautifulSoup4', 'Scraping'], [
+              {title:'Get raw markup document',desc:'Download content streams structure.'}
             ]]
           ],
           2: [
-            ['React Dashboard', 'Build a modern analytics dashboard with React.', 'Intermediate', ['React', 'Tailwind', 'Recharts'], [{title:'Setup',desc:'Vite + React'},{title:'Comps',desc:'Sidebar + Charts'},{title:'Data',desc:'Mock stats'}]]
+            ['Custom Prompt Library', 'Develop a prompts management suite saving optimized prompt templates, input vars, and models parameters.', 'Intermediate', ['Prompting', 'Variables', 'JSON Mapping'], [
+              {title:'Variables design model',desc:'Map system prompts with custom templates.'}
+            ], [
+              {
+                step: 0,
+                content: 'Build prompt loaders mapping template strings.',
+                starterCode: 'template = "Review this code: {code}"\nprint(template.format(code="print(123)"))'
+              }
+            ]],
+            ['Semantic Search Engine', 'Vectorize texts chunks using embeddings models and compute cosine similarity results.', 'Advanced', ['Embeddings', 'Cosine Similarity', 'Vector Math'], [
+              {title:'Generate embeddings',desc:'Connect text segments into semantic vectors.'}
+            ]],
+            ['RAG Document Q&A Bot', 'Design complete local Retrieval-Augmented Generation workflows utilizing text search mechanisms.', 'Advanced', ['RAG', 'VectorDB', 'Retrieval'], [
+              {title:'Chunk documents',desc:'Segment files and query embeddings databases.'}
+            ]]
           ],
           3: [
-            ['Social Media API', 'Build a backend for a social platform.', 'Advanced', ['Node.js', 'Express', 'JWT'], [{title:'Auth',desc:'JWT Login'},{title:'Posts',desc:'CRUD operations'},{title:'Likes',desc:'Relation logic'}]]
+            ['AI Chatbot', 'Build a live conversational platform maintaining active history threads and API integration.', 'Intermediate', ['Gemini API', 'History', 'React UI'], [
+              {title:'Initialize client',desc:'Construct dynamic chat streams.'}
+            ], [
+              {
+                step: 0,
+                content: 'Create message arrays forwarding past items to the API.',
+                starterCode: 'messages = [\n  {"role": "user", "parts": "Hello"}\n]'
+              }
+            ]],
+            ['PDF Q&A Bot', 'Upload and scan PDF contents to summarize topics directly.', 'Intermediate', ['PDF Parsing', 'Context Chaining'], []],
+            ['Voice Assistant', 'Integrate speech text transcriptions together with AI processing models.', 'Advanced', ['SpeechToText', 'Streaming API'], []],
+            ['Resume Analyzer', 'Scan profile resumes identifying key fields, missing credentials, and customized matching suggestions.', 'Intermediate', ['Formatting APIs', 'Scoring Model'], []],
+            ['RAG App', 'Complete enterprise-grade production level RAG builder.', 'Advanced', ['Full-stack RAG', 'Hybrid Search'], []]
           ],
           4: [
-            ['E-commerce Database', 'Schema design for complex inventory.', 'Advanced', ['MySQL', 'Indexing', 'Transactions'], [{title:'Schema',desc:'Tables design'},{title:'Queries',desc:'Complex joins'},{title:'Optimization',desc:'Index tune'}]]
+            ['Single-Agent Task Bot', 'Create autonomous agents using system tools executing CLI commands.', 'Advanced', ['Tool Calling', 'Agent Memory'], [
+              {title:'Bind function definitions',desc:'Expose custom tools to agent runtime.'}
+            ]],
+            ['Multi-Agent Pipeline', 'Set up multi-agent networks delegating tasks sequentially between writers and reviewers.', 'Advanced', ['Agent Networks', 'Task Pipelines'], []],
+            ['Auto Research Agent', 'Construct deep research engines writing comprehensive reports directly from online queries.', 'Expert', ['MCP Protocols', 'Auto-Search Systems'], []]
           ],
           5: [
-            ['AI Content Generator', 'Integrate Gemini for automatic blog posts.', 'Advanced', ['Gemini API', 'Node.js'], [{title:'Setup',desc:'API Key config'},{title:'Prompt',desc:'Engineering'},{title:'UI',desc:'Generation flow'}]]
+            ['Paper Summary Blog Post', 'Summarize key papers focusing on ReAct, Toolformer, and Tree of Thoughts methodologies.', 'Intermediate', ['Academic Reading', 'Literature Analysis'], [
+              {title:'Submit core outline',desc:'Compile paper insights and architectures differences.'}
+            ]],
+            ['Implement ReAct Agent', 'Code custom loops coordinating Reason and Action phases.', 'Expert', ['ReAct Paper', 'Execution Loops'], []],
+            ['Discussion Presentation', 'Create interactive presentations exploring system evaluations and hallucinations mitigation.', 'Intermediate', ['Evaluation Design', 'Presentation'], []]
           ],
           6: [
-            ['Real-time Chat App', 'Socket-based communication system.', 'Expert', ['WebSockets', 'Redis'], [{title:'Socket',desc:'Connection logic'},{title:'Rooms',desc:'Channel mapping'},{title:'History',desc:'DB persistence'}]]
+            ['Course Completion Proof', 'Upload and submit valid credential proofs from LangChain or DeepLearning.AI curricula.', 'Intermediate', ['Validation', 'Certification Upload'], [
+              {title:'Cert file upload',desc:'Validate proof metadata and links.'}
+            ]],
+            ['Capstone Project from Course', 'Build and share your final end-to-end coursework projects.', 'Expert', ['Full-stack Integration', 'Capstone Work'], []]
           ],
           7: [
-            ['Capstone Product', 'Your final graduation project.', 'Expert', ['Fullstack', 'AWS/Vercel'], [{title:'Pitch',desc:'Define product'},{title:'Build',desc:'MVP features'},{title:'Launch',desc:'Live demo'}]]
+            ['Deployed AI App (Live URL)', 'Deploy a production-ready application with a live domain publicly accessible.', 'Expert', ['FastAPI', 'Cloud Run', 'Production URL'], [
+              {title:'Route active deployment',desc:'Configure host rules, security API proxies, and release keys.'}
+            ]],
+            ['Dockerized Service', 'Package full application images with optimal dependencies and configurations.', 'Advanced', ['Docker', 'Containers', 'Optimized Images'], []],
+            ['CI/CD Pipeline Setup', 'Construct automated delivery workflows running lint, tests, and autodeploys on main branch commit.', 'Advanced', ['GitHub Actions', 'CI/CD Automation'], []]
           ]
         };
 
@@ -266,6 +332,171 @@ export const getPool = async () => {
                 'INSERT INTO phase_projects (phase_id, title, description, difficulty, requirements, steps, tutorial_data) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 [phase.id, pDetails[0], pDetails[1], pDetails[2], JSON.stringify(pDetails[3]), JSON.stringify(pDetails[4]), JSON.stringify(pDetails[5] || [])]
               );
+            }
+          }
+        }
+
+        // Seed 10 Quiz Questions per Phase if empty
+        const [quizQuestionsCount]: any = await connection.execute('SELECT COUNT(*) as count FROM quiz_questions');
+        if (quizQuestionsCount[0].count === 0) {
+          console.log('Seeding 10 quiz questions per phase...');
+          const questionsByPhaseOrder: Record<number, any[]> = {
+            1: [
+              { q: 'What is the correct file extension for Python files?', o: ['.py', '.pt', '.pyt', '.p'], c: 0 },
+              { q: 'Which built-in function is used to output text in Python?', o: ['input()', 'print()', 'output()', 'log()'], c: 1 },
+              { q: 'How do you create a function in Python?', o: ['function myFunc():', 'def myFunc():', 'create myFunc():', 'lambda myFunc():'], c: 1 },
+              { q: 'What does list.append() do?', o: ['Adds element at the start', 'Removes last element', 'Adds element at the end', 'Sorts the list'], c: 2 },
+              { q: 'Which data type is used to store key-value pairs?', o: ['list', 'tuple', 'set', 'dict'], c: 3 },
+              { q: 'What is the correct way to handle exceptions in Python?', o: ['try...except', 'try...catch', 'do...except', 'try...fail'], c: 0 },
+              { q: 'How do you import a module in Python?', o: ['require("module")', 'using module', 'import module', 'include module'], c: 2 },
+              { q: 'What does a virtual environment do?', o: ['Speeds up execution', 'Isolates package dependencies', 'Encrypts your source code', 'Backs up code to GitHub'], c: 1 },
+              { q: 'Which method is used to convert a JSON string to a dictionary?', o: ['json.dumps()', 'json.parse()', 'json.loads()', 'json.to_dict()'], c: 2 },
+              { q: 'In OOP, what is the role of self?', o: ['Refers to the original parent class', 'Refers to the instance of the class', 'Defines a static method', 'Imports the class itself'], c: 1 }
+            ],
+            2: [
+              { q: 'What is a "token" in the context of Large Language Models?', o: ['A cryptographic API key', 'A chunk of text or character sequence representing syllables/words', 'The speed rating of a model', 'A type of database index'], c: 1 },
+              { q: 'What does "context window" refer to?', o: ['The GUI editor size', 'Maximum tokens the model can process at once in a prompt + response', 'The network latency of LLMs api', 'Operating system window holding the chatbot'], c: 1 },
+              { q: 'What is the goal of "Prompt Engineering"?', o: ['Compiling LLM codebases', 'Designing and refining inputs to get accurate, structured outputs', 'Managing GPU cluster scheduling', 'Creating custom vector indexes'], c: 1 },
+              { q: 'What does RAG stand for in AI systems?', o: ['Random Access Generation', 'Retrieval-Augmented Generation', 'Recurrent Adversarial Grouping', 'Refined Agent Gateway'], c: 1 },
+              { q: 'What is the primary purpose of text Embeddings?', o: ['Translating high-level code to assembly', 'Representing words/sentences as dense numerical vectors in a semantic space', 'Encrypting prompt data dynamically', 'Compressing JSON file payloads'], c: 1 },
+              { q: 'What is a vector database principally used for?', o: ['SQL nested queries', 'Caching static CSS assets', 'Storing and querying dimensional vectors for fast semantic searches', 'Managing transactional bank logs'], c: 2 },
+              { q: 'Which model capability describes handling text alongside images?', o: ['Bilingual', 'Hyperdimensional', 'Multimodal', 'Recursive'], c: 2 },
+              { q: 'In LLMs generation parameters, what does "temperature" adjust?', o: ['GPU operation temperatures', 'Controls randomness and creativity in generated responses', 'Maximum prompt token limits', 'Network speed rates'], c: 1 },
+              { q: 'What is "hallucination" in LLMs?', o: ['Model stopping unexpectedly', 'Generating confident but false or unsupported facts', 'Retrieving documents from unauthorized sources', 'Crashing due to zero-division'], c: 1 },
+              { q: 'What is "fine-tuning"?', o: ['Tuning hyperparameters during inference', 'Refining system prompt wording', 'Training an existing base model further on a curated dataset for specific tasks', 'Converting models to work on Docker'], c: 2 }
+            ],
+            3: [
+              { q: 'How do you prevent public exposure of sensitive API keys?', o: ['Store them in window variables', 'Use server-side proxy API routes and process environment secrets', 'Include them in public index.html headers', 'Save them directly in local files inside public folders'], c: 1 },
+              { q: 'Which exchange format is preferred for transmitting structured AI outputs?', o: ['YAML', 'CSV', 'JSON', 'XML'], c: 2 },
+              { q: 'What sets semantic search apart from standard keyword search?', o: ['It only works inside SQL databases', 'Searching based on contextual meaning rather than matching character strings strictly', 'It requires specialized high-speed routers', 'It strictly checks spelling syntax'], c: 1 },
+              { q: 'What does "chaining LLM calls" mean?', o: ['Querying multiple different API keys simultaneously', 'Directly feeding the outputs of one API call as parameters to consecutive prompts', 'Duplicating models inside Docker containers', 'Grouping API calls in a database transaction'], c: 1 },
+              { q: 'Explain a primary benefit of RAG setups.', o: ['Allows models of smaller size to act instantly', 'Exposes real-time external files context without full model retraining', 'Stops models from checking spelling', 'Dramatically reduces server electric footprint'], c: 1 },
+              { q: 'Which of the following belongs to Google\'s modern client SDK?', o: ['@google/genai', '@google/g-model', 'google-ai-studio-client', '@google/gemini-rest'], c: 0 },
+              { q: 'Why is Tailwind helpful when building dynamic AI interfaces?', o: ['It performs GPU vector math natively', 'It styles responsive elements and layout grids instantly with convenient classes', 'It hosts models on the edge', 'It handles JWT token checks'], c: 1 },
+              { q: 'In document preparation for a vector search, why is chunking necessary?', o: ['To format text into bold Markdown headers', 'To stay within LLM embedding token limits and preserve context relevance', 'To translate text to another language', 'To parse images into vectors'], c: 1 },
+              { q: 'What is the purpose of setting a system-prompt or developer instructions?', o: ['It stores user profiles and emails', 'It configures the core behavior, constraints, and general persona of the agent', 'It compiles the React code', 'It speeds up network requests'], c: 1 },
+              { q: 'Why is a chat history list passed on consecutive LLM API requests?', o: ['To keep track of payment billing histories', 'To give the stateless API model the full flow and context of the interaction', 'To cache results on the proxy', 'To generate analytics graphs'], c: 1 }
+            ],
+            4: [
+              { q: 'What does MCP stand for in modern AI agent context?', o: ['Model Context Protocol', 'Micro Controller Process', 'Many Core Processor', 'Module Cache Proxy'], c: 0 },
+              { q: 'What is "Tool Calling" or function-calling?', o: ['The developer writing APIs', 'The LLM planning and emitting a response specifying function names and arguments to run', 'A remote procedure call protocol', 'Installing external server dependencies'], c: 1 },
+              { q: 'What constitutes an agent\'s memory?', o: ['The system hard-disk storage space', 'Persistent logging of tool execution runs and dialogue history to guide future plans', 'An API token cache', 'Using Redis servers only'], c: 1 },
+              { q: 'What is the core feature of a Multi-Agent system?', o: ['A server holding multiple API keys', 'Multiple autonomous programs, each with distinct roles, collaborating together', 'Using multiple GPUs concurrently', 'A chatbot translates multiple languages'], c: 1 },
+              { q: 'Which library is well-known for structuring agents or agents pipelines?', o: ['Vite', 'LangChain', 'Express', 'React Query'], c: 1 },
+              { q: 'What is the ReAct loop pattern?', o: ['React state rendering lifecycle', 'Interleaving Reasoning (thoughts) and Actions (executing tools) sequentially', 'An automated testing framework', 'Encrypting API requests'], c: 1 },
+              { q: 'Why must agent configurations specify maximum loops limits?', o: ['To restrict developer credentials', 'To prevent accidental infinite loops throwing the billing budget into distress', 'To structure JSON outputs', 'To force the container to reboot'], c: 1 },
+              { q: 'What is an "orchestrator" agent responsible for?', o: ['Rendering graphs and charts', 'Reviewing, breaking down tasks, and assigning subtasks to specialized helper agents', 'Decrypting user sessions lists', 'Handling database connections pools'], c: 1 },
+              { q: 'How does an agent signal it has finished a complex plan?', o: ['It requests user logout', 'The LLM triggers a final answer or termination tool call', 'It resets the local database', 'It returns a 404 http response'], c: 1 },
+              { q: 'How does MCP assist agents operating locally?', o: ['By serving raw HTML/CSS templates', 'By standardizing the connection protocol to local databases, resources, and dev tool wrappers', 'By compiling TypeScript code', 'By compressing files sizes'], c: 1 }
+            ],
+            5: [
+              { q: 'What mechanism is pioneered in the classic ReAct paper?', o: ['Client-side React rendering improvements', 'Interleaving text reasoning chains side-by-side with execution action steps', 'Building database triggers', 'Encrypting files over web sockets'], c: 1 },
+              { q: 'What does the "Toolformer" paper showcase?', o: ['An LLM training itself to decide when and how to call external APIs dynamically', 'An early form of vector storage', 'A visual node editor for prompts', 'A compiler translating Python to JS'], c: 0 },
+              { q: 'What is "Tree of Thoughts"?', o: ['Mapping folder hierarchies recursively', 'Allowing LLMs to explore multiple reasoning paths at once, with backtracking', 'A type of binary search tree in C++', 'Structuring prompts in nested layers'], c: 1 },
+              { q: 'In the Reflexion paper, how do agents optimize their workflows?', o: ['By upgrading server hardware, memory, and pipelines', 'By reflecting on trial-and-error runs, writing feedback to improve subsequent trials', 'By calling support APIs', 'By requesting user clarifications'], c: 1 },
+              { q: 'What does the classic RAG survey paper summarize as primary benefits?', o: ['RAG significantly reduces hallucinations and updates background knowledge easily', 'RAG removes the need to write backend code', 'RAG speeds up client-side framework builds', 'RAG removes JWT checks'], c: 0 },
+              { q: 'Why should AI engineers stay up-to-date with top academic journals and arXiv prints?', o: ['To satisfy legal licensing parameters', 'To construct bleeding-edge features and apply novel algorithms before libraries adopt them', 'To format source files correctly', 'To monitor server bandwidth load'], c: 1 },
+              { q: 'Which seminal paper introduced the Transformer architecture?', o: ['Attention Is All You Need', 'Deep Residual Learning for Image Recognition', 'Generative Adversarial Nets', 'BERT: Pre-training of Deep Bidirectional Transformers'], c: 0 },
+              { q: 'In Tree of Thoughts, what techniques evaluate each node?', o: ['Standard unit tests', 'Heuristic search algorithms like Depth-First or Breadth-First search evaluation prompts', 'Regular expressions string tests', 'SQL indexing query timers'], c: 1 },
+              { q: 'What components are cycled in the ReAct protocol?', o: ['Files, Functions, and Responses', 'Thoughts, Actions, and Observations', 'Queries, Indexes, and Documents', 'Inputs, Midpoints, and Outputs'], c: 1 },
+              { q: 'In Reflexion, how is evaluation feedback preserved?', o: ['Written to public blog articles', 'Appended to agent memory as persistent context across consecutive validation attempts', 'Saved in cookies variables', 'Shared to Twitter bots'], c: 1 }
+            ],
+            6: [
+              { q: 'Which educator is famous for launching DeepLearning.AI?', o: ['Yann LeCun', 'Andrew Ng', 'Geoffrey Hinton', 'Demis Hassabis'], c: 1 },
+              { q: 'LangChain provides framework capabilities for which platforms?', o: ['Only web plugins', 'JavaScript/TypeScript, Python, and other packages ecosystems', 'Only C++ systems', 'Only Linux engines'], c: 1 },
+              { q: 'When designing vector databases for production, what must be factored?', o: ['Indexing structures (e.g., HNSW), latency profiles, cost, and clustering scales', 'The background canvas image colors', 'Selecting standard SQL joins instead', 'Normalizing text tables fields'], c: 0 },
+              { q: 'What does the concept of LLMOps emphasize?', o: ['Writing simpler Python models', 'Constructing full integration pipelines, logging, evaluators, drift tracking, and model monitoring', 'Adding stylish CSS gradients sheets', 'Compressing node_modules files'], c: 1 },
+              { q: 'In building production-ready AI agents, which topic is crucial?', o: ['Standard HTML buttons layouts', 'Configuring evaluators, testing safety boundaries, managing costs, and tracing agents execute steps', 'Caching client router states', 'Configuring CSS media queries'], c: 1 },
+              { q: 'What is the primary indicator of a successful capstone graduation build?', o: ['A clean README file', 'A working, deployed end-to-end full-stack AI application solving a concrete issue', 'Utilizing a massive quantity of CSS classes', 'An impressive PowerPoint pitch deck'], c: 1 },
+              { q: 'Why is LLM evaluation tricky compared to standard unit tests?', o: ['Unit tests require API key limits', 'Model responses are highly non-deterministic and semantic, requiring soft-text validation', 'Models do not support testing tools', 'TypeScript enums compile to JS'], c: 1 },
+              { q: 'What is "Prompt Injection"?', o: ['Accelerating model generation timers', 'Malicious user prompts designed to bypass/override general system instructions and safety rules', 'Injecting model data during Docker run', 'Loading vector indexes dynamically'], c: 1 },
+              { q: 'What does dynamic tracing do in AI debugging?', o: ['Logs standard container load metrics', 'Allows developers to inspect the exact prompt, token count, tool execution, and output for each sub-step', 'Optimizes database query schemas', 'Hot-reloads CSS style classes'], c: 1 },
+              { q: 'What is the utility of setting strict rate-limiting for public AI tools?', o: ['To force users to register higher screen accounts', 'To preserve cloud budgets, prevent API key abuse, and maintain overall service availability', 'To reduce text files outputs sizes', 'To force CSS files to minify'], c: 1 }
+            ],
+            7: [
+              { q: 'What is FastAPI outstandingly suited for?', o: ['Serving heavy desktop graphics workloads', 'Building high-performance, asynchronous, self-documenting REST APIs in Python', 'Formatting offline document tables', 'Compiling React frontend pages'], c: 1 },
+              { q: 'What does a Dockerfile declare?', o: ['Database SQL seed instructions', 'Detailed containerized system configurations, operating layers, and startup commands', 'React UI components hierarchies', 'Mail transport SMTP variables'], c: 1 },
+              { q: 'What are GitHub Actions predominantly utilized for?', o: ['Recording real-time video audio transcripts', 'Executing automated linting, tests, build steps, and deployment pipelines upon code commits', 'Hosting databases on the cloud', 'Adding style presets to Tailwind modules'], c: 1 },
+              { q: 'What does the acronym CI/CD highlight?', o: ['Continuous Integration and Continuous Deployment', 'Custom Interfaces and Constant Deliveries', 'Container Isolation and Client Detection', 'Cloud Interaction and Database Cache'], c: 0 },
+              { q: 'Which option represents a serverless container hosting service?', o: ['Vite Server', 'AWS Fargate or GCP Cloud Run', 'MySQL Database engine', 'Local Node.js process'], c: 1 },
+              { q: 'By what mechanism does FastAPI self-document APIs?', o: ['By reading comments manually', 'Natively outputting OpenAPI standards, providing built-in interactive Swagger UI tables', 'Saving Word document guides', 'Sharing code to GitHub repositories'], c: 1 },
+              { q: 'What is the advantage of containerizing AI pipelines?', o: ['It avoids installing any libraries', 'It ensures absolute dependency parity (CUDA, Python versions, packages) across any hosts', 'It replaces the need for database engines', 'It automatically writes documentation'], c: 1 },
+              { q: 'Why is zero-downtime deployment critical for public tools?', o: ['To satisfy SEO spiders rankings', 'To transition traffic smoothly, ensuring active users don\'t face service disruptions', 'To reduce Docker images size', 'To bypass JWT tokens verification'], c: 1 },
+              { q: 'On our platform, what host port configuration is required for external entry queries?', o: ['Port 80 and 443 strictly inside containers', 'Port 3000 strictly, routed via reverse proxy', 'It changes on each container boot', 'No ports are open to the runtime'], c: 1 },
+              { q: 'What is blue-green deployment?', o: ['Styling applications with blue/green CSS styles patterns', 'Maintaining dual production environments (Active/Idle) to safely test and transfer users live', 'Hosting apps on dual cloud machines', 'Writing unit tests with green outputs'], c: 1 }
+            ]
+          };
+
+          for (const [phaseOrderText, list] of Object.entries(questionsByPhaseOrder)) {
+            const phaseOrder = parseInt(phaseOrderText);
+            const [pRow]: any = await connection.execute('SELECT id FROM phases WHERE order_index = ?', [phaseOrder]);
+            if (pRow.length > 0) {
+              const phaseId = pRow[0].id;
+              for (const item of list) {
+                await connection.execute(
+                  'INSERT INTO quiz_questions (phase_id, question, options, correct_index) VALUES (?, ?, ?, ?)',
+                  [phaseId, item.q, JSON.stringify(item.o), item.c]
+                );
+              }
+            }
+          }
+        }
+
+        // Seed Phase Resources if empty
+        const [resourcesCount]: any = await connection.execute('SELECT COUNT(*) as count FROM phase_resources');
+        if (resourcesCount[0].count === 0) {
+          console.log('Seeding initial learning resources per phase...');
+          const resourcesList: Record<number, any[][]> = {
+            1: [
+              ['Core Python For Beginners', 'video', 'https://www.youtube.com/watch?v=kqtD5dpn9C8'],
+              ['BeautifulSoup Web Scraping Tutorial', 'video', 'https://www.youtube.com/watch?v=XVv6mJpFOb0'],
+              ['Official Python Tutorial Documentation', 'article', 'https://docs.python.org/3/tutorial/index.html'],
+              ['Python CLI Argparse Guide', 'article', 'https://docs.python.org/3/howto/argparse.html']
+            ],
+            2: [
+              ['Large Language Models in a Nutshell', 'video', 'https://www.youtube.com/watch?v=zjkBMFhNj_g'],
+              ['What is a Vector Database?', 'article', 'https://www.mongodb.com/resources/basics/databases/vector-database'],
+              ['OpenAI Prompt Engineering Guide', 'repo', 'https://github.com/openai/openai-cookbook'],
+              ['RAG Fundamentals Explained', 'article', 'https://blogs.nvidia.com/blog/what-is-retrieval-augmented-generation/']
+            ],
+            3: [
+              ['Building AI Apps with Google Gemini API', 'video', 'https://www.youtube.com/watch?v=A39_eUf6M94'],
+              ['LangChain Full Course for Beginners', 'video', 'https://www.youtube.com/watch?v=lG7Uxts9SXs'],
+              ['NextJS Full Stack AI Templates', 'repo', 'https://github.com/steven-tey/precedency']
+            ],
+            4: [
+              ['Model Context Protocol Introduction', 'article', 'https://modelcontextprotocol.io/introduction'],
+              ['What are AI Agents?', 'video', 'https://www.youtube.com/watch?v=F8NKVhk0Kf8'],
+              ['LangGraph Multi-Agent Architecture', 'repo', 'https://github.com/langchain-ai/langgraph']
+            ],
+            5: [
+              ['ReAct: Synergizing Reasoning and Acting in Language Models', 'article', 'https://arxiv.org/abs/2210.03629'],
+              ['Toolformer: Language Models Can Teach Themselves to Use Tools', 'article', 'https://arxiv.org/abs/2302.04761'],
+              ['Tree of Thoughts: Deliberate Problem Solving with Language Models', 'article', 'https://arxiv.org/abs/2305.10601'],
+              ['Reflexion: Language Agents with Active Learning from Self-Reflection', 'article', 'https://arxiv.org/abs/2303.11366']
+            ],
+            6: [
+              ['LangChain Academy - Multi-Agent Systems in Production', 'video', 'https://academy.langchain.com/'],
+              ['DeepLearning.AI Official Course platform', 'video', 'https://www.deeplearning.ai/']
+            ],
+            7: [
+              ['FastAPI Production Checklist', 'article', 'https://fastapi.tiangolo.com/deployment/'],
+              ['Dockerizing Node & Python Applications', 'article', 'https://docs.docker.com/language/node/'],
+              ['GitHub Actions CI/CD Complete Workflows', 'article', 'https://docs.github.com/en/actions']
+            ]
+          };
+
+          for (const [phaseOrderText, list] of Object.entries(resourcesList)) {
+            const phaseOrder = parseInt(phaseOrderText);
+            const [pRow]: any = await connection.execute('SELECT id FROM phases WHERE order_index = ?', [phaseOrder]);
+            if (pRow.length > 0) {
+              const phaseId = pRow[0].id;
+              for (const item of list) {
+                await connection.execute(
+                  'INSERT INTO phase_resources (phase_id, title, type, url) VALUES (?, ?, ?, ?)',
+                  [phaseId, item[0], item[1], item[2]]
+                );
+              }
             }
           }
         }
@@ -307,8 +538,50 @@ export const getPool = async () => {
         if (!columnNames.includes('bio')) {
           await connection.execute('ALTER TABLE users ADD COLUMN bio TEXT');
         }
-        if (!columnNames.includes('github_username')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN github_username VARCHAR(100)');
+        if (!columnNames.includes('linkedin_url')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN linkedin_url VARCHAR(255)');
+        }
+        if (!columnNames.includes('github_url')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN github_url VARCHAR(255)');
+        }
+        if (!columnNames.includes('github_handle')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN github_handle VARCHAR(100)');
+        }
+        if (!columnNames.includes('current_role')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN current_role VARCHAR(100)');
+        }
+        if (!columnNames.includes('vl_id')) {
+          await connection.execute('ALTER TABLE users ADD COLUMN vl_id VARCHAR(20) UNIQUE');
+        }
+
+        // Migration query to assign vl_id for users with NULL results
+        try {
+          const [usersWithoutVlId]: any = await connection.execute(
+            'SELECT id, created_at FROM users WHERE vl_id IS NULL'
+          );
+          for (const u of usersWithoutVlId) {
+            const date = u.created_at ? new Date(u.created_at) : new Date();
+            const year = date.getFullYear();
+            const [countRes]: any = await connection.execute(
+              'SELECT COUNT(*) as total FROM users WHERE YEAR(created_at) = ? AND id < ?',
+              [year, u.id]
+            );
+            const nextVal = (countRes[0].total + 1).toString().padStart(5, '0');
+            const newVlId = `VL-${year}-${nextVal}`;
+
+            let checkId = newVlId;
+            let counter = 1;
+            while (true) {
+              const [checkRes]: any = await connection.execute('SELECT id FROM users WHERE vl_id = ?', [checkId]);
+              if (checkRes.length === 0) break;
+              checkId = `VL-${year}-${(countRes[0].total + 1 + counter).toString().padStart(5, '0')}`;
+              counter++;
+            }
+
+            await connection.execute('UPDATE users SET vl_id = ? WHERE id = ?', [checkId, u.id]);
+          }
+        } catch (vlErr: any) {
+          console.error("Error migrating vl_id for existing users:", vlErr.message);
         }
 
         // New interactive columns
@@ -322,6 +595,21 @@ export const getPool = async () => {
         const uppColumnNames = uppColumns.map((c: any) => c.Field);
         if (!uppColumnNames.includes('last_active_step')) {
           await connection.execute('ALTER TABLE user_project_progress ADD COLUMN last_active_step INT DEFAULT 0');
+        }
+
+        const [uPhaseColumns]: any = await connection.execute('SHOW COLUMNS FROM user_phase_progress');
+        const uPhaseColumnNames = uPhaseColumns.map((c: any) => c.Field);
+        if (!uPhaseColumnNames.includes('topics_checklist')) {
+          await connection.execute('ALTER TABLE user_phase_progress ADD COLUMN topics_checklist JSON');
+        }
+
+        const [badgesColumns]: any = await connection.execute('SHOW COLUMNS FROM badges');
+        const badgesColumnNames = badgesColumns.map((c: any) => c.Field);
+        if (!badgesColumnNames.includes('certificate_url')) {
+          await connection.execute('ALTER TABLE badges ADD COLUMN certificate_url TEXT');
+        }
+        if (!badgesColumnNames.includes('earned_at')) {
+          await connection.execute('ALTER TABLE badges ADD COLUMN earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
         }
 
         console.log('DB Debug: Tables verified/created.');
