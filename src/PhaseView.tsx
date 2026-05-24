@@ -28,7 +28,8 @@ import {
   Monitor,
   Smartphone,
   Tablet,
-  RotateCw
+  RotateCw,
+  AlertTriangle
 } from "lucide-react";
 
 interface Phase {
@@ -86,6 +87,8 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [hasBadge, setHasBadge] = useState(false);
   const [selectedResource, setSelectedResource] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [certifyErrorMsg, setCertifyErrorMsg] = useState("");
   const [submitProjectId, setSubmitProjectId] = useState<number | null>(null);
   const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -557,6 +560,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
 
   const handleCertify = async () => {
     setIsCertifying(true);
+    setCertifyErrorMsg("");
     try {
       const token = localStorage.getItem('vibelab_token');
       const response = await fetch(`/api/phase/${phaseId}/certify`, {
@@ -570,10 +574,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
         onProgress?.(); // Refresh dashboard/sidebar
       } else {
         const errorData = await response.json();
-        alert(errorData.error || "Certification failed");
+        setCertifyErrorMsg(errorData.error || "Certification failed");
+        setShowErrorModal(true);
       }
     } catch (err) {
       console.error("Failed to certify", err);
+      setCertifyErrorMsg("Unable to contact the server. Please verify your connection.");
+      setShowErrorModal(true);
     } finally {
       setIsCertifying(false);
     }
@@ -733,6 +740,95 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <AnimatePresence>
+        {showErrorModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            onClick={() => setShowErrorModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 40 }}
+              className="bg-white rounded-[3rem] p-12 max-w-lg w-full shadow-2xl text-center relative overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-400 via-orange-500 to-rose-400 animate-gradient" />
+               <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-8 ring-8 ring-rose-50/50">
+                 <AlertTriangle className="w-12 h-12 text-rose-500" />
+               </div>
+               
+               <h2 className="text-3xl font-display font-bold text-slate-900 mb-4 tracking-tight">Requirement Missing</h2>
+               <p className="text-slate-600 mb-8 leading-relaxed text-sm">
+                 {certifyErrorMsg.replace("Certification Condition Failed: ", "")}
+               </p>
+
+               <div className="flex flex-col gap-3">
+                 {certifyErrorMsg.toLowerCase().includes("quiz") && (
+                   <button 
+                     onClick={() => {
+                       setActiveTab('learn');
+                       setShowErrorModal(false);
+                       setTimeout(() => {
+                         const qElement = document.getElementById("quiz-challenge-section");
+                         if (qElement) {
+                           qElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                         }
+                       }, 200);
+                     }}
+                     className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                   >
+                     <BookOpen className="w-4 h-4" />
+                     Take Phase Quiz Now
+                   </button>
+                 )}
+
+                 {(certifyErrorMsg.toLowerCase().includes("topics") || certifyErrorMsg.toLowerCase().includes("checklist")) && (
+                   <button 
+                     onClick={() => {
+                       setActiveTab('learn');
+                       setShowErrorModal(false);
+                       setTimeout(() => {
+                         const cElement = document.getElementById("curriculum-checklist-section");
+                         if (cElement) {
+                           cElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                         }
+                       }, 200);
+                     }}
+                     className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                   >
+                     <CheckCircle2 className="w-4 h-4" />
+                     Review Curriculum Checklist
+                   </button>
+                 )}
+
+                 {certifyErrorMsg.toLowerCase().includes("project") && (
+                   <button 
+                     onClick={() => {
+                       setActiveTab('build');
+                       setShowErrorModal(false);
+                     }}
+                     className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                   >
+                     <Code2 className="w-4 h-4" />
+                     Go to Projects View
+                   </button>
+                 )}
+
+                 <button 
+                   onClick={() => setShowErrorModal(false)}
+                   className="w-full py-4 bg-slate-50 text-slate-600 border border-slate-100 rounded-2xl font-bold text-sm hover:bg-slate-100 transition-all active:scale-95"
+                 >
+                   Dismiss
+                 </button>
+               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-6">
@@ -811,7 +907,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             <div className="lg:col-span-2 space-y-6">
               
               {/* Honest Topics Progress Checklist */}
-              <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
+              <div id="curriculum-checklist-section" className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
@@ -866,7 +962,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               </div>
 
               {/* Course Trivia Quiz Segment */}
-              <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
+              <div id="quiz-challenge-section" className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
