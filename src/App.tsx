@@ -1336,38 +1336,59 @@ export default function App() {
     const oauthToken = params.get('token');
     const oauthUser = params.get('user');
 
+    let loggedInUser: any = null;
+
     if (oauthToken && oauthUser) {
       try {
         const parsedUser = JSON.parse(decodeURIComponent(oauthUser));
         localStorage.setItem('vibelab_token', oauthToken);
         localStorage.setItem('vibelab_user', JSON.stringify(parsedUser));
         setUser(parsedUser);
+        loggedInUser = parsedUser;
         setCurrentPage('dashboard');
 
         // Clean up the URL query params without reloading the page
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
-        return;
       } catch (err) {
         console.error("Failed to parse OAuth callback user parameters", err);
       }
+    } else {
+      // 2. Load existing session
+      const savedUser = localStorage.getItem('vibelab_user');
+      if (savedUser && savedUser !== 'undefined') {
+        try {
+          const parsed = JSON.parse(savedUser);
+          setUser(parsed);
+          loggedInUser = parsed;
+        } catch (e) {
+          console.error("Failed to parse user from localStorage", e);
+        }
+      }
     }
 
-    // 2. Load existing session
-    const savedUser = localStorage.getItem('vibelab_user');
-    if (savedUser && savedUser !== 'undefined') {
-      try {
-        const parsed = JSON.parse(savedUser);
-        setUser(parsed);
-        
-        // 3. Check for modern script-injected OAuth redirection flag
-        if (localStorage.getItem('vibelab_oauth_redirect') === 'true') {
-          localStorage.removeItem('vibelab_oauth_redirect');
-          setCurrentPage('dashboard');
-        }
-      } catch (e) {
-        console.error("Failed to parse user from localStorage", e);
-      }
+    // 3. Handle URL based routing with logged in state awareness
+    const path = window.location.pathname;
+    if (path === '/verify-email') {
+      setCurrentPage('verify-email');
+    } else if (path === '/reset-password') {
+      setCurrentPage('reset-password');
+    } else if (path.startsWith('/verify/') || path.startsWith('/profile/')) {
+      setCurrentPage('verify-profile');
+    } else if (loggedInUser) {
+      // Logged in users belong on the dashboard instead of home, login, or signup
+      setCurrentPage('dashboard');
+    } else if (path === '/login') {
+      setCurrentPage('login');
+    } else if (path === '/signup') {
+      setCurrentPage('signup');
+    } else {
+      setCurrentPage('home');
+    }
+
+    // Clean up modern script-injected OAuth redirection flag if any
+    if (localStorage.getItem('vibelab_oauth_redirect') === 'true') {
+      localStorage.removeItem('vibelab_oauth_redirect');
     }
   }, []);
 
@@ -1381,16 +1402,6 @@ export default function App() {
     setUser(null);
     setCurrentPage('home');
   };
-
-  useEffect(() => {
-    // Handle URL based routing for verification, reset, profile, login and signup
-    const path = window.location.pathname;
-    if (path === '/verify-email') setCurrentPage('verify-email');
-    else if (path === '/reset-password') setCurrentPage('reset-password');
-    else if (path === '/login') setCurrentPage('login');
-    else if (path === '/signup') setCurrentPage('signup');
-    else if (path.startsWith('/verify/') || path.startsWith('/profile/')) setCurrentPage('verify-profile');
-  }, []);
 
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
