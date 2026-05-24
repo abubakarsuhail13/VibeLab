@@ -1,6 +1,6 @@
 import { useState, FormEvent } from "react";
 import { motion } from "motion/react";
-import { ShieldCheck, Mail, Lock, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { ShieldCheck, Mail, Lock, ArrowRight, AlertCircle, Loader2, Github } from "lucide-react";
 
 interface LoginProps {
   onNavigate: (page: string) => void;
@@ -124,6 +124,24 @@ export default function Login({ onNavigate, onLoginSuccess }: LoginProps) {
             )}
           </button>
         </form>
+
+        <div className="relative my-6 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-100"></div>
+          </div>
+          <span className="relative bg-white px-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">or</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = '/api/auth/github';
+          }}
+          className="w-full bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 hover:border-slate-300 shadow-sm"
+        >
+          <Github className="w-5 h-5 text-slate-900" />
+          Continue with GitHub
+        </button>
 
         <div className="mt-10 pt-8 border-t border-slate-100 text-center">
           <p className="text-sm text-slate-500 font-medium">
