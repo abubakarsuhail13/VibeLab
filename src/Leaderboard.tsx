@@ -8,7 +8,7 @@ export default function Leaderboard() {
   const [leaders, setLeaders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const countries = ['Worldwide', 'United States', 'United Kingdom', 'India', 'Germany', 'Canada', 'Nigeria', 'Singapore', 'Australia'];
+  const countries = ['Worldwide', 'United States', 'United Kingdom', 'India', 'Pakistan', 'Germany', 'Canada', 'Nigeria', 'Singapore', 'Australia'];
 
   useEffect(() => {
     const fetchLeaderboard = async () => {

@@ -760,7 +760,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                         defaultValue={user?.country || 'Worldwide'}
                         className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-slate-900 transition-all font-medium appearance-none"
                        >
-                         {['Worldwide', 'United States', 'United Kingdom', 'India', 'Germany', 'Canada', 'Nigeria', 'Singapore', 'Australia'].map(c => (
+                         {['Worldwide', 'United States', 'United Kingdom', 'India', 'Pakistan', 'Germany', 'Canada', 'Nigeria', 'Singapore', 'Australia'].map(c => (
                            <option key={c} value={c}>{c}</option>
                          ))}
                        </select>
