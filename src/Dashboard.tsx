@@ -52,6 +52,8 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
   const [badges, setBadges] = useState<any[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [settingsError, setSettingsError] = useState<string>("");
 
   useEffect(() => {
     fetchDashboardData();
@@ -709,9 +711,57 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                   </div>
                 </div>
 
-                <div className="bg-white p-8 md:p-12 rounded-[3rem] border border-slate-200 shadow-sm max-w-2xl">
+                <div className="bg-white p-8 md:p-12 rounded-[3rem] border border-slate-200 shadow-sm max-w-2xl relative overflow-hidden">
+                  <AnimatePresence>
+                    {saveStatus === 'success' && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="absolute inset-0 z-20 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center text-center p-8"
+                      >
+                        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                          <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Profile Saved!</h3>
+                        <p className="text-slate-600 mb-8 max-w-md">Your profile settings have been successfully updated in the database.</p>
+                        <button 
+                          type="button"
+                          onClick={() => setSaveStatus('idle')}
+                          className="px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-2xl transition-all shadow-md active:scale-95 font-display"
+                        >
+                          Back to Settings
+                        </button>
+                      </motion.div>
+                    )}
+
+                    {saveStatus === 'error' && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="absolute inset-0 z-20 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center text-center p-8"
+                      >
+                        <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                          <AlertTriangle className="w-10 h-10 text-rose-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Save Failed</h3>
+                        <p className="text-rose-600/90 mb-8 max-w-md">{settingsError || "An error occurred while saving your profile settings."}</p>
+                        <button 
+                          type="button"
+                          onClick={() => setSaveStatus('idle')}
+                          className="px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-2xl transition-all shadow-md active:scale-95 font-display"
+                        >
+                          Try Again
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <form onSubmit={async (e) => {
                     e.preventDefault();
+                    setSettingsError("");
+                    setSaveStatus('loading');
                     const formData = new FormData(e.currentTarget);
                     const updates = {
                       name: formData.get('name'),
@@ -734,13 +784,15 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                         const updatedUser = { ...user, ...updates };
                         localStorage.setItem('vibelab_user', JSON.stringify(updatedUser));
                         onUpdateUser(updatedUser);
-                        alert('Profile updated successfully!');
+                        setSaveStatus('success');
                       } else {
                         const data = await res.json();
-                        alert(data.error || 'Update failed');
+                        setSettingsError(data.error || 'Update failed');
+                        setSaveStatus('error');
                       }
                     } catch (err) {
-                      alert('Error updating profile');
+                      setSettingsError('Error connecting to the server');
+                      setSaveStatus('error');
                     }
                   }} className="space-y-8">
                     <div className="space-y-2">
@@ -794,9 +846,10 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
 
                     <button 
                       type="submit"
-                      className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98]"
+                      disabled={saveStatus === 'loading'}
+                      className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98] disabled:opacity-55"
                     >
-                      Save Changes
+                      {saveStatus === 'loading' ? 'Saving...' : 'Save Changes'}
                     </button>
                   </form>
                 </div>

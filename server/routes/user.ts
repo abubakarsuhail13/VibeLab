@@ -29,14 +29,17 @@ router.patch('/profile', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
+    const githubUrl = github_username ? `https://github.com/${github_username}` : null;
+
     await p.execute(
-      'UPDATE users SET name = ?, country = ?, bio = ?, github_username = ? WHERE id = ?',
-      [name, country, bio, github_username, req.user.userId]
+      'UPDATE users SET name = ?, country = ?, bio = ?, github_handle = ?, github_url = ? WHERE id = ?',
+      [name, country, bio, github_username || null, githubUrl, req.user.userId]
     );
 
     res.json({ success: true, message: 'Profile updated' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update profile' });
+  } catch (error: any) {
+    console.error('PATCH /profile database update error:', error);
+    res.status(500).json({ error: `Failed to update profile: ${error.message || error}` });
   }
 });
 

@@ -183,6 +183,7 @@ router.get('/profile/:vl_id', async (req, res) => {
         bio: user.bio,
         github_url: user.github_url,
         github_handle: user.github_handle,
+        github_username: user.github_handle,
         linkedin_url: user.linkedin_url,
         current_role: user.current_role,
         vl_id,
@@ -252,7 +253,9 @@ router.get('/user/:userId/profile', async (req, res) => {
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     const [rows]: any = await p.execute('SELECT id, name, avatar_url, role, country, bio, linkedin_url, github_url, github_handle, current_role, vl_id, created_at FROM users WHERE id = ?', [userId]);
     if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
-    res.json(rows[0]);
+    const user = rows[0];
+    user.github_username = user.github_handle;
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch profile' });
   }
