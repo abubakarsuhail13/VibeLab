@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -615,6 +616,9 @@ export const getPool = async () => {
         console.log('DB Debug: Tables verified/created.');
       } catch (tableErr: any) {
         console.error('DB Debug: Error creating tables:', tableErr.message);
+        try {
+          fs.appendFileSync('server-error.log', `[${new Date().toISOString()}] DB Schema Error: ${tableErr.stack || tableErr.message || tableErr}\n`);
+        } catch (e) {}
       } finally {
         connection.release();
       }
@@ -625,6 +629,9 @@ export const getPool = async () => {
         host: dbConfig.host,
         user: dbConfig.user
       });
+      try {
+        fs.appendFileSync('server-error.log', `[${new Date().toISOString()}] DB Connection Error: ${err.stack || err.message || err}\n`);
+      } catch (e) {}
       pool = null;
       return null;
     }

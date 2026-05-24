@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cryptoRandomString from 'crypto-random-string';
+import fs from 'fs';
 import { getPool } from '../db.js';
 import { sendMail } from '../mail.js';
 import { JWT_SECRET } from '../auth.js';
@@ -86,7 +87,10 @@ router.post('/register', async (req, res) => {
     });
   } catch (error: any) {
     console.error('Registration Error:', error);
-    res.status(500).json({ error: 'Database error during registration' });
+    try {
+      fs.appendFileSync('server-error.log', `[${new Date().toISOString()}] Registration Error: ${error.stack || error.message || error}\n`);
+    } catch (e) {}
+    res.status(500).json({ error: `Database error during registration: ${error.message || error}` });
   }
 });
 
