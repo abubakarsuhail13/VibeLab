@@ -13,7 +13,8 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
+  connectTimeout: 5000,
+  ssl: (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) ? { rejectUnauthorized: false } : undefined
 };
 
 let pool: any = null;
@@ -29,6 +30,19 @@ export const getPool = async () => {
       pool = mysql.createPool(dbConfig);
       const connection = await pool.getConnection();
       console.log('Successfully connected to MySQL database');
+      
+      // Quick table presence check to bypass massive schema execution if already configured
+      let isInitialized = false;
+      try {
+        const [rows]: any = await connection.execute("SHOW TABLES LIKE 'users'");
+        isInitialized = rows.length > 0;
+      } catch (e) {}
+
+      if (isInitialized) {
+        console.log('DB Debug: Database is already initialized. Skipping schema verification.');
+        connection.release();
+        return pool;
+      }
       
       // Auto-ensure tables exist
       try {

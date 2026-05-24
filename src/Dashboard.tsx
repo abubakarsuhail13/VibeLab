@@ -54,6 +54,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [settingsError, setSettingsError] = useState<string>("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -288,23 +289,26 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Public Verification</p>
               <p className="text-[11px] text-slate-500 mb-4 font-medium leading-relaxed">Share your verified builder profile with recruiters.</p>
             <div className="flex gap-2">
-              <button 
-                onClick={() => window.open(`/verify/${user.id}`, '_blank')}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-[11px] font-bold hover:bg-slate-50 transition-all shadow-sm"
+              <a 
+                href={`/profile/${user.vl_id || user.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-[11px] font-bold hover:bg-slate-50 transition-all shadow-sm text-center"
               >
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                 View Profile
-              </button>
+              </a>
               <button 
                 onClick={() => {
-                  const url = `${window.location.origin}/verify/${user.id}`;
+                  const url = `${window.location.origin}/profile/${user.vl_id || user.id}`;
                   navigator.clipboard.writeText(url);
-                  alert('Link copied to clipboard!');
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
                 }}
-                className="flex items-center justify-center p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                className={`flex items-center justify-center p-2.5 rounded-xl bg-white border transition-all shadow-sm ${copied ? 'border-emerald-200 text-emerald-600 bg-emerald-50/50' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
                 title="Copy profile link"
               >
-                <LinkIcon className="w-4 h-4" />
+                {copied ? <span className="text-[10px] font-bold px-1">Copied!</span> : <LinkIcon className="w-4 h-4" />}
               </button>
             </div>
            </div>
