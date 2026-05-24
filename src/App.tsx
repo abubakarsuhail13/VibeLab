@@ -1331,7 +1331,7 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // 1. Process potential OAuth callback query parameters
+    // 1. Process potential OAuth callback query parameters (legacy fallback)
     const params = new URLSearchParams(window.location.search);
     const oauthToken = params.get('token');
     const oauthUser = params.get('user');
@@ -1353,11 +1353,18 @@ export default function App() {
       }
     }
 
-    // 2. Otherwise load existing session
+    // 2. Load existing session
     const savedUser = localStorage.getItem('vibelab_user');
     if (savedUser && savedUser !== 'undefined') {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        setUser(parsed);
+        
+        // 3. Check for modern script-injected OAuth redirection flag
+        if (localStorage.getItem('vibelab_oauth_redirect') === 'true') {
+          localStorage.removeItem('vibelab_oauth_redirect');
+          setCurrentPage('dashboard');
+        }
       } catch (e) {
         console.error("Failed to parse user from localStorage", e);
       }

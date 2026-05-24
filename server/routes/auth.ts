@@ -383,16 +383,55 @@ router.get('/github/callback', async (req: any, res) => {
       { expiresIn: '24h' }
     );
     
-    const userParam = encodeURIComponent(JSON.stringify({
+    const userPayload = {
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
       avatar_url: user.avatar_url,
       vl_id: user.vl_id
-    }));
+    };
     
-    res.redirect(`${process.env.VITE_APP_URL || baseUrl}/login?token=${token}&user=${userParam}`);
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Completing Authentication...</title>
+      </head>
+      <body>
+        <div style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background-color: #0f172a; color: #f8fafc;">
+          <div style="text-align: center;">
+            <svg style="animation: spin 1s linear infinite; margin: 0 auto 16px auto; width: 40px; height: 40px; color: #0284c7;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <style>
+              @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+            </style>
+            <h2 style="font-weight: 600; margin-bottom: 8px; font-family: system-ui, sans-serif;">Authenticating...</h2>
+            <p style="font-size: 14px; color: #94a3b8; font-family: system-ui, sans-serif;">Please wait while we log you in securely.</p>
+          </div>
+        </div>
+        <script>
+          try {
+            const token = ${JSON.stringify(token)};
+            const user = ${JSON.stringify(userPayload)};
+            localStorage.setItem('vibelab_token', token);
+            localStorage.setItem('vibelab_user', JSON.stringify(user));
+            localStorage.setItem('vibelab_oauth_redirect', 'true');
+            window.location.href = '/';
+          } catch (e) {
+            console.error('OAuth save failure:', e);
+            window.location.href = '/login?error=auth_integration_failed';
+          }
+        </script>
+      </body>
+      </html>
+    `);
   } catch (err: any) {
     console.error('[OAuth] Error in callback:', err);
     return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=callback_exception');
@@ -531,16 +570,55 @@ router.get('/google/callback', async (req: any, res) => {
       { expiresIn: '24h' }
     );
     
-    const userParam = encodeURIComponent(JSON.stringify({
+    const userPayload = {
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
       avatar_url: user.avatar_url,
       vl_id: user.vl_id
-    }));
+    };
     
-    res.redirect(`${process.env.VITE_APP_URL || baseUrl}/login?token=${token}&user=${userParam}`);
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Completing Authentication...</title>
+      </head>
+      <body>
+        <div style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background-color: #0f172a; color: #f8fafc;">
+          <div style="text-align: center;">
+            <svg style="animation: spin 1s linear infinite; margin: 0 auto 16px auto; width: 40px; height: 40px; color: #0284c7;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <style>
+              @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+            </style>
+            <h2 style="font-weight: 600; margin-bottom: 8px; font-family: system-ui, sans-serif;">Authenticating...</h2>
+            <p style="font-size: 14px; color: #94a3b8; font-family: system-ui, sans-serif;">Please wait while we log you in securely.</p>
+          </div>
+        </div>
+        <script>
+          try {
+            const token = ${JSON.stringify(token)};
+            const user = ${JSON.stringify(userPayload)};
+            localStorage.setItem('vibelab_token', token);
+            localStorage.setItem('vibelab_user', JSON.stringify(user));
+            localStorage.setItem('vibelab_oauth_redirect', 'true');
+            window.location.href = '/';
+          } catch (e) {
+            console.error('OAuth save failure:', e);
+            window.location.href = '/login?error=auth_integration_failed';
+          }
+        </script>
+      </body>
+      </html>
+    `);
   } catch (err: any) {
     console.error('[Google OAuth] Error in callback:', err);
     return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=callback_exception');
