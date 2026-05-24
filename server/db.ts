@@ -208,32 +208,114 @@ export const getPool = async () => {
           )
         `);
 
-        // Check and reconstruct the curriculum if it does not match Python-first v2 spec
-        await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
-        const [pCheck]: any = await connection.execute('SELECT name FROM phases WHERE order_index = 1');
-        const needsCurriculumReset = pCheck.length === 0 || !pCheck[0].name.toLowerCase().includes('python');
-        
-        if (needsCurriculumReset) {
-          console.log('Curriculum is outdated. Resetting and updating to VibeLab AI Skills path...');
-          await connection.execute('TRUNCATE TABLE phase_resources');
-          await connection.execute('TRUNCATE TABLE quiz_questions');
-          await connection.execute('TRUNCATE TABLE phase_projects');
-          await connection.execute('TRUNCATE TABLE phases');
-          
-          const initialPhases = [
-            ['Phase 1 — Learn Python', 'Master Python variables, functions, HTTP requests, APIs, JSON handling, and OOP.', 1, 0],
-            ['Phase 2 — LLMs & AI Fundamentals', 'Delve into tokens, context windows, embeddings, prompt engineering, RAG, and vector databases.', 2, 1],
-            ['Phase 3 — Build Projects', 'Build full applications chaining LLM calls, handling data pipelines, and integrating AI into clean UX.', 3, 1],
-            ['Phase 4 — Learn AI Agents', 'Understand Model Context Protocol (MCP), tool-calling, agent memory, and multi-agent system pipelines.', 4, 1],
-            ['Phase 5 — Read Papers', 'Explore deep theoretical fundamentals of ReAct, Toolformer, Tree of Thoughts, Reflexion, and classic surveys.', 5, 1],
-            ['Phase 6 — Courses', 'Earn practical validation inside DeepLearning.AI or LangChain for LLMs/Agents, completing interactive capstones.', 6, 1],
-            ['Phase 7 — Deployment', 'Publish containerized services with FastAPI, Docker, CI/CD, and serverless Cloud tools.', 7, 1]
-          ];
-          for (const phase of initialPhases) {
-            await connection.execute('INSERT INTO phases (name, description, order_index, is_locked_default) VALUES (?, ?, ?, ?)', phase);
+        // Safe, isolated column generator for all tables
+        const addColumnIfNeeded = async (tableName: string, columnName: string, columnDef: string) => {
+          try {
+            const [cols]: any = await connection.execute(`SHOW COLUMNS FROM ${tableName}`);
+            const names = cols.map((c: any) => c.Field);
+            if (!names.includes(columnName)) {
+              console.log(`DB Migration: Adding column ${columnName} to ${tableName}...`);
+              await connection.execute(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDef}`);
+            }
+          } catch (err: any) {
+            console.error(`DB Migration Warn: Failed adding ${columnName} to ${tableName}:`, err.message);
           }
+        };
+
+        // Migrate Users Table Columns at very high priority, isolated from other migrations!
+        await addColumnIfNeeded('users', 'is_verified', 'TINYINT DEFAULT 0');
+        await addColumnIfNeeded('users', 'verification_token', 'VARCHAR(255)');
+        await addColumnIfNeeded('users', 'reset_token', 'VARCHAR(255)');
+        await addColumnIfNeeded('users', 'reset_token_expires', 'DATETIME');
+        await addColumnIfNeeded('users', 'avatar_url', 'LONGTEXT');
+        await addColumnIfNeeded('users', 'country', 'VARCHAR(100) DEFAULT "Worldwide"');
+        await addColumnIfNeeded('users', 'bio', 'TEXT');
+        await addColumnIfNeeded('users', 'linkedin_url', 'VARCHAR(255)');
+        await addColumnIfNeeded('users', 'github_url', 'VARCHAR(255)');
+        await addColumnIfNeeded('users', 'github_handle', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'current_role', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'vl_id', 'VARCHAR(20) UNIQUE');
+
+        // Migrate User Project Progress Columns
+        await addColumnIfNeeded('user_project_progress', 'last_active_step', 'INT DEFAULT 0');
+        await addColumnIfNeeded('user_project_progress', 'code_state', 'JSON');
+
+        // Migrate Phase Projects Columns
+        await addColumnIfNeeded('phase_projects', 'tutorial_data', 'JSON');
+
+        // Migrate User Phase Progress Columns
+        await addColumnIfNeeded('user_phase_progress', 'topics_checklist', 'JSON');
+
+        // Migrate Badges Columns
+        await addColumnIfNeeded('badges', 'certificate_url', 'TEXT');
+        await addColumnIfNeeded('badges', 'earned_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+
+        // Migration query to assign vl_id for users with NULL results, running safely immediately after columns migrate
+        try {
+          const [usersWithoutVlId]: any = await connection.execute(
+            'SELECT id, created_at FROM users WHERE vl_id IS NULL'
+          );
+          for (const u of usersWithoutVlId) {
+            const date = u.created_at ? new Date(u.created_at) : new Date();
+            const year = date.getFullYear();
+            const [countRes]: any = await connection.execute(
+              'SELECT COUNT(*) as total FROM users WHERE YEAR(created_at) = ? AND id < ?',
+              [year, u.id]
+            );
+            const nextVal = (countRes[0].total + 1).toString().padStart(5, '0');
+            const newVlId = `VL-${year}-${nextVal}`;
+
+            let checkId = newVlId;
+            let counter = 1;
+            while (true) {
+              const [checkRes]: any = await connection.execute('SELECT id FROM users WHERE vl_id = ?', [checkId]);
+              if (checkRes.length === 0) break;
+              checkId = `VL-${year}-${(countRes[0].total + 1 + counter).toString().padStart(5, '0')}`;
+              counter++;
+            }
+
+            await connection.execute('UPDATE users SET vl_id = ? WHERE id = ?', [checkId, u.id]);
+          }
+        } catch (vlErr: any) {
+          console.error("Error migrating vl_id for existing users:", vlErr.message);
         }
-        await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
+
+        // Check and reconstruct the curriculum if it does not match Python-first v2 spec - Wrapped beautifully in try-catch to keep it robust against permission levels (e.g. Hostinger/shared MySQL blocks FOREIGN_KEY_CHECKS = 0)
+        try {
+          try {
+            await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
+          } catch (_) {}
+          
+          const [pCheck]: any = await connection.execute('SELECT name FROM phases WHERE order_index = 1');
+          const needsCurriculumReset = pCheck.length === 0 || !pCheck[0].name.toLowerCase().includes('python');
+          
+          if (needsCurriculumReset) {
+            console.log('Curriculum is outdated. Resetting and updating to VibeLab AI Skills path...');
+            await connection.execute('TRUNCATE TABLE phase_resources');
+            await connection.execute('TRUNCATE TABLE quiz_questions');
+            await connection.execute('TRUNCATE TABLE phase_projects');
+            await connection.execute('TRUNCATE TABLE phases');
+            
+            const initialPhases = [
+              ['Phase 1 — Learn Python', 'Master Python variables, functions, HTTP requests, APIs, JSON handling, and OOP.', 1, 0],
+              ['Phase 2 — LLMs & AI Fundamentals', 'Delve into tokens, context windows, embeddings, prompt engineering, RAG, and vector databases.', 2, 1],
+              ['Phase 3 — Build Projects', 'Build full applications chaining LLM calls, handling data pipelines, and integrating AI into clean UX.', 3, 1],
+              ['Phase 4 — Learn AI Agents', 'Understand Model Context Protocol (MCP), tool-calling, agent memory, and multi-agent system pipelines.', 4, 1],
+              ['Phase 5 — Read Papers', 'Explore deep theoretical fundamentals of ReAct, Toolformer, Tree of Thoughts, Reflexion, and classic surveys.', 5, 1],
+              ['Phase 6 — Courses', 'Earn practical validation inside DeepLearning.AI or LangChain for LLMs/Agents, completing interactive capstones.', 6, 1],
+              ['Phase 7 — Deployment', 'Publish containerized services with FastAPI, Docker, CI/CD, and serverless Cloud tools.', 7, 1]
+            ];
+            for (const phase of initialPhases) {
+              await connection.execute('INSERT INTO phases (name, description, order_index, is_locked_default) VALUES (?, ?, ?, ?)', phase);
+            }
+          }
+          
+          try {
+            await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
+          } catch (_) {}
+        } catch (curriculumErr: any) {
+          console.error('DB Migration Error on resetting/verifying curriculum:', curriculumErr.message);
+        }
 
         // Seed initial projects for all phases if they are missing
         const [allPhases]: any = await connection.execute('SELECT id, order_index FROM phases ORDER BY order_index');
@@ -512,105 +594,6 @@ export const getPool = async () => {
             ['Test Builder', 'testbuilder@vibelab.io', hashedPassword, 'student', 1]
           );
           console.log('DB Debug: Test User created.');
-        }
-
-        // Ensure missing columns exist for existing tables
-        const [columns]: any = await connection.execute('SHOW COLUMNS FROM users');
-        const columnNames = columns.map((c: any) => c.Field);
-        
-        if (!columnNames.includes('is_verified')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN is_verified TINYINT DEFAULT 0');
-        }
-        if (!columnNames.includes('verification_token')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)');
-        }
-        if (!columnNames.includes('reset_token')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)');
-        }
-        if (!columnNames.includes('reset_token_expires')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN reset_token_expires DATETIME');
-        }
-        if (!columnNames.includes('avatar_url')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN avatar_url LONGTEXT');
-        }
-        if (!columnNames.includes('country')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN country VARCHAR(100) DEFAULT "Worldwide"');
-        }
-        if (!columnNames.includes('bio')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN bio TEXT');
-        }
-        if (!columnNames.includes('linkedin_url')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN linkedin_url VARCHAR(255)');
-        }
-        if (!columnNames.includes('github_url')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN github_url VARCHAR(255)');
-        }
-        if (!columnNames.includes('github_handle')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN github_handle VARCHAR(100)');
-        }
-        if (!columnNames.includes('current_role')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN current_role VARCHAR(100)');
-        }
-        if (!columnNames.includes('vl_id')) {
-          await connection.execute('ALTER TABLE users ADD COLUMN vl_id VARCHAR(20) UNIQUE');
-        }
-
-        // Migration query to assign vl_id for users with NULL results
-        try {
-          const [usersWithoutVlId]: any = await connection.execute(
-            'SELECT id, created_at FROM users WHERE vl_id IS NULL'
-          );
-          for (const u of usersWithoutVlId) {
-            const date = u.created_at ? new Date(u.created_at) : new Date();
-            const year = date.getFullYear();
-            const [countRes]: any = await connection.execute(
-              'SELECT COUNT(*) as total FROM users WHERE YEAR(created_at) = ? AND id < ?',
-              [year, u.id]
-            );
-            const nextVal = (countRes[0].total + 1).toString().padStart(5, '0');
-            const newVlId = `VL-${year}-${nextVal}`;
-
-            let checkId = newVlId;
-            let counter = 1;
-            while (true) {
-              const [checkRes]: any = await connection.execute('SELECT id FROM users WHERE vl_id = ?', [checkId]);
-              if (checkRes.length === 0) break;
-              checkId = `VL-${year}-${(countRes[0].total + 1 + counter).toString().padStart(5, '0')}`;
-              counter++;
-            }
-
-            await connection.execute('UPDATE users SET vl_id = ? WHERE id = ?', [checkId, u.id]);
-          }
-        } catch (vlErr: any) {
-          console.error("Error migrating vl_id for existing users:", vlErr.message);
-        }
-
-        // New interactive columns
-        const [ppColumns]: any = await connection.execute('SHOW COLUMNS FROM phase_projects');
-        const ppColumnNames = ppColumns.map((c: any) => c.Field);
-        if (!ppColumnNames.includes('tutorial_data')) {
-          await connection.execute('ALTER TABLE phase_projects ADD COLUMN tutorial_data JSON');
-        }
-
-        const [uppColumns]: any = await connection.execute('SHOW COLUMNS FROM user_project_progress');
-        const uppColumnNames = uppColumns.map((c: any) => c.Field);
-        if (!uppColumnNames.includes('last_active_step')) {
-          await connection.execute('ALTER TABLE user_project_progress ADD COLUMN last_active_step INT DEFAULT 0');
-        }
-
-        const [uPhaseColumns]: any = await connection.execute('SHOW COLUMNS FROM user_phase_progress');
-        const uPhaseColumnNames = uPhaseColumns.map((c: any) => c.Field);
-        if (!uPhaseColumnNames.includes('topics_checklist')) {
-          await connection.execute('ALTER TABLE user_phase_progress ADD COLUMN topics_checklist JSON');
-        }
-
-        const [badgesColumns]: any = await connection.execute('SHOW COLUMNS FROM badges');
-        const badgesColumnNames = badgesColumns.map((c: any) => c.Field);
-        if (!badgesColumnNames.includes('certificate_url')) {
-          await connection.execute('ALTER TABLE badges ADD COLUMN certificate_url TEXT');
-        }
-        if (!badgesColumnNames.includes('earned_at')) {
-          await connection.execute('ALTER TABLE badges ADD COLUMN earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
         }
 
         console.log('DB Debug: Tables verified/created.');
