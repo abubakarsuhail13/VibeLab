@@ -399,4 +399,152 @@ router.get('/github/callback', async (req: any, res) => {
   }
 });
 
+// Google OAuth Redirect Endpoint
+router.get('/google', (req: any, res) => {
+  const client_id = process.env.GOOGLE_CLIENT_ID;
+  if (!client_id) {
+    return res.status(500).json({ error: 'Google OAuth is not configured in the workspace.' });
+  }
+  const baseUrl = process.env.VITE_APP_URL || `${req.protocol}://${req.get('host')}`;
+  const redirect_uri = `${baseUrl}/api/auth/google/callback`;
+  const googleUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code&scope=${encodeURIComponent('openid email profile')}&prompt=select_account`;
+  res.redirect(googleUrl);
+});
+
+// Google OAuth Callback Endpoint
+router.get('/google/callback', async (req: any, res) => {
+  const { code } = req.query;
+  if (!code) {
+    return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=no_code_provided');
+  }
+  
+  try {
+    const client_id = process.env.GOOGLE_CLIENT_ID;
+    const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+    const baseUrl = process.env.VITE_APP_URL || `${req.protocol}://${req.get('host')}`;
+    const redirect_uri = `${baseUrl}/api/auth/google/callback`;
+    
+    // 1. Exchange OAuth code for an access token
+    const tokenUrl = 'https://oauth2.googleapis.com/token';
+    const tokenRes = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        client_id: client_id || '',
+        client_secret: client_secret || '',
+        code: code as string,
+        grant_type: 'authorization_code',
+        redirect_uri
+      })
+    });
+    
+    const tokenData: any = await tokenRes.json();
+    if (!tokenData.access_token) {
+      console.error('[Google OAuth] Failed to retrieve access token:', tokenData);
+      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=token_failed');
+    }
+    
+    const accessToken = tokenData.access_token;
+    
+    // 2. Query basic Google user details
+    const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    const gUser: any = await userRes.json();
+    
+    const email = gUser.email;
+    if (!email) {
+      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=no_email_returned');
+    }
+    
+    const p = await getPool();
+    if (!p) {
+      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=db_failed');
+    }
+    
+    // 3. Trace if user email is registered or if a new user registration is needed
+    const [rows]: any = await p.execute('SELECT * FROM users WHERE email = ?', [email]);
+    let user = null;
+    
+    if (rows.length > 0) {
+      user = rows[0];
+      // Sync Google avatar if empty and exists
+      if (!user.avatar_url && gUser.picture) {
+        await p.execute(
+          'UPDATE users SET avatar_url = ? WHERE id = ?',
+          [gUser.picture, user.id]
+        );
+        user.avatar_url = gUser.picture;
+      }
+    } else {
+      // Setup dynamic secure hash password for Google user accounts
+      const { randomBytes } = await import('crypto');
+      const randomPassword = randomBytes(16).toString('hex');
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      
+      const year = new Date().getFullYear();
+      const [countRes]: any = await p.execute(
+        'SELECT COUNT(*) as total FROM users WHERE YEAR(created_at) = ?',
+        [year]
+      );
+      const nextVal = (countRes[0].total + 1).toString().padStart(5, '0');
+      let vlId = `VL-${year}-${nextVal}`;
+      
+      let counter = 1;
+      while (true) {
+        const [checkRes]: any = await p.execute('SELECT id FROM users WHERE vl_id = ?', [vlId]);
+        if (checkRes.length === 0) break;
+        vlId = `VL-${year}-${(countRes[0].total + 1 + counter).toString().padStart(5, '0')}`;
+        counter++;
+      }
+      
+      const [insertRes]: any = await p.execute(
+        'INSERT INTO users (name, email, password, role, is_verified, avatar_url, vl_id) VALUES (?, ?, ?, ?, 1, ?, ?)',
+        [gUser.name || email.split('@')[0], email, hashedPassword, 'student', gUser.picture || '', vlId]
+      );
+      
+      const newUserId = insertRes.insertId;
+      try {
+        const [firstPhase]: any = await p.execute('SELECT id FROM phases ORDER BY order_index ASC LIMIT 1');
+        if (firstPhase.length > 0) {
+          await p.execute(
+            'INSERT IGNORE INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, "active")',
+            [newUserId, firstPhase[0].id]
+          );
+        }
+      } catch (obErr) {
+        console.error('Onboarding Error:', obErr);
+      }
+      
+      const [userRow]: any = await p.execute('SELECT * FROM users WHERE id = ?', [newUserId]);
+      user = userRow[0];
+    }
+    
+    // 4. Generate validation JWT session
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    const userParam = encodeURIComponent(JSON.stringify({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar_url: user.avatar_url,
+      vl_id: user.vl_id
+    }));
+    
+    res.redirect(`${process.env.VITE_APP_URL || baseUrl}/login?token=${token}&user=${userParam}`);
+  } catch (err: any) {
+    console.error('[Google OAuth] Error in callback:', err);
+    return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=callback_exception');
+  }
+});
+
 export default router;

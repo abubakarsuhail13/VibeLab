@@ -1331,6 +1331,29 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    // 1. Process potential OAuth callback query parameters
+    const params = new URLSearchParams(window.location.search);
+    const oauthToken = params.get('token');
+    const oauthUser = params.get('user');
+
+    if (oauthToken && oauthUser) {
+      try {
+        const parsedUser = JSON.parse(decodeURIComponent(oauthUser));
+        localStorage.setItem('vibelab_token', oauthToken);
+        localStorage.setItem('vibelab_user', JSON.stringify(parsedUser));
+        setUser(parsedUser);
+        setCurrentPage('dashboard');
+
+        // Clean up the URL query params without reloading the page
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        return;
+      } catch (err) {
+        console.error("Failed to parse OAuth callback user parameters", err);
+      }
+    }
+
+    // 2. Otherwise load existing session
     const savedUser = localStorage.getItem('vibelab_user');
     if (savedUser && savedUser !== 'undefined') {
       try {
@@ -1353,11 +1376,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Handle URL based routing for verification and reset
+    // Handle URL based routing for verification, reset, profile, login and signup
     const path = window.location.pathname;
     if (path === '/verify-email') setCurrentPage('verify-email');
-    if (path === '/reset-password') setCurrentPage('reset-password');
-    if (path.startsWith('/verify/')) setCurrentPage('verify-profile');
+    else if (path === '/reset-password') setCurrentPage('reset-password');
+    else if (path === '/login') setCurrentPage('login');
+    else if (path === '/signup') setCurrentPage('signup');
+    else if (path.startsWith('/verify/') || path.startsWith('/profile/')) setCurrentPage('verify-profile');
   }, []);
 
   return (
@@ -1402,7 +1427,11 @@ export default function App() {
         ) : currentPage === 'reset-password' ? (
           <ResetPassword onNavigate={setCurrentPage} />
         ) : currentPage === 'verify-profile' ? (
-          <PublicProfile userId={window.location.pathname.split('/verify/')[1]} />
+          <PublicProfile userId={
+            window.location.pathname.startsWith('/profile/')
+              ? window.location.pathname.split('/profile/')[1]
+              : window.location.pathname.split('/verify/')[1]
+          } />
         ) : (
           <ContactPage onNavigate={setCurrentPage} />
         )}
