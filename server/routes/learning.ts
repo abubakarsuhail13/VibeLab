@@ -79,6 +79,15 @@ router.get('/phase/:id/projects', authenticateToken, async (req: any, res) => {
         console.error("Failed to parse project.steps", e);
       }
 
+      if (!parsedSteps || parsedSteps.length === 0) {
+        parsedSteps = [
+          {
+            title: 'Core Implementation',
+            desc: 'Read the project requirements and implement them using Vibe Coding.'
+          }
+        ];
+      }
+
       let parsedTutorialData = [];
       try {
         parsedTutorialData = project.tutorial_data ? (typeof project.tutorial_data === 'string' ? JSON.parse(project.tutorial_data) : project.tutorial_data) : [];

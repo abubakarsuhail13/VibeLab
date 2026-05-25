@@ -529,12 +529,19 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           if (typeof codeState === 'string') {
             try { codeState = JSON.parse(codeState); } catch (_) { codeState = {}; }
           }
+          const requirementsVal = typeof p.requirements === 'string' ? JSON.parse(p.requirements) : p.requirements;
+          const stepsVal = typeof p.steps === 'string' ? JSON.parse(p.steps) : p.steps;
+          const completedStepsVal = typeof p.completed_steps === 'string' ? JSON.parse(p.completed_steps) : p.completed_steps;
+          const tutorialDataVal = typeof p.tutorial_data === 'string' ? JSON.parse(p.tutorial_data) : p.tutorial_data;
+
           return {
             ...p,
-            requirements: typeof p.requirements === 'string' ? JSON.parse(p.requirements) : p.requirements,
-            steps: typeof p.steps === 'string' ? JSON.parse(p.steps) : p.steps,
-            completed_steps: typeof p.completed_steps === 'string' ? JSON.parse(p.completed_steps) : p.completed_steps,
-            tutorial_data: typeof p.tutorial_data === 'string' ? JSON.parse(p.tutorial_data) : p.tutorial_data,
+            requirements: Array.isArray(requirementsVal) ? requirementsVal : [],
+            steps: (Array.isArray(stepsVal) && stepsVal.length > 0) ? stepsVal : [
+              { title: 'Core Implementation', desc: 'Read the project requirements and implement them using Vibe Coding.' }
+            ],
+            completed_steps: Array.isArray(completedStepsVal) ? completedStepsVal : [],
+            tutorial_data: Array.isArray(tutorialDataVal) ? tutorialDataVal : [],
             code_state: codeState
           };
         });
