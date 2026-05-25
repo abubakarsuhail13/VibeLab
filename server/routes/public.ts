@@ -86,33 +86,48 @@ router.post('/contact', async (req, res) => {
 });
 
 router.get('/leaderboard', async (req, res) => {
-  const { country } = req.query;
+  const { country, period } = req.query;
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
+    const isMonthly = period === 'monthly';
+
     let query = `
-      SELECT 
-        u.id, 
-        u.name, 
-        u.avatar_url, 
-        u.country, 
-        u.vl_id,
-        u.current_role,
-        u.created_at as registration_date,
-        (SELECT COUNT(*) FROM badges WHERE user_id = u.id) as badges_count,
-        (SELECT COUNT(*) FROM project_submissions WHERE user_id = u.id) as projects_count
-      FROM users u
-      WHERE 1=1
+      SELECT * FROM (
+        SELECT 
+          u.id, 
+          u.name, 
+          u.avatar_url, 
+          u.country, 
+          u.vl_id,
+          u.current_role,
+          u.role,
+          u.created_at as registration_date,
+          (
+            SELECT COUNT(*) 
+            FROM badges 
+            WHERE user_id = u.id 
+            ${isMonthly ? 'AND earned_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY)' : ''}
+          ) as badges_count,
+          (
+            SELECT COUNT(*) 
+            FROM project_submissions 
+            WHERE user_id = u.id 
+            ${isMonthly ? 'AND created_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY)' : ''}
+          ) as projects_count
+        FROM users u
+      ) as u_sub
+      WHERE role = 'student'
     `;
 
     const params: any[] = [];
     if (country && country !== 'Worldwide') {
-      query += ' AND u.country = ?';
+      query += ' AND country = ?';
       params.push(country);
     }
     
-    query += ' ORDER BY badges_count DESC, projects_count DESC, u.created_at ASC LIMIT 100';
+    query += ' ORDER BY badges_count DESC, projects_count DESC, registration_date ASC LIMIT 100';
 
     const [rows] = await p.execute(query, params);
     res.json(rows);
