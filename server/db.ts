@@ -222,6 +222,18 @@ export const getPool = async () => {
           )
         `);
 
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS support_messages (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            student_id INT NOT NULL,
+            teacher_id INT DEFAULT NULL,
+            sender_role VARCHAR(50) NOT NULL,
+            message TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+
         // Safe, isolated column generator for all tables
         const addColumnIfNeeded = async (tableName: string, columnName: string, columnDef: string) => {
           try {
@@ -263,6 +275,13 @@ export const getPool = async () => {
         // Migrate Badges Columns
         await addColumnIfNeeded('badges', 'certificate_url', 'TEXT');
         await addColumnIfNeeded('badges', 'earned_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP');
+
+        // Migrate Project Submissions Columns
+        await addColumnIfNeeded('project_submissions', 'status', "VARCHAR(50) DEFAULT 'pending'");
+        await addColumnIfNeeded('project_submissions', 'grade', "VARCHAR(10) DEFAULT NULL");
+        await addColumnIfNeeded('project_submissions', 'review_comment', "TEXT DEFAULT NULL");
+        await addColumnIfNeeded('project_submissions', 'reviewed_by', "INT DEFAULT NULL");
+        await addColumnIfNeeded('project_submissions', 'reviewed_at', "TIMESTAMP DEFAULT NULL");
 
         // Migration query to assign vl_id for users with NULL results, running safely immediately after columns migrate
         try {

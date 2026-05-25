@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent, useEffect } from "react";
+import React, { useState, useRef, ChangeEvent, useEffect, FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Rocket, 
@@ -22,7 +22,10 @@ import {
   Github,
   Link as LinkIcon,
   FileText,
-  CheckCircle2
+  CheckCircle2,
+  Send,
+  GraduationCap,
+  X
 } from "lucide-react";
 import PhaseView from "./PhaseView";
 import Leaderboard from "./Leaderboard";
@@ -43,7 +46,7 @@ interface Phase {
 
 export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardProps) {
   const [uploading, setUploading] = useState(false);
-  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions' | 'certificates' | 'leaderboard' | 'settings'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions' | 'certificates' | 'leaderboard' | 'settings' | 'grading' | 'support'>('overview');
   const [selectedPhaseId, setSelectedPhaseId] = useState<number | null>(null);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loadingPhases, setLoadingPhases] = useState(true);
@@ -56,9 +59,184 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
   const [settingsError, setSettingsError] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
+  // Teacher Workspace State Parameters
+  const [cohortStudents, setCohortStudents] = useState<any[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [cohortSubmissions, setCohortSubmissions] = useState<any[]>([]);
+  const [loadingCohortSubmissions, setLoadingCohortSubmissions] = useState(false);
+  
+  // Scoring / review variables
+  const [selectedReviewSubmission, setSelectedReviewSubmission] = useState<any | null>(null);
+  const [reviewGrade, setReviewGrade] = useState("A");
+  const [reviewStatus, setReviewStatus] = useState("approved");
+  const [reviewComment, setReviewComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
+
+  // Academic support session variables
+  const [supportSessions, setSupportSessions] = useState<any[]>([]);
+  const [activeSessionStudent, setActiveSessionStudent] = useState<any | null>(null);
+  const [supportMessages, setSupportMessages] = useState<any[]>([]);
+  const [supportInput, setSupportInput] = useState("");
+  const [sendingSupport, setSendingSupport] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  // Student communication helper
+  const [studentChatOpen, setStudentChatOpen] = useState(false);
+
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user?.role === 'teacher') {
+      fetchTeacherData();
+    } else {
+      fetchDashboardData();
+    }
+  }, [user]);
+
+  const fetchTeacherData = async () => {
+    setLoadingStudents(true);
+    setLoadingCohortSubmissions(true);
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const [studentsRes, submissionsRes, sessionsRes] = await Promise.all([
+        fetch('/api/teacher/students', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/teacher/submissions', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/teacher/support/sessions', { headers: { 'Authorization': `Bearer ${token}` } })
+      ]);
+
+      if (studentsRes.ok) setCohortStudents(await studentsRes.json());
+      if (submissionsRes.ok) setCohortSubmissions(await submissionsRes.json());
+      if (sessionsRes.ok) setSupportSessions(await sessionsRes.json());
+    } catch (err) {
+      console.error("Failed to fetch teacher datasets", err);
+    } finally {
+      setLoadingStudents(false);
+      setLoadingCohortSubmissions(false);
+    }
+  };
+
+  const handleManualOverride = async (studentId: number, phaseId: number, status: string, progressPercentage: number) => {
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch('/api/teacher/override-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ studentId, phaseId, status, progressPercentage })
+      });
+      if (response.ok) {
+        alert("Progress override applied successfully!");
+        fetchTeacherData();
+      } else {
+        const d = await response.json();
+        alert(d.error || "Override failed");
+      }
+    } catch (e) {
+      alert("Error connection mapping.");
+    }
+  };
+
+  const handleReviewSubmission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedReviewSubmission) return;
+    setIsSubmittingReview(true);
+    setReviewMessage("");
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch('/api/teacher/review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          submissionId: selectedReviewSubmission.id,
+          status: reviewStatus,
+          grade: reviewGrade,
+          reviewComment: reviewComment
+        })
+      });
+
+      if (response.ok) {
+        setReviewMessage("Review applied successfully!");
+        setTimeout(() => {
+          setSelectedReviewSubmission(null);
+          setReviewComment("");
+          setReviewMessage("");
+        }, 1500);
+        fetchTeacherData();
+      } else {
+        const data = await response.json();
+        setReviewMessage(data.error || "Review submission failed.");
+      }
+    } catch (err) {
+      setReviewMessage("Error connecting to server.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const fetchSupportMessages = async (studentId: number) => {
+    setLoadingMessages(true);
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch(`/api/teacher/support/messages?studentId=${studentId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setSupportMessages(await response.json());
+      }
+    } catch (err) {
+      console.error("Failed to fetch support conversation logs", err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const handleSendSupportMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supportInput.trim()) return;
+
+    // Target is either first active session (tutor-student) or student self ID
+    const studentId = user.role === 'teacher' ? activeSessionStudent?.id : user.id;
+    if (!studentId) return;
+
+    setSendingSupport(true);
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch('/api/teacher/support/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: supportInput, studentId })
+      });
+
+      if (response.ok) {
+        setSupportInput("");
+        fetchSupportMessages(studentId);
+      }
+    } catch (err) {
+      console.error("Failed to transmit support comment", err);
+    } finally {
+      setSendingSupport(false);
+    }
+  };
+
+  // Run messaging cycles based on state updates
+  useEffect(() => {
+    let interval: any;
+    const targetId = user.role === 'teacher' ? activeSessionStudent?.id : user.id;
+    if (targetId && (activeView === 'support' || studentChatOpen)) {
+      fetchSupportMessages(targetId);
+      interval = setInterval(() => {
+        fetchSupportMessages(targetId);
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [activeSessionStudent, activeView, studentChatOpen]);
 
   const fetchDashboardData = async () => {
     setLoadingPhases(true);
@@ -200,87 +378,151 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
         </div>
 
         <nav className="space-y-2 flex-1 overflow-y-auto">
-          <button 
-            onClick={() => setActiveView('overview')}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
-              activeView === 'overview' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            Overview
-          </button>
-
-          <button 
-            onClick={() => setActiveView('submissions')}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
-              activeView === 'submissions' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Github className="w-5 h-5" />
-            My Submissions
-          </button>
-
-          <button 
-            onClick={() => setActiveView('certificates')}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
-              activeView === 'certificates' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Trophy className="w-5 h-5" />
-            Certificates
-          </button>
-
-          <button 
-            onClick={() => setActiveView('leaderboard')}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
-              activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Users className="w-5 h-5" />
-            Leaderboard
-          </button>
-
-          <button 
-            onClick={() => setActiveView('settings')}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
-              activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Settings className="w-5 h-5" />
-            Settings
-          </button>
-
-          <div className="pt-6 pb-2 px-4">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Learning Path</p>
-          </div>
-
-          {loadingPhases ? (
-            <div className="space-y-4 px-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-10 bg-slate-100 animate-pulse rounded-lg" />
-              ))}
-            </div>
-          ) : (
-            phases.map((phase) => (
+          {user?.role === "teacher" ? (
+            <>
               <button 
-                key={phase.id}
-                onClick={() => handlePhaseClick(phase.id)}
-                disabled={phase.status === 'locked'}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
-                  activeView === 'phase' && selectedPhaseId === phase.id
-                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
-                    : phase.status === 'locked'
-                      ? 'text-slate-300 cursor-not-allowed'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                onClick={() => { setActiveView('overview'); fetchTeacherData(); }}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'overview' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
-                <div className="flex items-center gap-4 overflow-hidden">
-                  {phase.status === 'locked' ? <Lock className="w-5 h-5 shrink-0" /> : <BookOpen className="w-5 h-5 shrink-0" />}
-                  <span className="truncate">{phase.name}</span>
-                </div>
-                {phase.status === 'completed' && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
+                <LayoutDashboard className="w-5 h-5" />
+                Student Cohort
               </button>
-            ))
+
+              <button 
+                onClick={() => { setActiveView('grading'); fetchTeacherData(); }}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'grading' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                Review Submissions
+              </button>
+
+              <button 
+                onClick={() => { setActiveView('support'); fetchTeacherData(); }}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'support' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <MessageSquare className="w-5 h-5" />
+                Faculty Support
+              </button>
+
+              <button 
+                onClick={() => { setActiveView('leaderboard'); fetchDashboardData(); }}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Users className="w-5 h-5" />
+                Leaderboard
+              </button>
+
+              <button 
+                onClick={() => setActiveView('settings')}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Settings className="w-5 h-5" />
+                Settings
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => setActiveView('overview')}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'overview' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <LayoutDashboard className="w-5 h-5" />
+                Overview
+              </button>
+
+              <button 
+                onClick={() => setActiveView('submissions')}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'submissions' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Github className="w-5 h-5" />
+                My Submissions
+              </button>
+
+              <button 
+                onClick={() => setActiveView('certificates')}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'certificates' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Trophy className="w-5 h-5" />
+                Certificates
+              </button>
+
+              <button 
+                onClick={() => setActiveView('leaderboard')}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Users className="w-5 h-5" />
+                Leaderboard
+              </button>
+
+              <button 
+                onClick={() => setStudentChatOpen(true)}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all text-indigo-600 hover:bg-indigo-50/50 hover:text-indigo-700`}
+              >
+                <MessageSquare className="w-5 h-5 text-indigo-500" />
+                Support Helpdesk
+              </button>
+
+              <button 
+                onClick={() => setActiveView('settings')}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <Settings className="w-5 h-5" />
+                Settings
+              </button>
+
+              <div className="pt-6 pb-2 px-4">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Learning Path</p>
+              </div>
+
+              {loadingPhases ? (
+                <div className="space-y-4 px-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-10 bg-slate-100 animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                phases.map((phase) => (
+                  <button 
+                    key={phase.id}
+                    onClick={() => handlePhaseClick(phase.id)}
+                    disabled={phase.status === 'locked'}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
+                      activeView === 'phase' && selectedPhaseId === phase.id
+                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
+                        : phase.status === 'locked'
+                          ? 'text-slate-300 cursor-not-allowed'
+                          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      {phase.status === 'locked' ? <Lock className="w-5 h-5 shrink-0" /> : <BookOpen className="w-5 h-5 shrink-0" />}
+                      <span className="truncate">{phase.name}</span>
+                    </div>
+                    {phase.status === 'completed' && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
+                  </button>
+                ))
+              )}
+            </>
           )}
         </nav>
 
@@ -327,13 +569,481 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
       <div className="flex-1 p-8 md:p-12 pt-16 lg:pt-32 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
-            {activeView === 'overview' ? (
-              <motion.div
-                key="overview"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
+            {user?.role === "teacher" ? (
+              // TEACHER SYSTEM WORKSPACE
+              activeView === 'overview' ? (
+                <motion.div
+                  key="teacher-cohort"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-8 animate-fade-in"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <div>
+                      <h1 className="text-4xl font-display font-black text-slate-900 mb-2">Student Cohort</h1>
+                      <p className="text-slate-500 font-medium">Monitor pacing, override course locks, and check academic stats.</p>
+                    </div>
+                    <div className="flex gap-4">
+                      <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 flex flex-col items-center justify-center min-w-[140px] shadow-lg">
+                        <span className="text-3xl font-black">{cohortStudents.length}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total Enrolled</span>
+                      </div>
+                      <div className="bg-white border border-slate-200 text-slate-900 rounded-3xl p-6 flex flex-col items-center justify-center min-w-[140px] shadow-sm">
+                        <span className="text-3xl font-black text-indigo-600">
+                          {cohortSubmissions.filter(s => s.status === 'pending').length}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Pending Grade</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {loadingStudents ? (
+                    <div className="text-center py-24 bg-white border border-slate-200 rounded-[2.5rem]">
+                      <div className="w-12 h-12 border-4 border-slate-900/10 border-t-slate-900 rounded-full animate-spin mx-auto mb-4" />
+                      <p className="text-slate-500 font-medium font-display text-sm">Loading Student Cohort Directory...</p>
+                    </div>
+                  ) : cohortStudents.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {cohortStudents.map((student) => (
+                        <div key={student.id} className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm text-slate-900 flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-start justify-between gap-4 mb-6">
+                              <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white font-bold font-display text-lg flex items-center justify-center overflow-hidden">
+                                  {student.avatar_url ? (
+                                    <img src={student.avatar_url} alt={student.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    student.name[0]
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <h3 className="font-bold text-lg text-slate-905 truncate">{student.name}</h3>
+                                  <p className="text-slate-500 text-xs font-mono">{student.email}</p>
+                                </div>
+                              </div>
+                              <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200/80">
+                                {student.vl_id || `ID: ${student.id}`}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-slate-400 font-black uppercase tracking-widest mb-4">Academic Progression metrics</p>
+                            <div className="grid grid-cols-3 gap-3 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                              <div className="text-center">
+                                <span className="block text-lg font-bold text-slate-990">{student.completed_projects}</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest line-clamp-1">Projects</span>
+                              </div>
+                              <div className="text-center">
+                                <span className="block text-lg font-bold text-slate-990">{student.total_submissions}</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest line-clamp-1">Submissions</span>
+                              </div>
+                              <div className="text-center">
+                                <span className="block text-lg font-bold text-slate-990">{student.total_badges}</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest line-clamp-1">Certificates</span>
+                              </div>
+                            </div>
+
+                            {student.phases && student.phases.length > 0 && (
+                              <div className="space-y-2 mb-6">
+                                <p className="text-xs text-slate-400 font-black uppercase tracking-widest">Phase Locking statuses</p>
+                                {student.phases.map((ph: any) => (
+                                  <div key={ph.phase_id} className="flex items-center justify-between text-xs font-medium">
+                                    <span className="text-slate-600">{ph.phase_name}</span>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                                      ph.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
+                                      ph.status === 'active' ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-400'
+                                    }`}>
+                                      {ph.status} ({ph.progress_percentage}%)
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="pt-4 border-t border-slate-100">
+                            <p className="text-xs text-slate-400 font-black uppercase tracking-widest mb-3">Academic Control Actions</p>
+                            <form onSubmit={(e) => {
+                              e.preventDefault();
+                              const form = e.currentTarget;
+                              const phaseId = parseInt((form.elements.namedItem('overridePhase') as HTMLSelectElement).value);
+                              const status = (form.elements.namedItem('overrideStatus') as HTMLSelectElement).value;
+                              const progress = parseInt((form.elements.namedItem('overrideProgress') as HTMLInputElement).value || '0');
+                              handleManualOverride(student.id, phaseId, status, progress);
+                            }} className="flex flex-col gap-2">
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <select name="overridePhase" className="p-2 border border-slate-200 rounded-lg outline-none font-semibold">
+                                  <option value="1">Phase 1 (Basic Dev)</option>
+                                  <option value="2">Phase 2 (Cloud AI)</option>
+                                  <option value="3">Phase 3 (Capstone)</option>
+                                </select>
+                                <select name="overrideStatus" className="p-2 border border-slate-200 rounded-lg outline-none font-semibold">
+                                  <option value="active">Unlock / Active</option>
+                                  <option value="completed">Complete Phase</option>
+                                  <option value="locked">Lock Phase</option>
+                                </select>
+                              </div>
+                              <div className="flex gap-2 text-xs">
+                                <input name="overrideProgress" type="number" min="0" max="100" placeholder="Prog %" className="w-1/3 p-2 border border-slate-200 rounded-lg outline-none font-semibold" />
+                                <button type="submit" className="flex-1 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-all text-xs">
+                                  Override progress
+                                </button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-24 bg-white border border-slate-200 rounded-[2.5rem]">
+                      <GraduationCap className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                      <h3 className="font-bold text-slate-950 text-xl">No Students Found</h3>
+                      <p className="text-slate-500 max-w-sm mx-auto mt-1">There are no registered student accounts on VibeLab yet.</p>
+                    </div>
+                  )}
+                </motion.div>
+              ) : activeView === 'grading' ? (
+                <motion.div
+                  key="teacher-grading"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-8"
+                >
+                  <div className="mb-8">
+                    <h1 className="text-4xl font-display font-black text-slate-900 mb-2">Grading Suite</h1>
+                    <p className="text-slate-500 font-medium">Review submitted project repository artifacts, live URLs, code, and assign grades.</p>
+                  </div>
+
+                  {selectedReviewSubmission ? (
+                    <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm text-slate-900">
+                      <div className="flex items-center justify-between pb-6 border-b border-slate-200 mb-6 font-display">
+                        <button 
+                          onClick={() => { setSelectedReviewSubmission(null); setReviewMessage(""); }}
+                          className="text-xs font-bold text-slate-500 hover:text-slate-950 transition-colors uppercase tracking-widest"
+                        >
+                          &larr; Return to Submission lists
+                        </button>
+                        <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg border border-amber-100 text-[10px] font-black uppercase tracking-widest">
+                          Reviewing Submission
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 text-xs text-slate-800">
+                        <div>
+                          <h2 className="text-2xl font-black text-slate-900 mb-2 font-display">{selectedReviewSubmission.project_title}</h2>
+                          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4">Submitted by: {selectedReviewSubmission.student_name} ({selectedReviewSubmission.student_vl_id})</p>
+                          <div className="space-y-3 mb-6">
+                            <p className="text-sm font-semibold text-slate-700">Student Description Commentary:</p>
+                            <p className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-slate-600 text-sm whitespace-pre-wrap font-medium">{selectedReviewSubmission.description || "No project description provided."}</p>
+                          </div>
+                          <div className="flex gap-4">
+                            {selectedReviewSubmission.github_url && (
+                              <a href={selectedReviewSubmission.github_url} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 text-center bg-slate-100 text-slate-900 font-bold rounded-xl border border-slate-200 hover:bg-slate-200 transition-all text-xs">
+                                Github Repository
+                              </a>
+                            )}
+                            {selectedReviewSubmission.live_url && (
+                              <a href={selectedReviewSubmission.live_url} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 text-center bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-505 transition-all text-xs shadow-lg shadow-indigo-600/15">
+                                Live Deployment Url
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Grading Review feedback board */}
+                        <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                          <h3 className="font-bold text-slate-905 text-lg mb-4">Academic Review Grading Form</h3>
+                          
+                          {reviewMessage && (
+                            <div className="mb-4 p-4 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-xl">
+                              {reviewMessage}
+                            </div>
+                          )}
+
+                          <form onSubmit={handleReviewSubmission} className="space-y-4 text-xs text-slate-700">
+                            <div className="space-y-1">
+                              <label className="font-bold text-slate-500 uppercase tracking-wider">Evaluation Outcome Status</label>
+                              <div className="flex gap-4">
+                                <label className="flex items-center gap-2 font-bold cursor-pointer">
+                                  <input type="radio" checked={reviewStatus === "approved"} onChange={() => setReviewStatus("approved")} />
+                                  Approve & Pass
+                                </label>
+                                <label className="flex items-center gap-2 font-bold cursor-pointer">
+                                  <input type="radio" checked={reviewStatus === "rejected"} onChange={() => setReviewStatus("rejected")} />
+                                  Request Revision
+                                </label>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="font-bold text-slate-500 uppercase tracking-wider">Assign Score Grade Level</label>
+                              <select 
+                                value={reviewGrade} 
+                                onChange={(e) => setReviewGrade(e.target.value)}
+                                className="w-full p-3 border border-slate-200 rounded-xl bg-white outline-none font-bold"
+                              >
+                                {["A+", "A", "B+", "B", "C", "Pass", "Fail"].map(g => (
+                                  <option key={g} value={g}>{g}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="font-bold text-slate-500 uppercase tracking-wider">Tutor Review Commentary</label>
+                              <textarea 
+                                value={reviewComment}
+                                onChange={(e) => setReviewComment(e.target.value)}
+                                placeholder="Provide comprehensive feedback, architecture pointers, or guidelines for revision..."
+                                className="w-full p-3 border border-slate-200 rounded-xl bg-white outline-none h-24 font-medium resize-none"
+                              />
+                            </div>
+
+                            <button 
+                              type="submit" 
+                              disabled={isSubmittingReview}
+                              className="w-full py-3 bg-slate-990 hover:bg-slate-800 text-white font-bold rounded-xl transition-all"
+                            >
+                              {isSubmittingReview ? "Saving Academic review..." : "Publish Grade & Commentary"}
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+
+                      {/* Display source code state if available */}
+                      {selectedReviewSubmission.code_state && (
+                        <div className="mt-8 border-t border-slate-200 pt-6">
+                          <h4 className="font-bold text-slate-900 text-sm mb-3">Student Source Code Snapshot:</h4>
+                          <div className="bg-slate-950 p-6 rounded-2xl border border-slate-900 font-mono text-xs text-slate-300 overflow-x-auto max-h-96">
+                            <pre>{typeof selectedReviewSubmission.code_state === 'object' 
+                              ? JSON.stringify(selectedReviewSubmission.code_state, null, 2) 
+                              : selectedReviewSubmission.code_state
+                            }</pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden text-slate-900 animate-fade-in">
+                      <div className="p-6 border-b border-slate-105 flex items-center justify-between bg-slate-50/50 font-display">
+                        <span className="text-xs font-black text-slate-500 uppercase tracking-wider">Project submission list</span>
+                        <span className="text-xs font-bold text-slate-400">Total: {cohortSubmissions.length} submissions</span>
+                      </div>
+
+                      {loadingCohortSubmissions ? (
+                        <div className="text-center py-24 font-display">
+                          <div className="w-12 h-12 border-4 border-slate-900/10 border-t-slate-900 rounded-full animate-spin mx-auto mb-4" />
+                          <p className="text-slate-500 text-sm font-medium">Downloading Cohort Project Submissions...</p>
+                        </div>
+                      ) : cohortSubmissions.length > 0 ? (
+                        <div className="divide-y divide-slate-100 text-sm text-slate-700">
+                          {cohortSubmissions.map((sub) => (
+                            <div key={sub.id} className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors">
+                              <div>
+                                <h3 className="font-bold text-slate-909 text-base">{sub.project_title}</h3>
+                                <p className="text-slate-400 text-xs font-medium uppercase tracking-widest">
+                                  {sub.phase_name} | By: {sub.student_name} ({sub.student_vl_id})
+                                </p>
+                                <p className="text-slate-500 text-xs mt-1 italic font-medium">
+                                  {sub.description ? `${sub.description.substring(0, 100)}...` : "No description provided."}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-4 shrink-0 font-display">
+                                <div className="text-right">
+                                  <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                                    sub.status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                                    sub.status === 'rejected' ? 'bg-rose-50 border-rose-100 text-rose-700' :
+                                    'bg-amber-50 border-amber-100 text-amber-700 font-black animate-pulse'
+                                  }`}>
+                                    {sub.status === 'approved' ? `APPROVED (${sub.grade})` : sub.status === 'rejected' ? 'REVISIONS REQ' : 'PENDING REVIEW'}
+                                  </span>
+                                  <span className="block text-[10px] font-medium text-slate-400 mt-1">{new Date(sub.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    setSelectedReviewSubmission(sub);
+                                    setReviewStatus(sub.status || 'approved');
+                                    setReviewGrade(sub.grade || 'A');
+                                    setReviewComment(sub.review_comment || '');
+                                  }}
+                                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all"
+                                >
+                                  Review & Grade
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-24 font-display">
+                          <CheckCircle2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                          <h3 className="font-bold text-slate-950 text-xl">All Caught Up!</h3>
+                          <p className="text-slate-500 max-w-sm mx-auto mt-1">There are no pending project submissions across all student phases.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              ) : activeView === 'support' ? (
+                <motion.div
+                  key="teacher-support"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-8 animate-fade-in"
+                >
+                  <div className="mb-8 font-display">
+                    <h1 className="text-4xl font-display font-black text-slate-900 mb-2">Faculty Support Center</h1>
+                    <p className="text-slate-500 font-medium font-sans">Answer questions, provide guidance reviews, and tutor cohort students.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[600px] bg-white rounded-[3rem] border border-slate-200 overflow-hidden shadow-sm">
+                    {/* Conversations list sidebar */}
+                    <div className="col-span-4 border-r border-slate-100 h-full flex flex-col font-display">
+                      <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                        <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Active Channels</span>
+                      </div>
+                      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+                        {supportSessions.length > 0 ? supportSessions.map((session) => (
+                          <button
+                            key={session.id}
+                            onClick={() => {
+                              setActiveSessionStudent(session);
+                              fetchSupportMessages(session.id);
+                            }}
+                            className={`w-full p-5 text-left flex items-start gap-4 transition-colors ${
+                              activeSessionStudent?.id === session.id ? 'bg-slate-50' : 'hover:bg-slate-50/50'
+                            }`}
+                          >
+                            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white font-bold text-sm flex items-center justify-center shrink-0">
+                              {session.avatar_url ? (
+                                <img src={session.avatar_url} alt={session.name} className="w-full h-full object-cover" />
+                              ) : (
+                                session.name[0]
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1 font-sans">
+                              <p className="font-bold text-slate-900 text-sm font-display">{session.name}</p>
+                              <p className="text-slate-400 text-xs truncate mt-0.5 font-medium">{session.last_message || "Active chat help requested..."}</p>
+                              <span className="text-[10px] text-slate-300 font-medium font-mono">{session.vl_id}</span>
+                            </div>
+                          </button>
+                        )) : (
+                          <p className="text-center text-xs text-slate-400 p-8 font-medium">No active student chat requests yet.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Chat communication portal */}
+                    <div className="col-span-8 h-full flex flex-col justify-between bg-slate-50/20">
+                      {activeSessionStudent ? (
+                        <>
+                          {/* Thread header */}
+                          <div className="p-6 border-b border-slate-105 bg-white flex items-center justify-between font-display">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-slate-905 text-white font-bold text-sm flex items-center justify-center overflow-hidden">
+                                {activeSessionStudent.avatar_url ? (
+                                  <img src={activeSessionStudent.avatar_url} alt={activeSessionStudent.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  activeSessionStudent.name[0]
+                                )}
+                              </div>
+                              <div className="font-sans">
+                                <p className="font-bold text-slate-900 text-sm font-display">Review Chat with {activeSessionStudent.name}</p>
+                                <p className="text-[10px] text-slate-400 font-mono font-medium">Academic ID: {activeSessionStudent.vl_id}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Message bubbles */}
+                          <div className="flex-1 p-6 overflow-y-auto space-y-4 font-sans">
+                            {loadingMessages && supportMessages.length === 0 ? (
+                              <div className="text-center py-10 text-xs text-slate-400">Loading chat logs...</div>
+                            ) : supportMessages.length > 0 ? (
+                              supportMessages.map((msg) => {
+                                const isMe = msg.sender_role === "teacher";
+                                return (
+                                  <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[70%] p-4 rounded-3xl text-sm ${
+                                      isMe ? 'bg-slate-900 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'
+                                    }`}>
+                                      <p className="font-semibold">{msg.message}</p>
+                                      <span className="block text-[9px] font-mono text-slate-400 mt-2 text-right font-medium">
+                                        {msg.sender_name} | {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="text-center py-24 text-slate-400 text-sm font-medium">No support messages on this thread yet. Send a hello to get started!</div>
+                            )}
+                          </div>
+
+                          {/* Input box */}
+                          <form onSubmit={handleSendSupportMessage} className="p-4 border-t border-slate-100 bg-white flex gap-3 text-xs">
+                            <input 
+                              type="text"
+                              value={supportInput}
+                              onChange={(e) => setSupportInput(e.target.value)}
+                              placeholder={`Type guidance reply to ${activeSessionStudent.name}...`}
+                              className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 outline-none rounded-xl font-medium focus:border-slate-900 transition-all font-display"
+                            />
+                            <button 
+                              type="submit"
+                              disabled={sendingSupport || !supportInput.trim()}
+                              className="px-4 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-md flex items-center gap-2 font-bold font-display"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              Send
+                            </button>
+                          </form>
+                        </>
+                      ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400">
+                          <MessageSquare className="w-14 h-14 text-slate-305 mb-4 animate-pulse" />
+                          <h4 className="font-bold text-slate-950 text-xl font-display">Faculty Communications Channel</h4>
+                          <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1 font-sans font-medium">Please select an active student request from the sidebar directory to begin review chats.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ) : activeView === 'leaderboard' ? (
+                <motion.div
+                  key="teacher-leaderboard"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <Leaderboard />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="teacher-settings"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div className="bg-white p-8 md:p-10 rounded-[3rem] border border-slate-200 shadow-sm max-w-2xl mx-auto text-slate-800">
+                    <h2 className="text-2xl font-black text-slate-950 mb-2 font-display">Faculty Account Settings</h2>
+                    <p className="text-slate-500 mb-8 font-medium">Manage your teacher profile credentials and info.</p>
+                    <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-xs font-bold mb-4">
+                      Academic instructor settings are connected. Use normal settings inputs below for modifications.
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            ) : (
+              // ORIGINAL STUDENT WORKSPACE
+              activeView === 'overview' ? (
+                <motion.div
+                  key="overview"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                >
                 {/* Mobile Profile Bar */}
                 <div className="lg:hidden flex items-center justify-between mb-8 pb-8 border-b border-slate-200">
                   <div className="flex items-center gap-4">
@@ -935,10 +1645,93 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                   onProgress={fetchDashboardData}
                 />
               </motion.div>
-            )}
+            )
+          )}
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Student support chat sliding drawer overlay */}
+      <AnimatePresence>
+        {studentChatOpen && (
+          <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs font-sans">
+            <motion.div 
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                    <GraduationCap className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-950 text-base font-display">VibeLab Faculty Helpdesk</h3>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">1-on-1 Academic Support Chat</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setStudentChatOpen(false)}
+                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-900 transition-all"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Chat Thread */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/30">
+                {loadingMessages ? (
+                  <div className="text-center py-10 text-xs font-medium text-slate-400">Loading academic thread...</div>
+                ) : supportMessages.length > 0 ? (
+                  supportMessages.map((msg) => {
+                    const isMe = msg.sender_role === "student";
+                    return (
+                      <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] p-4 rounded-3xl text-sm ${
+                          isMe ? 'bg-slate-900 text-white rounded-tr-none' : 'bg-white border text-slate-800 rounded-tl-none'
+                        }`}>
+                          <p className="font-semibold leading-relaxed">{msg.message}</p>
+                          <span className="block text-[9px] font-mono text-slate-400 mt-2 text-right font-medium">
+                            {msg.sender_name} | {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-16 text-slate-400 space-y-3 font-medium">
+                    <MessageSquare className="w-12 h-12 text-slate-200 mx-auto mb-2" />
+                    <p className="text-sm font-bold text-slate-600">Need academic support or review feedback clarification?</p>
+                    <p className="text-xs text-slate-400 max-w-xs mx-auto">Ask your teacher questions directly right here! Your instructor will receive these and reply in your workspace.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Feed Input form */}
+              <form onSubmit={handleSendSupportMessage} className="p-4 border-t border-slate-100 flex gap-3 bg-white text-xs">
+                <input 
+                  type="text"
+                  value={supportInput}
+                  onChange={(e) => setSupportInput(e.target.value)}
+                  placeholder="Type Message to VibeLab review faculty..."
+                  className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 outline-none rounded-xl font-medium focus:border-slate-900 transition-all font-display"
+                />
+                <button 
+                  type="submit"
+                  disabled={sendingSupport || !supportInput.trim()}
+                  className="px-4 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all shadow-md flex items-center gap-2 font-bold font-display"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Send
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
