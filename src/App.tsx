@@ -36,6 +36,7 @@ import VerifyEmail from "./VerifyEmail";
 import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
 import PublicProfile from "./PublicProfile";
+import VerifyCredential from "./VerifyCredential";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [password, setPassword] = useState("");
@@ -309,6 +310,13 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
             className={`hover:text-cyan-600 transition-colors ${currentPage === 'contact' ? 'text-slate-900' : ''}`}
           >
             Contact
+          </button>
+
+          <button 
+            onClick={() => onNavigate('verify-credential')} 
+            className={`hover:text-cyan-600 transition-colors ${currentPage === 'verify-credential' ? 'text-slate-900' : ''}`}
+          >
+            Verify Credential
           </button>
         </div>
         <div className="flex items-center gap-4">
@@ -1373,6 +1381,8 @@ export default function App() {
       setCurrentPage('verify-email');
     } else if (path === '/reset-password') {
       setCurrentPage('reset-password');
+    } else if (path === '/verify-credential' || path === '/verify') {
+      setCurrentPage('verify-credential');
     } else if (path.startsWith('/verify/') || path.startsWith('/profile/')) {
       setCurrentPage('verify-profile');
     } else if (loggedInUser) {
@@ -1444,6 +1454,8 @@ export default function App() {
           <ForgotPassword onNavigate={setCurrentPage} />
         ) : currentPage === 'reset-password' ? (
           <ResetPassword onNavigate={setCurrentPage} />
+        ) : currentPage === 'verify-credential' ? (
+          <VerifyCredential onNavigate={setCurrentPage} />
         ) : currentPage === 'verify-profile' ? (
           <PublicProfile userId={
             window.location.pathname.startsWith('/profile/')

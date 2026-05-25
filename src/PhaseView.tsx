@@ -108,6 +108,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [checkedTopics, setCheckedTopics] = useState<string[]>([]);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
   const [previousQuizAttempt, setPreviousQuizAttempt] = useState<any>(null);
+  const [quizCooldown, setQuizCooldown] = useState<{ active: boolean; message: string; expiresAt: number } | null>(null);
   const [habitLogs, setHabitLogs] = useState<any[]>([]);
   
   // Interactive quiz states
@@ -137,6 +138,27 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
     }
     const firstStep = selectedProject?.tutorial_data?.find((s: any) => s.step === 0);
     return firstStep?.starterCode || '';
+  };
+
+  const getRemainingCooldownText = (expiresAt: number) => {
+    const diff = expiresAt - Date.now();
+    if (diff <= 0) return '';
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m left`;
+  };
+
+  const getStudySuggestions = (orderIndex: number) => {
+    const suggestions: Record<number, string[]> = {
+      1: ["Review Python variables and custom methods scopes", "Practice handling standard input and output exception blocks", "Understand dictionary object structures and json.loads() mappings"],
+      2: ["Study how words mapping converts text into semantic vector embeddings", "Review LLM context window limits and prompts boundaries", "Perfect RAG strategies combining retrieval with generations"],
+      3: ["Review model request chaining loops using the developer SDK", "Hide and preserve private API authorization variables securely on backends", "Construct responsive frontend layout containers handling streaming APIs"],
+      4: ["Verify the MCP protocol structure specification and schemas", "Construct multi-agent task networks delegating tasks sequentially", "Setup safe boundaries restricting infinite cycles in agent tool executions"],
+      5: ["Read papers highlighting the ReAct (Reasoning + Acting) loop", "Compare Tree of Thoughts logic vs classic linear prompts models", "Review Toolformer to learn how LLMs teach themselves when to query APIs"],
+      6: ["Explore LLM evaluation strategies, automated tracers, and benchmarks", "Study model alignment and guardrails filtering user prompts queries", "Mitigate confidence-hallucinations through verification guidelines"],
+      7: ["Construct multi-stage Docker builds packing dependencies perfectly", "Configure secure CI/CD pipelines deploying builds upon git commits", "Manage serverless container configurations binding on Port 3000"]
+    };
+    return suggestions[orderIndex] || ["Review the lesson resources listed above", "Solve minor project bugs", "Check curriculum documentation guidelines"];
   };
 
   useEffect(() => {
@@ -543,6 +565,17 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             const qData = await quizRes.json();
             setQuizQuestions(qData.questions || []);
             setPreviousQuizAttempt(qData.previousAttempt || null);
+            setQuizCooldown(null);
+          } else if (quizRes.status === 403) {
+            const qData = await quizRes.json();
+            if (qData.cooldown) {
+              setQuizCooldown({
+                active: true,
+                message: qData.message,
+                expiresAt: qData.cooldownExpires
+              });
+              setPreviousQuizAttempt(qData.previousAttempt || null);
+            }
           }
           if (habitsRes.ok) {
             setHabitLogs(await habitsRes.json());
@@ -1078,26 +1111,57 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                 ) : (
                   /* Standard Inactive Quiz State Screen */
                   <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 text-center flex flex-col items-center justify-center space-y-4">
-                    <Trophy className="w-10 h-10 text-slate-300" />
-                    <div>
-                      <h4 className="font-bold text-slate-900">Quiz Challenge</h4>
-                      <p className="text-slate-500 text-xs font-medium max-w-md mx-auto leading-relaxed mt-1">
-                        Consists of randomized questions covering core concepts in this phase. Pass threshold is 70%. Once passed, a secure 24-hour retake cooldown locks further attempts.
-                      </p>
-                    </div>
+                    {quizCooldown && quizCooldown.active && (quizCooldown.expiresAt - Date.now() > 0) ? (
+                      <div className="w-full space-y-6">
+                        <div className="p-6 bg-rose-50 border border-rose-100/50 rounded-2xl text-center flex flex-col items-center space-y-2">
+                          <span className="text-rose-600 text-[10px] font-black uppercase tracking-widest bg-rose-100/40 px-3 py-1 rounded-full">
+                            🔒 Cooldown Active
+                          </span>
+                          <h4 className="font-bold text-slate-900 mt-1">Quiz Access Temporarily Locked</h4>
+                          <p className="text-slate-500 text-xs font-medium max-w-sm">
+                            You failed your last attempt. VibeLab enforces a 24-hour study break so you can master the topics before retaking.
+                          </p>
+                          <span className="text-xs font-mono font-black text-rose-600 bg-rose-200/50 px-4.5 py-1.5 rounded-xl uppercase tracking-wider mt-2 shadow-xs">
+                            {getRemainingCooldownText(quizCooldown.expiresAt)}
+                          </span>
+                        </div>
+                        
+                        <div className="text-left bg-white border border-slate-200/80 p-6 rounded-2xl space-y-4">
+                          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recommended Study Checklist</h5>
+                          <ul className="space-y-3">
+                            {getStudySuggestions(phase?.order_index || 1).map((s, idx) => (
+                              <li key={idx} className="flex gap-3 items-start text-xs text-slate-600 font-medium">
+                                <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+                                <span className="leading-relaxed">{s}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <Trophy className="w-10 h-10 text-slate-300" />
+                        <div>
+                          <h4 className="font-bold text-slate-900">Quiz Challenge</h4>
+                          <p className="text-slate-500 text-xs font-medium max-w-md mx-auto leading-relaxed mt-1">
+                            Consists of randomized questions covering core concepts in this phase. Pass threshold is 70%. Once passed, a secure 24-hour retake cooldown locks further attempts.
+                          </p>
+                        </div>
 
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setQuizActive(true);
-                        setQuizResult(null);
-                        setSelectedQuizAnswers({});
-                        setQuizErrorMsg('');
-                      }}
-                      className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
-                    >
-                      Start Trivia Quiz
-                    </button>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setQuizActive(true);
+                            setQuizResult(null);
+                            setSelectedQuizAnswers({});
+                            setQuizErrorMsg('');
+                          }}
+                          className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
+                        >
+                          Start Trivia Quiz
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

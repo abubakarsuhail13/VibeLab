@@ -207,7 +207,27 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     
-    // Check if they already passed to show status or handle cooldown warning
+    // Check latest attempt for failed cooldown check (24-hour cooldown on failed attempts)
+    const [latestAttempts]: any = await p.execute(
+      'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? ORDER BY attempted_at DESC LIMIT 1',
+      [req.user.userId, id]
+    );
+
+    if (latestAttempts.length > 0 && !latestAttempts[0].passed) {
+      const lastAttemptTime = new Date(latestAttempts[0].attempted_at).getTime();
+      const now = Date.now();
+      const diffHours = (now - lastAttemptTime) / (1000 * 60 * 60);
+      if (diffHours < 24) {
+        return res.status(403).json({
+          cooldown: true,
+          error: 'Retry Locked',
+          message: `Quiz retake cooldown: You have failed your previous attempt. Please wait ${Math.ceil(24 - diffHours)} hours before retaking.`,
+          cooldownExpires: lastAttemptTime + 24 * 60 * 60 * 1000,
+          previousAttempt: latestAttempts[0]
+        });
+      }
+    }
+
     const [bestAttempt]: any = await p.execute(
       'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? ORDER BY score DESC, attempted_at DESC LIMIT 1',
       [req.user.userId, id]
@@ -237,6 +257,24 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    
+    // Cooldown verification on any previous failed attempt in the last 24 hours
+    const [latestAttempts]: any = await p.execute(
+      'SELECT score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? ORDER BY attempted_at DESC LIMIT 1',
+      [req.user.userId, id]
+    );
+
+    if (latestAttempts.length > 0 && !latestAttempts[0].passed) {
+      const lastAttemptTime = new Date(latestAttempts[0].attempted_at).getTime();
+      const now = Date.now();
+      const diffHours = (now - lastAttemptTime) / (1000 * 60 * 60);
+      if (diffHours < 24) {
+        return res.status(403).json({ 
+          cooldown: true,
+          message: `Quiz retake cooldown is active: Please wait ${Math.ceil(24 - diffHours)} hours before retaking.` 
+        });
+      }
+    }
     
     // Cooldown verification: once passed, 24 hours cooldown operates
     const [latestPass]: any = await p.execute(
