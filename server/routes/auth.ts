@@ -255,8 +255,10 @@ router.get('/github', (req: any, res) => {
 // GitHub OAuth Callback Endpoint
 router.get('/github/callback', async (req: any, res) => {
   const { code } = req.query;
+  const redirectBase = process.env.VITE_APP_URL || `${req.protocol}://${req.get('host')}`;
+  
   if (!code) {
-    return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=no_code_provided');
+    return res.redirect(redirectBase + '/login?error=no_code_provided');
   }
   
   try {
@@ -284,7 +286,7 @@ router.get('/github/callback', async (req: any, res) => {
     const tokenData: any = await tokenRes.json();
     if (!tokenData.access_token) {
       console.error('[OAuth] Failed to retrieve access token:', tokenData);
-      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=token_failed');
+      return res.redirect(redirectBase + '/login?error=token_failed');
     }
     
     const accessToken = tokenData.access_token;
@@ -310,12 +312,12 @@ router.get('/github/callback', async (req: any, res) => {
     const email = primaryEmailObj ? primaryEmailObj.email : `${ghUser.login}@github-vibelab.io`;
     
     if (!email) {
-      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=no_email_returned');
+      return res.redirect(redirectBase + '/login?error=no_email_returned');
     }
     
     const p = await getPool();
     if (!p) {
-      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=db_failed');
+      return res.redirect(redirectBase + '/login?error=db_failed');
     }
     
     // 4. Trace if user email is registered or if a new user registration is needed
@@ -434,7 +436,7 @@ router.get('/github/callback', async (req: any, res) => {
     `);
   } catch (err: any) {
     console.error('[OAuth] Error in callback:', err);
-    return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=callback_exception');
+    return res.redirect(process.env.VITE_APP_URL || (req ? `${req.protocol}://${req.get('host')}` : 'https://vibe-lab-tan.vercel.app') + '/login?error=callback_exception');
   }
 });
 
@@ -453,8 +455,9 @@ router.get('/google', (req: any, res) => {
 // Google OAuth Callback Endpoint
 router.get('/google/callback', async (req: any, res) => {
   const { code } = req.query;
+  const redirectBase = process.env.VITE_APP_URL || `${req.protocol}://${req.get('host')}`;
   if (!code) {
-    return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=no_code_provided');
+    return res.redirect(redirectBase + '/login?error=no_code_provided');
   }
   
   try {
@@ -482,7 +485,7 @@ router.get('/google/callback', async (req: any, res) => {
     const tokenData: any = await tokenRes.json();
     if (!tokenData.access_token) {
       console.error('[Google OAuth] Failed to retrieve access token:', tokenData);
-      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=token_failed');
+      return res.redirect(redirectBase + '/login?error=token_failed');
     }
     
     const accessToken = tokenData.access_token;
@@ -497,12 +500,12 @@ router.get('/google/callback', async (req: any, res) => {
     
     const email = gUser.email;
     if (!email) {
-      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=no_email_returned');
+      return res.redirect(redirectBase + '/login?error=no_email_returned');
     }
     
     const p = await getPool();
     if (!p) {
-      return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=db_failed');
+      return res.redirect(redirectBase + '/login?error=db_failed');
     }
     
     // 3. Trace if user email is registered or if a new user registration is needed
@@ -621,7 +624,7 @@ router.get('/google/callback', async (req: any, res) => {
     `);
   } catch (err: any) {
     console.error('[Google OAuth] Error in callback:', err);
-    return res.redirect((process.env.VITE_APP_URL || 'https://vibe-lab-tan.vercel.app') + '/login?error=callback_exception');
+    return res.redirect(redirectBase + '/login?error=callback_exception');
   }
 });
 
