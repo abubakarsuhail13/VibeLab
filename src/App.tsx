@@ -412,36 +412,82 @@ const LaunchAnimation = () => {
 
         {/* App Content Area */}
         <div className="space-y-4">
-          <div className="h-36 rounded-2xl bg-slate-100/50 border border-slate-200/50 flex items-center justify-center overflow-hidden relative">
+          <div className="h-44 rounded-2xl bg-slate-950 border border-slate-800 shadow-inner flex items-center justify-center overflow-hidden relative">
+            {/* Custom Code Grid Background */}
+            <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:14px_14px] pointer-events-none" />
+            
             {!isLaunching ? (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center gap-2 text-center p-2"
+                className="flex flex-col items-center gap-2 text-center p-2 relative z-10 w-full h-full justify-center"
               >
-                {/* High fidelity professional developer / vibe coding animated loop element */}
-                <div className="relative w-16 h-16 flex items-center justify-center">
-                  <img 
-                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People%20with%20professions/Man%20Technologist%20Medium%20Light%20Skin%20Tone.png" 
-                    alt="Coder" 
-                    className="w-14 h-14 object-contain"
-                    referrerPolicy="no-referrer"
-                  />
-                  {/* Subtle pulsing premium backdrop ring */}
-                  <span className="absolute inset-0 border-2 border-cyan-500/30 rounded-full animate-ping opacity-40" />
+                {/* Side-by-Side Floating Tech stack representing educational/coding process */}
+                <div className="flex items-center justify-center gap-3 relative">
+                  {/* Laptop Emoji */}
+                  <motion.div
+                    animate={{ y: [0, -6, 0], rotate: [0, -2, 0] }}
+                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                    className="relative w-14 h-14 flex items-center justify-center"
+                  >
+                    <img 
+                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Laptop.png" 
+                      alt="Laptop" 
+                      className="w-12 h-12 object-contain"
+                      referrerPolicy="no-referrer"
+                    />
+                  </motion.div>
+
+                  {/* Connecting Digital Spark Pulsing */}
+                  <div className="h-0.5 w-6 bg-gradient-to-r from-blue-500 to-cyan-400 animate-pulse relative">
+                    <span className="absolute -top-1 left-1/2 w-2.5 h-2.5 bg-cyan-400 rounded-full animate-ping" />
+                  </div>
+
+                  {/* Technologist Emoji */}
+                  <motion.div
+                    animate={{ y: [0, -8, 0], rotate: [0, 2, 0] }}
+                    transition={{ repeat: Infinity, duration: 3, delay: 0.5, ease: "easeInOut" }}
+                    className="relative w-14 h-14 flex items-center justify-center"
+                  >
+                    <img 
+                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People%20with%20professions/Man%20Technologist%20Medium%20Light%20Skin%20Tone.png" 
+                      alt="Coder" 
+                      className="w-12 h-12 object-contain"
+                      referrerPolicy="no-referrer"
+                    />
+                  </motion.div>
                 </div>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-mono text-cyan-600 font-extrabold uppercase tracking-widest">Vibe Coding...</span>
-                  <div className="flex gap-1.5 justify-center items-center">
-                    {[1, 2, 3].map(i => (
-                      <motion.div 
-                        key={i}
-                        animate={{ scale: [0.8, 1.3, 0.8], opacity: [0.4, 1, 0.4] }}
-                        transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.15 }}
-                        className="w-1.5 h-1.5 bg-cyan-400 rounded-full"
-                      />
-                    ))}
+
+                {/* Micro educational feedback console displaying live Vibe compilation */}
+                <div className="flex flex-col items-center w-full px-4">
+                  <span className="text-[10px] font-mono text-cyan-400 font-extrabold uppercase tracking-widest bg-cyan-950/60 px-2.5 py-1 rounded-full border border-cyan-800/40 animate-pulse">
+                    ⚡ Vibe compiling App
+                  </span>
+                  
+                  {/* Floating Code Snippets with Framer Motion */}
+                  <div className="absolute inset-x-0 bottom-1 flex justify-around gap-1 pointer-events-none opacity-40 px-2">
+                    <motion.span 
+                      animate={{ y: [15, -60], opacity: [0, 1, 0] }}
+                      transition={{ repeat: Infinity, duration: 2.2, ease: "linear" }}
+                      className="font-mono text-[9px] text-cyan-400 font-bold bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-800/20"
+                    >
+                      npm run dev
+                    </motion.span>
+                    <motion.span 
+                      animate={{ y: [15, -60], opacity: [0, 1, 0] }}
+                      transition={{ repeat: Infinity, duration: 2.2, delay: 0.8, ease: "linear" }}
+                      className="font-mono text-[9px] text-indigo-400 font-bold bg-indigo-950/30 px-1.5 py-0.5 rounded border border-indigo-800/20"
+                    >
+                      {"<VibeCode />"}
+                    </motion.span>
+                    <motion.span 
+                      animate={{ y: [15, -60], opacity: [0, 1, 0] }}
+                      transition={{ repeat: Infinity, duration: 2.2, delay: 1.4, ease: "linear" }}
+                      className="font-mono text-[9px] text-emerald-400 font-bold bg-emerald-950/30 px-1.5 py-0.5 rounded border border-emerald-800/20"
+                    >
+                      Gemini.vibe()
+                    </motion.span>
                   </div>
                 </div>
               </motion.div>
@@ -449,27 +495,55 @@ const LaunchAnimation = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center gap-2"
+                className="flex flex-col items-center gap-3 text-center relative z-10 w-full h-full justify-center"
               >
-                <Rocket className="w-12 h-12 text-blue-600" />
-                <span className="text-xs font-bold text-slate-900">Project Launched!</span>
+                {/* Animated Flying Rocket Deploy */}
+                <div className="relative w-18 h-18 flex items-center justify-center">
+                  <motion.div
+                    animate={{ 
+                      y: [-4, 4, -4],
+                      x: [-2, 2, -2]
+                    }}
+                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                  >
+                    <img 
+                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" 
+                      alt="Rocket" 
+                      className="w-14 h-14 object-contain filter drop-shadow-[0_0_12px_rgba(59,130,246,0.6)]"
+                      referrerPolicy="no-referrer"
+                    />
+                  </motion.div>
+                  {/* Floating Sparkles backdrop */}
+                  <img 
+                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Sparkles.png" 
+                    alt="Sparkles" 
+                    className="absolute -top-2 -right-2 w-6 h-6 object-contain animate-spin"
+                    style={{ animationDuration: '6s' }}
+                    referrerPolicy="no-referrer"
+                  />
+                  {/* Glowing core engine circle behind the rocket */}
+                  <span className="absolute bottom-1 w-8 h-8 bg-blue-500/30 rounded-full blur-md animate-pulse" />
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-[11px] font-mono text-emerald-400 font-extrabold uppercase tracking-widest bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800/40">
+                    🚀 App Live on VibeLab
+                  </span>
+                </div>
               </motion.div>
             )}
             
-            {/* Floating Particles during launch */}
-            {isLaunching && (
-              <div className="absolute inset-0 pointer-events-none">
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ y: 20, x: 0, opacity: 0 }}
-                    animate={{ y: -100, x: (i - 3) * 20, opacity: [0, 1, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
-                    className="absolute bottom-0 left-1/2 w-1 h-1 bg-cyan-400 rounded-full"
-                  />
-                ))}
-              </div>
-            )}
+            {/* Floating Cybernetic Code Particles during compilation/launch */}
+            <div className="absolute inset-0 pointer-events-none">
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ y: 80, x: 0, opacity: 0 }}
+                  animate={{ y: -120, x: (i - 4) * 22, opacity: [0, 0.8, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.6, delay: i * 0.15 }}
+                  className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-gradient-to-t from-cyan-400 to-blue-500 rounded-full"
+                />
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">

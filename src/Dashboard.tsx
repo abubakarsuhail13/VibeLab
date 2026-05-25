@@ -473,14 +473,6 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
               </button>
 
               <button 
-                onClick={() => setStudentChatOpen(true)}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all text-indigo-600 hover:bg-indigo-50/50 hover:text-indigo-700`}
-              >
-                <MessageSquare className="w-5 h-5 text-indigo-500" />
-                Support Helpdesk
-              </button>
-
-              <button 
                 onClick={() => setActiveView('settings')}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
