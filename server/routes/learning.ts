@@ -64,9 +64,43 @@ router.get('/phase/:id/projects', authenticateToken, async (req: any, res) => {
 
     const projectsWithProgress = projects.map((project: any) => {
       const userProgress = progress.find((pr: any) => pr.project_id === project.id);
+      
+      let parsedRequirements = [];
+      try {
+        parsedRequirements = project.requirements ? (typeof project.requirements === 'string' ? JSON.parse(project.requirements) : project.requirements) : [];
+      } catch (e) {
+        console.error("Failed to parse project.requirements", e);
+      }
+
+      let parsedSteps = [];
+      try {
+        parsedSteps = project.steps ? (typeof project.steps === 'string' ? JSON.parse(project.steps) : project.steps) : [];
+      } catch (e) {
+        console.error("Failed to parse project.steps", e);
+      }
+
+      let parsedTutorialData = [];
+      try {
+        parsedTutorialData = project.tutorial_data ? (typeof project.tutorial_data === 'string' ? JSON.parse(project.tutorial_data) : project.tutorial_data) : [];
+      } catch (e) {
+        console.error("Failed to parse project.tutorial_data", e);
+      }
+
+      let parsedCompletedSteps = [];
+      if (userProgress && userProgress.completed_steps) {
+        try {
+          parsedCompletedSteps = typeof userProgress.completed_steps === 'string' ? JSON.parse(userProgress.completed_steps) : userProgress.completed_steps;
+        } catch (e) {
+          console.error("Failed to parse userProgress.completed_steps", e);
+        }
+      }
+
       return {
         ...project,
-        completed_steps: userProgress ? userProgress.completed_steps : [],
+        requirements: parsedRequirements || [],
+        steps: parsedSteps || [],
+        tutorial_data: parsedTutorialData || [],
+        completed_steps: parsedCompletedSteps || [],
         last_active_step: userProgress ? userProgress.last_active_step : 0,
         code_state: userProgress ? (typeof userProgress.code_state === 'string' ? JSON.parse(userProgress.code_state) : userProgress.code_state) : null,
         is_completed: userProgress ? !!userProgress.is_completed : false

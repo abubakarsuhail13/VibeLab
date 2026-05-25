@@ -377,14 +377,22 @@ const LaunchAnimation = () => {
         className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent rounded-[3rem] blur-3xl"
       />
 
-      {/* The "App" being built/launched */}
+      {/* The "App" being built/launched with infinitely looping float and responsive shift */}
       <motion.div
         animate={{ 
-          y: isLaunching ? -40 : 0,
+          y: isLaunching ? [-35, -42, -35] : [0, -10, 0],
           scale: isLaunching ? 1.05 : 1,
-          rotateX: isLaunching ? 5 : 0
+          rotateX: isLaunching ? 4 : 0
         }}
-        transition={{ type: "spring", stiffness: 100 }}
+        transition={{ 
+          y: { 
+            repeat: Infinity, 
+            duration: 4.5, 
+            ease: "easeInOut" 
+          },
+          scale: { type: "spring", stiffness: 100 },
+          rotateX: { type: "spring", stiffness: 100 }
+        }}
         className="relative z-20 w-72 md:w-80 glass p-6 rounded-[2.5rem] border-cyan-500/20 shadow-2xl overflow-hidden"
       >
         {/* App Header */}
@@ -404,24 +412,37 @@ const LaunchAnimation = () => {
 
         {/* App Content Area */}
         <div className="space-y-4">
-          <div className="h-32 rounded-2xl bg-slate-100/50 border border-slate-200/50 flex items-center justify-center overflow-hidden relative">
+          <div className="h-36 rounded-2xl bg-slate-100/50 border border-slate-200/50 flex items-center justify-center overflow-hidden relative">
             {!isLaunching ? (
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center gap-3"
+                className="flex flex-col items-center gap-2 text-center p-2"
               >
-                <Code2 className="w-10 h-10 text-cyan-500 animate-pulse" />
-                <div className="flex gap-1">
-                  {[1, 2, 3].map(i => (
-                    <motion.div 
-                      key={i}
-                      animate={{ height: [4, 12, 4] }}
-                      transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
-                      className="w-1 bg-cyan-400 rounded-full"
-                    />
-                  ))}
+                {/* High fidelity professional developer / vibe coding animated loop element */}
+                <div className="relative w-16 h-16 flex items-center justify-center">
+                  <img 
+                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People%20with%20professions/Man%20Technologist%20Medium%20Light%20Skin%20Tone.png" 
+                    alt="Coder" 
+                    className="w-14 h-14 object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                  {/* Subtle pulsing premium backdrop ring */}
+                  <span className="absolute inset-0 border-2 border-cyan-500/30 rounded-full animate-ping opacity-40" />
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-[10px] font-mono text-cyan-600 font-extrabold uppercase tracking-widest">Vibe Coding...</span>
+                  <div className="flex gap-1.5 justify-center items-center">
+                    {[1, 2, 3].map(i => (
+                      <motion.div 
+                        key={i}
+                        animate={{ scale: [0.8, 1.3, 0.8], opacity: [0.4, 1, 0.4] }}
+                        transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.15 }}
+                        className="w-1.5 h-1.5 bg-cyan-400 rounded-full"
+                      />
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             ) : (
@@ -1338,6 +1359,29 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [user, setUser] = useState<any>(null);
 
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page);
+
+    const routeMap: Record<string, string> = {
+      home: '/',
+      dashboard: '/',
+      login: '/login',
+      signup: '/signup',
+      'verify-credential': '/verify-credential',
+      'verify-email': '/verify-email',
+      'reset-password': '/reset-password',
+      'forgot-password': '/forgot-password',
+      'about': '/about',
+      'admin': '/admin',
+      'contact': '/contact'
+    };
+
+    const targetPath = routeMap[page];
+    if (targetPath) {
+      window.history.replaceState({}, document.title, targetPath);
+    }
+  };
+
   useEffect(() => {
     // 1. Process potential OAuth callback query parameters (legacy fallback)
     const params = new URLSearchParams(window.location.search);
@@ -1356,8 +1400,7 @@ export default function App() {
         setCurrentPage('dashboard');
 
         // Clean up the URL query params without reloading the page
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
+        window.history.replaceState({}, document.title, '/');
       } catch (err) {
         console.error("Failed to parse OAuth callback user parameters", err);
       }
@@ -1378,7 +1421,12 @@ export default function App() {
     // 3. Handle URL based routing with logged in state awareness
     const path = window.location.pathname;
     if (path === '/verify-email') {
-      setCurrentPage('verify-email');
+      if (loggedInUser) {
+        setCurrentPage('dashboard');
+        window.history.replaceState({}, document.title, '/');
+      } else {
+        setCurrentPage('verify-email');
+      }
     } else if (path === '/reset-password') {
       setCurrentPage('reset-password');
     } else if (path === '/verify-credential' || path === '/verify') {
@@ -1388,6 +1436,9 @@ export default function App() {
     } else if (loggedInUser) {
       // Logged in users belong on the dashboard instead of home, login, or signup
       setCurrentPage('dashboard');
+      if (path !== '/') {
+        window.history.replaceState({}, document.title, '/');
+      }
     } else if (path === '/login') {
       setCurrentPage('login');
     } else if (path === '/signup') {
@@ -1410,17 +1461,13 @@ export default function App() {
     localStorage.removeItem('vibelab_user');
     localStorage.removeItem('vibelab_token');
     setUser(null);
-    setCurrentPage('home');
+    handleNavigate('home');
   };
 
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
       <Navbar 
-        onNavigate={(p) => {
-          // If accessing dashboard without user, and it's protected (later), we might want to redirect.
-          // For now, simpler:
-          setCurrentPage(p);
-        }} 
+        onNavigate={handleNavigate} 
         currentPage={currentPage} 
         user={user}
         onLogout={handleLogout}
@@ -1428,7 +1475,7 @@ export default function App() {
       <main>
         {currentPage === 'home' ? (
           <>
-            <Hero onNavigate={setCurrentPage} />
+            <Hero onNavigate={handleNavigate} />
             <TrustedBy />
             <LearningPathSection />
             <Problem />
@@ -1436,26 +1483,26 @@ export default function App() {
             <HowItWorks />
             <LearningZones />
             <Audience />
-            <FinalCTA onNavigate={setCurrentPage} />
+            <FinalCTA onNavigate={handleNavigate} />
           </>
         ) : currentPage === 'about' ? (
-          <AboutPage onNavigate={setCurrentPage} />
+          <AboutPage onNavigate={handleNavigate} />
         ) : currentPage === 'admin' ? (
-          <AdminPanel onNavigate={setCurrentPage} />
+          <AdminPanel onNavigate={handleNavigate} />
         ) : currentPage === 'login' ? (
-          <Login onNavigate={setCurrentPage} onLoginSuccess={setUser} />
+          <Login onNavigate={handleNavigate} onLoginSuccess={setUser} />
         ) : currentPage === 'signup' ? (
-          <Signup onNavigate={setCurrentPage} onLoginSuccess={setUser} />
+          <Signup onNavigate={handleNavigate} onLoginSuccess={setUser} />
         ) : currentPage === 'dashboard' ? (
           <Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} />
         ) : currentPage === 'verify-email' ? (
-          <VerifyEmail onNavigate={setCurrentPage} />
+          <VerifyEmail onNavigate={handleNavigate} />
         ) : currentPage === 'forgot-password' ? (
-          <ForgotPassword onNavigate={setCurrentPage} />
+          <ForgotPassword onNavigate={handleNavigate} />
         ) : currentPage === 'reset-password' ? (
-          <ResetPassword onNavigate={setCurrentPage} />
+          <ResetPassword onNavigate={handleNavigate} />
         ) : currentPage === 'verify-credential' ? (
-          <VerifyCredential onNavigate={setCurrentPage} />
+          <VerifyCredential onNavigate={handleNavigate} />
         ) : currentPage === 'verify-profile' ? (
           <PublicProfile userId={
             window.location.pathname.startsWith('/profile/')
@@ -1463,10 +1510,10 @@ export default function App() {
               : window.location.pathname.split('/verify/')[1]
           } />
         ) : (
-          <ContactPage onNavigate={setCurrentPage} />
+          <ContactPage onNavigate={handleNavigate} />
         )}
       </main>
-      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && <Footer onNavigate={setCurrentPage} />}
+      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && <Footer onNavigate={handleNavigate} />}
     </div>
   );
 }
