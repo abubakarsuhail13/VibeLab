@@ -160,7 +160,13 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar size={16} className="text-slate-400" />
-                  Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  Joined {(() => {
+                    const dateStr = profile.created_at || profile.registration_date;
+                    const parsedDate = dateStr ? new Date(dateStr) : new Date();
+                    return isNaN(parsedDate.getTime()) 
+                      ? 'Recently' 
+                      : parsedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                  })()}
                 </div>
                 {profile.github_username && (
                   <a 

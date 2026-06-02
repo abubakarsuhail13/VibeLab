@@ -202,6 +202,7 @@ router.get('/profile/:vl_id', async (req, res) => {
         linkedin_url: user.linkedin_url,
         current_role: user.current_role,
         vl_id,
+        created_at: user.created_at,
         registration_date: user.created_at
       },
       activePhase,
