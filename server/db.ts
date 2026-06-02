@@ -40,9 +40,73 @@ export const getPool = async () => {
 
       if (isInitialized) {
         console.log('DB Debug: Database is already initialized. Skipping schema verification.');
+        // Run Phase 0 - Idea Discovery Assistant migrations safely
+        try {
+          await connection.execute(`
+            CREATE TABLE IF NOT EXISTS ideation_sessions (
+              id            INT PRIMARY KEY AUTO_INCREMENT,
+              user_id       INT NOT NULL,
+              status        ENUM('in_progress', 'completed') DEFAULT 'in_progress',
+              started_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              completed_at  TIMESTAMP NULL,
+              FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+          `);
+          await connection.execute(`
+            CREATE TABLE IF NOT EXISTS ideation_responses (
+              id              INT PRIMARY KEY AUTO_INCREMENT,
+              session_id      INT NOT NULL,
+              story_number    INT NOT NULL,
+              story_code      VARCHAR(10) NOT NULL,
+              question_text   TEXT NOT NULL,
+              user_response   TEXT NOT NULL,
+              ai_followup     TEXT,
+              created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY (session_id) REFERENCES ideation_sessions(id) ON DELETE CASCADE
+            )
+          `);
+          await connection.execute(`
+            CREATE TABLE IF NOT EXISTS project_blueprints (
+              id                    INT PRIMARY KEY AUTO_INCREMENT,
+              user_id               INT NOT NULL,
+              session_id            INT NOT NULL,
+              problem_statement     TEXT,
+              target_user_persona   TEXT,
+              solution_concept      TEXT,
+              ai_opportunity_map    JSON,
+              mvp_definition        TEXT,
+              learning_path         JSON,
+              product_name          VARCHAR(255),
+              product_features      JSON,
+              complexity            ENUM('beginner', 'intermediate', 'advanced'),
+              estimated_build_time  VARCHAR(100),
+              recommended_track     VARCHAR(100),
+              mvp_note              TEXT,
+              generated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY (user_id)    REFERENCES users(id) ON DELETE CASCADE,
+              FOREIGN KEY (session_id) REFERENCES ideation_sessions(id) ON DELETE CASCADE
+            )
+          `);
+
+          // Migrate Users Table Columns safely
+          const [cols]: any = await connection.execute("SHOW COLUMNS FROM users");
+          const names = cols.map((c: any) => c.Field);
+          if (!names.includes('ideation_completed')) {
+            console.log('DB Migration: Adding column ideation_completed to users...');
+            await connection.execute("ALTER TABLE users ADD COLUMN ideation_completed BOOLEAN DEFAULT FALSE");
+          }
+          if (!names.includes('ideation_completed_at')) {
+            console.log('DB Migration: Adding column ideation_completed_at to users...');
+            await connection.execute("ALTER TABLE users ADD COLUMN ideation_completed_at TIMESTAMP NULL");
+          }
+        } catch (migErr: any) {
+          console.error("Migration error inside already-initialized DB:", migErr);
+        }
+
         connection.release();
         return pool;
       }
+
       
       // Auto-ensure tables exist
       try {
@@ -234,6 +298,54 @@ export const getPool = async () => {
           )
         `);
 
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS ideation_sessions (
+            id            INT PRIMARY KEY AUTO_INCREMENT,
+            user_id       INT NOT NULL,
+            status        ENUM('in_progress', 'completed') DEFAULT 'in_progress',
+            started_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed_at  TIMESTAMP NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS ideation_responses (
+            id              INT PRIMARY KEY AUTO_INCREMENT,
+            session_id      INT NOT NULL,
+            story_number    INT NOT NULL,
+            story_code      VARCHAR(10) NOT NULL,
+            question_text   TEXT NOT NULL,
+            user_response   TEXT NOT NULL,
+            ai_followup     TEXT,
+            created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (session_id) REFERENCES ideation_sessions(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS project_blueprints (
+            id                    INT PRIMARY KEY AUTO_INCREMENT,
+            user_id               INT NOT NULL,
+            session_id            INT NOT NULL,
+            problem_statement     TEXT,
+            target_user_persona   TEXT,
+            solution_concept      TEXT,
+            ai_opportunity_map    JSON,
+            mvp_definition        TEXT,
+            learning_path         JSON,
+            product_name          VARCHAR(255),
+            product_features      JSON,
+            complexity            ENUM('beginner', 'intermediate', 'advanced'),
+            estimated_build_time  VARCHAR(100),
+            recommended_track     VARCHAR(100),
+            mvp_note              TEXT,
+            generated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id)    REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (session_id) REFERENCES ideation_sessions(id) ON DELETE CASCADE
+          )
+        `);
+
         // Safe, isolated column generator for all tables
         const addColumnIfNeeded = async (tableName: string, columnName: string, columnDef: string) => {
           try {
@@ -261,6 +373,9 @@ export const getPool = async () => {
         await addColumnIfNeeded('users', 'github_handle', 'VARCHAR(100)');
         await addColumnIfNeeded('users', 'current_role', 'VARCHAR(100)');
         await addColumnIfNeeded('users', 'vl_id', 'VARCHAR(20) UNIQUE');
+        await addColumnIfNeeded('users', 'ideation_completed', 'BOOLEAN DEFAULT FALSE');
+        await addColumnIfNeeded('users', 'ideation_completed_at', 'TIMESTAMP NULL');
+
 
         // Migrate User Project Progress Columns
         await addColumnIfNeeded('user_project_progress', 'last_active_step', 'INT DEFAULT 0');

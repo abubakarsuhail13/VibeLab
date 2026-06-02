@@ -5,12 +5,15 @@ import learningRoutes from './learning.js';
 import publicRoutes from './public.js';
 import tutorRoutes from './tutor.js';
 import teacherRoutes from './teacher.js';
+import ideationRoutes from './ideation.js';
 
 const router = express.Router();
 
 // Public routes
 router.use('/', publicRoutes);
 router.use('/auth', authRoutes);
+router.use('/ideation', ideationRoutes);
+
 
 // Protected routes (middleware applied within modules or here if preferred)
 router.use('/user', userRoutes);

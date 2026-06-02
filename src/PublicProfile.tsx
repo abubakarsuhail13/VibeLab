@@ -10,13 +10,16 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
   const [profile, setProfile] = useState<any>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [badges, setBadges] = useState<any[]>([]);
+  const [blueprint, setBlueprint] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        let userVlId = '';
         if (userId.startsWith('VL-')) {
+          userVlId = userId;
           // New unified public profile endpoint
           const res = await fetch(`/api/profile/${userId}`);
           if (res.ok) {
@@ -24,8 +27,13 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
             setProfile(data.user);
             setSubmissions(data.submissions || []);
             setBadges(data.badges || []);
+            if (data.user && data.user.vl_id) {
+              userVlId = data.user.vl_id;
+            }
           } else {
             setError(true);
+            setLoading(false);
+            return;
           }
         } else {
           // Traditional incremental endpoints for backwards compatibility
@@ -40,8 +48,20 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
             setProfile(profileData);
             setSubmissions(await subsRes.json());
             setBadges(await badgesRes.json());
+            userVlId = profileData.vl_id || '';
           } else {
             setError(true);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fetch blueprint if vl_id is found
+        if (userVlId) {
+          const bpRes = await fetch(`/api/ideation/blueprint/${userVlId}`);
+          if (bpRes.ok) {
+            const bpData = await bpRes.json();
+            setBlueprint(bpData);
           }
         }
       } catch (err) {
@@ -286,6 +306,36 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
           {/* Sidebar Area */}
           <div className="lg:col-span-4 space-y-12">
             
+            {blueprint && (
+              <section className="bg-white p-6 rounded-[2.5rem] border border-slate-200/60 shadow-sm relative overflow-hidden">
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Project Blueprint</p>
+                  
+                  {/* Row 1 */}
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="font-bold text-slate-900">{blueprint.product_name}</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 rounded-lg text-[9px] font-black uppercase tracking-wider border border-cyan-100">
+                      {blueprint.complexity || 'Basic'}
+                    </span>
+                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-lg text-[9px] font-black uppercase tracking-wider border border-indigo-100">
+                      {blueprint.recommended_track || 'AI'}
+                    </span>
+                  </div>
+
+                  {/* Row 2 */}
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    <span className="font-bold text-slate-700">Problem:</span> {blueprint.problem_statement}
+                  </p>
+
+                  {/* Row 3 */}
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    <span className="font-bold text-slate-700">Solution:</span> {blueprint.solution_concept}
+                  </p>
+                </div>
+              </section>
+            )}
+
             {/* Certifications Card */}
             <section className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16" />

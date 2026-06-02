@@ -34,6 +34,7 @@ interface DashboardProps {
   user: any;
   onLogout: () => void;
   onUpdateUser: (user: any) => void;
+  onNavigate?: (page: string) => void;
 }
 
 interface Phase {
@@ -44,7 +45,7 @@ interface Phase {
   progress_percentage: number;
 }
 
-export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardProps) {
+export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: DashboardProps) {
   const [uploading, setUploading] = useState(false);
   const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions' | 'certificates' | 'leaderboard' | 'settings' | 'grading' | 'support'>('overview');
   const [selectedPhaseId, setSelectedPhaseId] = useState<number | null>(null);
@@ -493,26 +494,35 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                   ))}
                 </div>
               ) : (
-                phases.map((phase) => (
-                  <button 
-                    key={phase.id}
-                    onClick={() => handlePhaseClick(phase.id)}
-                    disabled={phase.status === 'locked'}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
-                      activeView === 'phase' && selectedPhaseId === phase.id
-                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
-                        : phase.status === 'locked'
-                          ? 'text-slate-300 cursor-not-allowed'
-                          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4 overflow-hidden">
-                      {phase.status === 'locked' ? <Lock className="w-5 h-5 shrink-0" /> : <BookOpen className="w-5 h-5 shrink-0" />}
-                      <span className="truncate">{phase.name}</span>
-                    </div>
-                    {phase.status === 'completed' && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
-                  </button>
-                ))
+                phases.map((phase) => {
+                  const isPhase1Locked = phase.id === 1 && (user?.ideation_completed === false || user?.ideation_completed === undefined);
+                  return (
+                    <button 
+                      key={phase.id}
+                      onClick={() => handlePhaseClick(phase.id)}
+                      disabled={phase.status === 'locked' && !isPhase1Locked}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
+                        activeView === 'phase' && selectedPhaseId === phase.id
+                          ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
+                          : (phase.status === 'locked' && !isPhase1Locked)
+                            ? 'text-slate-300 cursor-not-allowed'
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4 overflow-hidden">
+                        {isPhase1Locked ? (
+                          <Lock className="w-5 h-5 shrink-0 text-[#C9A84C]" />
+                        ) : phase.status === 'locked' ? (
+                           <Lock className="w-5 h-5 shrink-0" />
+                        ) : (
+                           <BookOpen className="w-5 h-5 shrink-0" />
+                        )}
+                        <span className="truncate">{phase.name}</span>
+                      </div>
+                      {phase.status === 'completed' && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
+                    </button>
+                  );
+                })
               )}
             </>
           )}
@@ -1628,14 +1638,50 @@ export default function Dashboard({ user, onLogout, onUpdateUser }: DashboardPro
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <PhaseView 
-                  phaseId={selectedPhaseId!} 
-                  onBack={() => {
-                    setActiveView('overview');
-                    fetchDashboardData(); // Update phases and progress
-                  }} 
-                  onProgress={fetchDashboardData}
-                />
+                {selectedPhaseId === 1 && (user?.ideation_completed === false || user?.ideation_completed === undefined) ? (
+                  <div className="relative bg-[#02050e] border border-[#C9A84C]/20 rounded-[2.5rem] p-12 text-center text-white shadow-2xl overflow-hidden min-h-[500px] flex flex-col justify-center items-center font-dmsans">
+                    {/* Decorative premium lighting glows */}
+                    <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-bl from-[#C9A84C]/5 to-transparent blur-[120px] pointer-events-none" />
+                    
+                    <div className="relative space-y-6 max-w-lg mx-auto">
+                      <div className="inline-flex p-4 rounded-full border border-[#C9A84C]/20 bg-[#C9A84C]/5 mb-2 hover:scale-105 transition-transform">
+                        <Lock className="w-10 h-10 text-[#C9A84C]" />
+                      </div>
+                      
+                      <h2 className="font-bebas text-3xl sm:text-5xl text-white tracking-widest leading-none">
+                        Complete the Ideation Lab first
+                      </h2>
+                      
+                      <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                        Discover your project idea before you start coding
+                      </p>
+                      
+                      <div className="pt-4">
+                        <button
+                          onClick={() => {
+                            if (onNavigate) {
+                              onNavigate('ideation');
+                            } else {
+                              window.location.href = '/ideation';
+                            }
+                          }}
+                          className="w-full sm:w-auto inline-flex items-center justify-center bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-extrabold text-sm px-8 py-4 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/15 active:scale-[0.98] cursor-pointer"
+                        >
+                          Go to Ideation Lab →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <PhaseView 
+                    phaseId={selectedPhaseId!} 
+                    onBack={() => {
+                      setActiveView('overview');
+                      fetchDashboardData(); // Update phases and progress
+                    }} 
+                    onProgress={fetchDashboardData}
+                  />
+                )}
               </motion.div>
             )
           )}

@@ -1,9 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
+  --font-bebas: "Bebas Neue", sans-serif;
+  --font-dmsans: "DM Sans", sans-serif;
+  --font-jetbrains: "JetBrains Mono", monospace;
   --color-brand-bg: #f8fafc;
   --color-brand-primary: #06b6d4;
   --color-brand-secondary: #6366f1;

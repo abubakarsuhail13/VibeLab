@@ -37,6 +37,9 @@ import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
 import PublicProfile from "./PublicProfile";
 import VerifyCredential from "./VerifyCredential";
+import IdeationEntry from "./IdeationEntry";
+import IdeationChat from "./IdeationChat";
+import IdeationBlueprint from "./IdeationBlueprint";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [password, setPassword] = useState("");
@@ -1447,7 +1450,10 @@ export default function App() {
       'forgot-password': '/forgot-password',
       'about': '/about',
       'admin': '/admin',
-      'contact': '/contact'
+      'contact': '/contact',
+      ideation: '/ideation',
+      'ideation-chat': '/ideation/chat',
+      'ideation-blueprint': '/ideation/blueprint'
     };
 
     const targetPath = routeMap[page];
@@ -1507,6 +1513,15 @@ export default function App() {
       setCurrentPage('verify-credential');
     } else if (path.startsWith('/verify/') || path.startsWith('/profile/')) {
       setCurrentPage('verify-profile');
+    } else if (path === '/ideation' || path === '/ideation/chat' || path === '/ideation/blueprint') {
+      if (loggedInUser) {
+        if (path === '/ideation') setCurrentPage('ideation');
+        else if (path === '/ideation/chat') setCurrentPage('ideation-chat');
+        else setCurrentPage('ideation-blueprint');
+      } else {
+        setCurrentPage('login');
+        window.history.replaceState({}, document.title, '/login');
+      }
     } else if (loggedInUser) {
       // Logged in users belong on the dashboard instead of home, login, or signup
       setCurrentPage('dashboard');
@@ -1540,12 +1555,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
-      <Navbar 
-        onNavigate={handleNavigate} 
-        currentPage={currentPage} 
-        user={user}
-        onLogout={handleLogout}
-      />
+      {currentPage !== 'ideation-chat' && currentPage !== 'ideation' && currentPage !== 'ideation-blueprint' && (
+        <Navbar 
+          onNavigate={handleNavigate} 
+          currentPage={currentPage} 
+          user={user}
+          onLogout={handleLogout}
+        />
+      )}
       <main>
         {currentPage === 'home' ? (
           <>
@@ -1568,7 +1585,7 @@ export default function App() {
         ) : currentPage === 'signup' ? (
           <Signup onNavigate={handleNavigate} onLoginSuccess={setUser} />
         ) : currentPage === 'dashboard' ? (
-          <Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} />
+          <Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />
         ) : currentPage === 'verify-email' ? (
           <VerifyEmail onNavigate={handleNavigate} />
         ) : currentPage === 'forgot-password' ? (
@@ -1583,11 +1600,17 @@ export default function App() {
               ? window.location.pathname.split('/profile/')[1]
               : window.location.pathname.split('/verify/')[1]
           } />
+        ) : currentPage === 'ideation' ? (
+          <IdeationEntry onNavigate={handleNavigate} />
+        ) : currentPage === 'ideation-chat' ? (
+          <IdeationChat onNavigate={handleNavigate} />
+        ) : currentPage === 'ideation-blueprint' ? (
+          <IdeationBlueprint onNavigate={handleNavigate} onUpdateUser={setUser} />
         ) : (
           <ContactPage onNavigate={handleNavigate} />
         )}
       </main>
-      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && <Footer onNavigate={handleNavigate} />}
+      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && currentPage !== 'ideation' && currentPage !== 'ideation-chat' && currentPage !== 'ideation-blueprint' && <Footer onNavigate={handleNavigate} />}
     </div>
   );
 }
