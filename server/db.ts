@@ -1,8 +1,360 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
+
+const LOCAL_DB_DIR = './server/local_db';
+
+// Helper function to load table data with fallback seeds
+function getTableData(table: string): any[] {
+  if (!fs.existsSync(LOCAL_DB_DIR)) {
+    fs.mkdirSync(LOCAL_DB_DIR, { recursive: true });
+  }
+  const filePath = path.join(LOCAL_DB_DIR, `${table}.json`);
+  if (!fs.existsSync(filePath)) {
+    // Seed default data for key tables
+    if (table === 'phases') {
+      const defaultPhases = [
+        {id: 1, name: "Phase 1 — Learn Python", description: "Master Python variables, functions, HTTP requests, APIs, JSON handling, and OOP.", order_index: 1, is_locked_default: 0},
+        {id: 2, name: "Phase 2 — LLMs & AI Fundamentals", description: "Delve into tokens, context windows, embeddings, prompt engineering, RAG, and vector databases.", order_index: 2, is_locked_default: 1},
+        {id: 3, name: "Phase 3 — Build Projects", description: "Build full applications chaining LLM calls, handling data pipelines, and integrating AI into clean UX.", order_index: 3, is_locked_default: 1},
+        {id: 4, name: "Phase 4 — Learn AI Agents", description: "Understand Model Context Protocol (MCP), tool-calling, agent memory, and multi-agent system pipelines.", order_index: 4, is_locked_default: 1},
+        {id: 5, name: "Phase 5 — Read Papers", description: "Explore deep theoretical fundamentals of ReAct, Toolformer, Tree of Thoughts, Reflexion, and classic surveys.", order_index: 5, is_locked_default: 1},
+        {id: 6, name: "Phase 6 — Courses", description: "Earn practical validation inside DeepLearning.AI or LangChain for LLMs/Agents, completing interactive capstones.", order_index: 6, is_locked_default: 1},
+        {id: 7, name: "Phase 7 — Deployment", description: "Publish containerized services with FastAPI, Docker, CI/CD, and serverless Cloud tools.", order_index: 7, is_locked_default: 1}
+      ];
+      fs.writeFileSync(filePath, JSON.stringify(defaultPhases, null, 2), 'utf-8');
+      return defaultPhases;
+    }
+    if (table === 'users') {
+      const defaultUsers = [
+        {
+          id: 1,
+          name: "Test Builder",
+          email: "testbuilder@vibelab.io",
+          password: "$2a$10$O0O/e9Bv6g5iY5.1uP9qO.rPZ/BGlxscCym6sXvG0I9eI.83W052y", //'Password123'
+          role: "student",
+          is_verified: 1,
+          vl_id: "VL-2026-00001",
+          created_at: new Date().toISOString()
+        }
+      ];
+      fs.writeFileSync(filePath, JSON.stringify(defaultUsers, null, 2), 'utf-8');
+      return defaultUsers;
+    }
+    if (table === 'phase_projects') {
+      const defaultProjects = [
+        {
+          id: 1,
+          phase_id: 1,
+          title: "CLI Todo App",
+          description: "Build a Command Line Interface todo list using Python scripts, saving output state to standard file streams.",
+          difficulty: "Beginner",
+          requirements: ["Python Basics", "File Handing", "Argparse"],
+          steps: [
+            {title: "Setup project setup", desc: "Configure Python virtual environment and create main file."},
+            {title: "Add functional CRUD tasks", desc: "Write core functions to add, review, and remove tasks."},
+            {title: "File serialization", desc: "Save tasks list locally in JSON format."}
+          ],
+          tutorial_data: [
+            {
+              step: 0,
+              content: "Welcome to Python Development! We will draft a simple Command-Line interface list first.",
+              starterCode: "def main():\n    print(\"Task: CLI Todo App Initialized!\")\n\nif __name__ == \"__main__\":\n    main()",
+              instructions: "1. Save the starter code.\n2. Execute in your Python local CLI."
+            }
+          ]
+        }
+      ];
+      fs.writeFileSync(filePath, JSON.stringify(defaultProjects, null, 2), 'utf-8');
+      return defaultProjects;
+    }
+    return [];
+  }
+  try {
+    const data = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (e) {
+    return [];
+  }
+}
+
+// Helper to save table data synchronously
+function saveTableData(table: string, data: any[]) {
+  if (!fs.existsSync(LOCAL_DB_DIR)) {
+    fs.mkdirSync(LOCAL_DB_DIR, { recursive: true });
+  }
+  const filePath = path.join(LOCAL_DB_DIR, `${table}.json`);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+// SQL condition parser for local JSON query filtering
+function parseQueryConditions(whereClause: string, params: any[]): Record<string, any> {
+  const conditions: Record<string, any> = {};
+  if (!whereClause) return conditions;
+  
+  let paramIdx = 0;
+  const parts = whereClause.split(/\s+AND\s+/i);
+  for (const part of parts) {
+    const match = part.match(/([a-zA-Z0-9_`\.]+)\s*(=|LIKE|IS|IN)\s*(.+)/i);
+    if (match) {
+      let col = match[1].replace(/[`']/g, '').trim();
+      if (col.includes('.')) {
+        col = col.split('.')[1];
+      }
+      let valPart = match[3].trim();
+      let val: any = undefined;
+      
+      if (valPart === '?') {
+        val = params[paramIdx++];
+      } else if (valPart.toUpperCase() === 'NULL') {
+        val = null;
+      } else {
+        val = valPart.replace(/['"`]/g, '').trim();
+      }
+      conditions[col] = val;
+    }
+  }
+  return conditions;
+}
+
+// Mock pool representing a lightweight file-backed SQL emulator fallback
+class LocalDatabasePool {
+  async execute(sql: string, params: any[] = []): Promise<[any, any]> {
+    return this.query(sql, params);
+  }
+
+  async query(sql: string, params: any[] = []): Promise<[any, any]> {
+    const cleanedSql = sql.replace(/\s+/g, ' ').trim();
+    const upperSql = cleanedSql.toUpperCase();
+
+    // SELECT handling
+    if (upperSql.startsWith('SELECT')) {
+      let tableName = '';
+      const fromMatch = cleanedSql.match(/FROM\s+([a-zA-Z0-9_]+)/i);
+      if (fromMatch) {
+        tableName = fromMatch[1];
+      }
+
+      if (upperSql.includes("SHOW TABLES")) {
+        return [[{ "Tables_in_vibelab": "users" }], []];
+      }
+      if (upperSql.includes("SHOW COLUMNS")) {
+        return [[
+          { Field: 'id' }, { Field: 'name' }, { Field: 'email' }, { Field: 'password' },
+          { Field: 'role' }, { Field: 'is_verified' }, { Field: 'verification_token' },
+          { Field: 'vl_id' }, { Field: 'current_role' }, { Field: 'github_handle' },
+          { Field: 'github_url' }, { Field: 'linkedin_url' }, { Field: 'bio' }, { Field: 'country' }
+        ], []];
+      }
+
+      let data = getTableData(tableName);
+      let isJoiningUsers = upperSql.includes('JOIN USERS');
+
+      const whereIdx = upperSql.indexOf('WHERE');
+      let selectWhere = '';
+      if (whereIdx !== -1) {
+        let endIdx = upperSql.indexOf('ORDER BY');
+        if (endIdx === -1) endIdx = upperSql.indexOf('LIMIT');
+        if (endIdx === -1) endIdx = cleanedSql.length;
+        selectWhere = cleanedSql.substring(whereIdx + 5, endIdx).trim();
+      }
+
+      const conditions = parseQueryConditions(selectWhere, params);
+      let matched = data.filter(row => {
+        return Object.entries(conditions).every(([col, condVal]) => {
+          let rowVal = row[col];
+          if (condVal === null) {
+            return rowVal === null || rowVal === undefined;
+          }
+          if (typeof rowVal === 'string' && typeof condVal === 'string') {
+            return rowVal.toLowerCase() === condVal.toLowerCase();
+          }
+          return rowVal == condVal;
+        });
+      });
+
+      if (isJoiningUsers && tableName === 'project_blueprints') {
+        const users = getTableData('users');
+        matched = matched.map(pb => {
+          const u = users.find(user => user.id === pb.user_id);
+          return {
+            ...pb,
+            student_name: u ? u.name : 'Student',
+            avatar_url: u ? u.avatar_url : null
+          };
+        });
+      }
+
+      if (upperSql.includes('COUNT(*) AS TOTAL') || upperSql.includes('COUNT(*) AS ')) {
+        const totalName = upperSql.includes('COUNT(*) AS TOTAL') ? 'total' : 'count';
+        return [[{ [totalName]: matched.length }], []];
+      }
+
+      if (upperSql.includes('ORDER BY')) {
+        const orderMatch = cleanedSql.match(/ORDER BY\s+([a-zA-Z0-9_`\.]+)\s*(ASC|DESC)?/i);
+        if (orderMatch) {
+          const col = orderMatch[1].replace(/[`']/g, '').trim().split('.').pop() as string;
+          const isDesc = orderMatch[2] && orderMatch[2].toUpperCase() === 'DESC';
+          matched.sort((a, b) => {
+            let valA = a[col];
+            let valB = b[col];
+            if (valA === undefined) return 1;
+            if (valB === undefined) return -1;
+            if (typeof valA === 'string') {
+              return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
+            }
+            return isDesc ? (valB - valA) : (valA - valB);
+          });
+        }
+      }
+
+      if (upperSql.includes('LIMIT')) {
+        const limitMatch = cleanedSql.match(/LIMIT\s+(\d+)/i);
+        if (limitMatch) {
+          const lim = parseInt(limitMatch[1]);
+          matched = matched.slice(0, lim);
+        }
+      }
+
+      return [matched, []];
+    }
+
+    // INSERT handling
+    if (upperSql.startsWith('INSERT')) {
+      const intoMatch = cleanedSql.match(/INSERT\s+(?:IGNORE\s+)?INTO\s+([a-zA-Z0-9_]+)/i);
+      if (!intoMatch) return [[], []];
+      const tableName = intoMatch[1];
+
+      const colsMatch = cleanedSql.match(/\(([^)]+)\)\s+VALUES/i);
+      if (!colsMatch) return [[], []];
+      const columns = colsMatch[1].split(',').map(c => c.trim().replace(/[`']/g, ''));
+
+      const item: Record<string, any> = {};
+      columns.forEach((col, idx) => {
+        item[col] = params[idx];
+      });
+
+      const data = getTableData(tableName);
+      const newId = data.length > 0 ? Math.max(...data.map(d => d.id || 0)) + 1 : 1;
+      item.id = newId;
+      item.created_at = new Date().toISOString();
+      
+      // Auto-populate vl_id if inserting users
+      if (tableName === 'users' && !item.vl_id) {
+        const year = new Date().getFullYear();
+        item.vl_id = `VL-${year}-${newId.toString().padStart(5, '0')}`;
+      }
+
+      data.push(item);
+      saveTableData(tableName, data);
+
+      return [{ insertId: newId, affectedRows: 1 }, []];
+    }
+
+    // UPDATE handling
+    if (upperSql.startsWith('UPDATE')) {
+      const updateMatch = cleanedSql.match(/UPDATE\s+([a-zA-Z0-9_]+)/i);
+      if (!updateMatch) return [[], []];
+      const tableName = updateMatch[1];
+
+      const data = getTableData(tableName);
+
+      const setIdx = upperSql.indexOf('SET');
+      const whereIdx = upperSql.indexOf('WHERE');
+      const setPart = cleanedSql.substring(setIdx + 3, whereIdx !== -1 ? whereIdx : cleanedSql.length).trim();
+      
+      let updateWhere = '';
+      if (whereIdx !== -1) {
+        updateWhere = cleanedSql.substring(whereIdx + 5).trim();
+      }
+
+      const whereParamCount = (updateWhere.match(/\?/g) || []).length;
+      const setParams = params.slice(0, params.length - whereParamCount);
+      const whereParams = params.slice(params.length - whereParamCount);
+
+      const sets: Record<string, any> = {};
+      let setParamIdx = 0;
+      const setParts = setPart.split(',');
+      for (const p of setParts) {
+        const eqIdx = p.indexOf('=');
+        if (eqIdx !== -1) {
+          const col = p.substring(0, eqIdx).trim().replace(/[`']/g, '');
+          const valPart = p.substring(eqIdx + 1).trim();
+          let setVal: any = undefined;
+          if (valPart === '?') {
+            setVal = setParams[setParamIdx++];
+          } else if (valPart.toUpperCase() === 'NULL') {
+            setVal = null;
+          } else {
+            setVal = valPart.replace(/['"`]/g, '').trim();
+          }
+          sets[col] = setVal;
+        }
+      }
+
+      const conditions = parseQueryConditions(updateWhere, whereParams);
+      let affectedRows = 0;
+      
+      const updatedData = data.map(row => {
+        const isMatch = Object.entries(conditions).every(([col, condVal]) => {
+          let rowVal = row[col];
+          if (condVal === null) return rowVal === null || rowVal === undefined;
+          return rowVal == condVal;
+        });
+
+        if (isMatch) {
+          affectedRows++;
+          return { ...row, ...sets };
+        }
+        return row;
+      });
+
+      saveTableData(tableName, updatedData);
+      return [{ affectedRows }, []];
+    }
+
+    // DELETE handling
+    if (upperSql.startsWith('DELETE')) {
+      const fromMatch = cleanedSql.match(/FROM\s+([a-zA-Z0-9_]+)/i);
+      if (!fromMatch) return [[], []];
+      const tableName = fromMatch[1];
+
+      const data = getTableData(tableName);
+      const whereIdx = upperSql.indexOf('WHERE');
+      let deleteWhere = '';
+      if (whereIdx !== -1) {
+        deleteWhere = cleanedSql.substring(whereIdx + 5).trim();
+      }
+
+      const conditions = parseQueryConditions(deleteWhere, params);
+      const filtered = data.filter(row => {
+        const isMatch = Object.entries(conditions).every(([col, condVal]) => {
+          let rowVal = row[col];
+          if (condVal === null) return rowVal === null || rowVal === undefined;
+          return rowVal == condVal;
+        });
+        return !isMatch;
+      });
+
+      const affectedRows = data.length - filtered.length;
+      saveTableData(tableName, filtered);
+      return [{ affectedRows }, []];
+    }
+
+    return [[], []];
+  }
+
+  async getConnection() {
+    return {
+      execute: (sql: string, params: any[] = []) => this.execute(sql, params),
+      query: (sql: string, params: any[] = []) => this.query(sql, params),
+      release: () => {}
+    };
+  }
+}
 
 const dbConfig = {
   host: process.env.DB_HOST,
@@ -22,8 +374,9 @@ let pool: any = null;
 export const getPool = async () => {
   if (!pool) {
     if (!process.env.DB_HOST) {
-      console.warn('DB_HOST not configured.');
-      return null;
+      console.warn('DB_HOST not configured. Falling back to local JSON database.');
+      pool = new LocalDatabasePool();
+      return pool;
     }
     try {
       console.log('DB Debug: Connecting to Host:', dbConfig.host, 'User:', dbConfig.user, 'DB:', dbConfig.database);
@@ -754,7 +1107,7 @@ export const getPool = async () => {
         connection.release();
       }
     } catch (err: any) {
-      console.error('CRITICAL: Failed to connect to MySQL database:', {
+      console.warn('CRITICAL: Failed to connect to MySQL database. Falling back to local JSON database to prevent outage.', {
         message: err.message,
         code: err.code,
         host: dbConfig.host,
@@ -763,8 +1116,8 @@ export const getPool = async () => {
       try {
         fs.appendFileSync('server-error.log', `[${new Date().toISOString()}] DB Connection Error: ${err.stack || err.message || err}\n`);
       } catch (e) {}
-      pool = null;
-      return null;
+      pool = new LocalDatabasePool();
+      return pool;
     }
   }
   return pool;
