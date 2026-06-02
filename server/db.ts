@@ -146,7 +146,7 @@ class LocalDatabasePool {
           { Field: 'id' }, { Field: 'name' }, { Field: 'email' }, { Field: 'password' },
           { Field: 'role' }, { Field: 'is_verified' }, { Field: 'verification_token' },
           { Field: 'vl_id' }, { Field: 'current_role' }, { Field: 'github_handle' },
-          { Field: 'github_url' }, { Field: 'linkedin_url' }, { Field: 'bio' }, { Field: 'country' }
+          { Field: 'github_url' }, { Field: 'linkedin_url' }, { Field: 'bio' }, { Field: 'country' }, { Field: 'banner_url' }
         ], []];
       }
 
@@ -726,6 +726,7 @@ export const getPool = async () => {
         await addColumnIfNeeded('users', 'github_handle', 'VARCHAR(100)');
         await addColumnIfNeeded('users', 'current_role', 'VARCHAR(100)');
         await addColumnIfNeeded('users', 'vl_id', 'VARCHAR(20) UNIQUE');
+        await addColumnIfNeeded('users', 'banner_url', 'LONGTEXT');
         await addColumnIfNeeded('users', 'ideation_completed', 'BOOLEAN DEFAULT FALSE');
         await addColumnIfNeeded('users', 'ideation_completed_at', 'TIMESTAMP NULL');
 

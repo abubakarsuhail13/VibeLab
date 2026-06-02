@@ -23,6 +23,25 @@ router.post('/upload-avatar', authenticateToken, upload.single('avatar'), async 
   }
 });
 
+router.post('/upload-banner', authenticateToken, upload.single('banner'), async (req: any, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const base64Image = req.file.buffer.toString('base64');
+    const bannerUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+
+    await p.execute('UPDATE users SET banner_url = ? WHERE id = ?', [bannerUrl, req.user.userId]);
+
+    res.json({ success: true, bannerUrl });
+  } catch (error) {
+    console.error('Banner upload error:', error);
+    res.status(500).json({ error: 'Banner upload failed' });
+  }
+});
+
 router.patch('/profile', authenticateToken, async (req: any, res) => {
   const { name, country, bio, github_username } = req.body;
   try {

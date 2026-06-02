@@ -1595,11 +1595,14 @@ export default function App() {
         ) : currentPage === 'verify-credential' ? (
           <VerifyCredential onNavigate={handleNavigate} />
         ) : currentPage === 'verify-profile' ? (
-          <PublicProfile userId={
-            window.location.pathname.startsWith('/profile/')
-              ? window.location.pathname.split('/profile/')[1]
-              : window.location.pathname.split('/verify/')[1]
-          } />
+          <PublicProfile 
+            userId={
+              window.location.pathname.startsWith('/profile/')
+                ? window.location.pathname.split('/profile/')[1]
+                : window.location.pathname.split('/verify/')[1]
+            } 
+            currentUser={user}
+          />
         ) : currentPage === 'ideation' ? (
           <IdeationEntry onNavigate={handleNavigate} />
         ) : currentPage === 'ideation-chat' ? (

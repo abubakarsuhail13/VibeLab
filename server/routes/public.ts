@@ -146,7 +146,7 @@ router.get('/profile/:vl_id', async (req, res) => {
 
     // Find user by VL-ID
     const [userRows]: any = await p.execute(
-      'SELECT id, name, email, avatar_url, role, country, bio, github_url, github_handle, linkedin_url, current_role, created_at FROM users WHERE vl_id = ?',
+      'SELECT id, name, email, avatar_url, banner_url, role, country, bio, github_url, github_handle, linkedin_url, current_role, created_at FROM users WHERE vl_id = ?',
       [vl_id]
     );
 
@@ -193,6 +193,7 @@ router.get('/profile/:vl_id', async (req, res) => {
         id: user.id,
         name: user.name,
         avatar_url: user.avatar_url,
+        banner_url: user.banner_url,
         role: user.role,
         country: user.country,
         bio: user.bio,
@@ -267,7 +268,7 @@ router.get('/user/:userId/profile', async (req, res) => {
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
-    const [rows]: any = await p.execute('SELECT id, name, avatar_url, role, country, bio, linkedin_url, github_url, github_handle, current_role, vl_id, created_at FROM users WHERE id = ?', [userId]);
+    const [rows]: any = await p.execute('SELECT id, name, avatar_url, banner_url, role, country, bio, linkedin_url, github_url, github_handle, current_role, vl_id, created_at FROM users WHERE id = ?', [userId]);
     if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
     const user = rows[0];
     user.github_username = user.github_handle;

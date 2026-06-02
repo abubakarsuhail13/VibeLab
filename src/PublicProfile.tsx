@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Trophy, Github, Link as LinkIcon, CheckCircle2, User, Calendar, ExternalLink, Globe } from 'lucide-react';
+import { Trophy, Github, Link as LinkIcon, CheckCircle2, User, Calendar, ExternalLink, Globe, Camera } from 'lucide-react';
 
 interface PublicProfileProps {
   userId: string;
+  currentUser?: any;
 }
 
-export default function PublicProfile({ userId }: PublicProfileProps) {
+export default function PublicProfile({ userId, currentUser }: PublicProfileProps) {
   const [profile, setProfile] = useState<any>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [badges, setBadges] = useState<any[]>([]);
   const [blueprint, setBlueprint] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,6 +75,58 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
     fetchData();
   }, [userId]);
 
+  const isOwnProfile = profile && currentUser && (
+    currentUser.vl_id === profile.vl_id || 
+    currentUser.id === profile.id ||
+    currentUser.email === profile.email
+  );
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Please upload an image smaller than 5MB.");
+      return;
+    }
+
+    setBannerUploading(true);
+    const formData = new FormData();
+    formData.append('banner', file);
+
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch('/api/user/upload-banner', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setProfile((prev: any) => ({ ...prev, banner_url: data.bannerUrl }));
+        const storedUser = localStorage.getItem('vibelab_user');
+        if (storedUser) {
+          try {
+            const parsed = JSON.parse(storedUser);
+            parsed.banner_url = data.bannerUrl;
+            localStorage.setItem('vibelab_user', JSON.stringify(parsed));
+          } catch (e) {
+            console.error('Failed to update local storage user with new banner', e);
+          }
+        }
+      } else {
+        alert(data.error || "Upload failed");
+      }
+    } catch (err) {
+      alert("Error uploading banner");
+    } finally {
+      setBannerUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -107,11 +161,50 @@ export default function PublicProfile({ userId }: PublicProfileProps) {
       </div>
 
       {/* Hero Header */}
-      <div className="relative">
-        <div className="h-48 md:h-64 bg-slate-900 overflow-hidden relative">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/20 via-slate-900 to-indigo-600/20" />
+      <div className="relative animate-fade-in">
+        <div className="h-48 md:h-64 bg-slate-900 overflow-hidden relative group/banner">
+          {profile.banner_url ? (
+            <img 
+              src={profile.banner_url} 
+              alt={`${profile.name}'s Profile Header`} 
+              className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.01]" 
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/20 via-slate-900 to-indigo-600/20" />
+            </>
+          )}
           <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-slate-900 to-transparent" />
+
+          {/* Floated custom banner upload controls */}
+          {isOwnProfile && (
+            <div className="absolute top-4 right-6 z-20">
+              <label 
+                className="cursor-pointer flex items-center gap-2 px-3.5 py-2 bg-slate-950/70 hover:bg-slate-950 text-white font-bold text-xs uppercase tracking-wider rounded-xl backdrop-blur-md border border-white/10 transition-all duration-300 shadow-xl hover:shadow-cyan-500/10 active:scale-95 select-none"
+              >
+                {bannerUploading ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Uploading Banner...</span>
+                  </>
+                ) : (
+                  <>
+                    <Camera size={14} className="text-cyan-400" />
+                    <span>Change Cover</span>
+                  </>
+                )}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleBannerUpload}
+                  disabled={bannerUploading}
+                />
+              </label>
+            </div>
+          )}
         </div>
 
         <div className="max-w-6xl mx-auto px-6">
