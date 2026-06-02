@@ -5,14 +5,24 @@ import { authenticateToken } from '../auth.js';
 
 const router = express.Router();
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
+let aiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured in the server environment settings. If you are deploying on Vercel, please define GEMINI_API_KEY in your Project Dashboard Environment Variables.');
   }
-});
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+  return aiClient;
+}
 
 // 1. POST /api/ideation/start
 router.post('/start', authenticateToken, async (req: any, res) => {
@@ -109,7 +119,7 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
       }
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await getGeminiClient().models.generateContent({
       model: "gemini-3.5-flash",
       contents: prompt,
       config: {
@@ -147,7 +157,7 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
     });
   } catch (error: any) {
     console.error('Ideation Respond Error:', error);
-    res.status(500).json({ error: 'Failed to process response' });
+    res.status(500).json({ error: error.message || 'Failed to process response' });
   }
 });
 
@@ -208,7 +218,7 @@ router.post('/generate-blueprint', authenticateToken, async (req: any, res) => {
       }
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await getGeminiClient().models.generateContent({
       model: "gemini-3.5-flash",
       contents: prompt,
       config: {
@@ -270,7 +280,7 @@ router.post('/generate-blueprint', authenticateToken, async (req: any, res) => {
     res.json({ blueprint });
   } catch (error: any) {
     console.error('Blueprint Generation Error:', error);
-    res.status(500).json({ error: 'Failed to generate product blueprint' });
+    res.status(500).json({ error: error.message || 'Failed to generate product blueprint' });
   }
 });
 

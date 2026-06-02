@@ -4,14 +4,24 @@ import { authenticateToken } from '../auth.js';
 
 const router = express.Router();
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
+let aiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured in the server environment settings. If you are deploying on Vercel, please define GEMINI_API_KEY in your Project Dashboard Environment Variables.');
   }
-});
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+  return aiClient;
+}
 
 router.post('/ask', authenticateToken, async (req: any, res) => {
   const { question, context } = req.body;
@@ -28,7 +38,7 @@ router.post('/ask', authenticateToken, async (req: any, res) => {
       Use Markdown formatting.
     `;
 
-    const response = await ai.models.generateContent({
+    const response = await getGeminiClient().models.generateContent({
       model: "gemini-3.5-flash",
       contents: prompt,
     });
@@ -36,7 +46,7 @@ router.post('/ask', authenticateToken, async (req: any, res) => {
     res.json({ answer: response.text });
   } catch (error: any) {
     console.error('Tutor Error:', error);
-    res.status(500).json({ error: 'AI Tutor is temporarily offline.' });
+    res.status(500).json({ error: error.message || 'AI Tutor is temporarily offline.' });
   }
 });
 
