@@ -14,7 +14,7 @@ const dbConfig = {
   connectionLimit: 10,
   queueLimit: 0,
   connectTimeout: 5000,
-  ssl: (process.env.DB_SSL === 'true' || (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false')) ? { rejectUnauthorized: false } : undefined
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 };
 
 let pool: any = null;
