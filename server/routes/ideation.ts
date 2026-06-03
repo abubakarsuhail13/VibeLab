@@ -313,6 +313,106 @@ router.get('/blueprint', authenticateToken, async (req: any, res) => {
   }
 });
 
+// 4b. GET /api/ideation/blueprints
+router.get('/blueprints', authenticateToken, async (req: any, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const userId = req.user.userId;
+
+    const [rows]: any = await p.execute(
+      'SELECT * FROM project_blueprints WHERE user_id = ? ORDER BY id DESC',
+      [userId]
+    );
+
+    // parse JSON fields
+    for (const row of rows) {
+      try { row.ai_opportunity_map = typeof row.ai_opportunity_map === 'string' ? JSON.parse(row.ai_opportunity_map) : row.ai_opportunity_map; } catch (_) {}
+      try { row.learning_path = typeof row.learning_path === 'string' ? JSON.parse(row.learning_path) : row.learning_path; } catch (_) {}
+      try { row.product_features = typeof row.product_features === 'string' ? JSON.parse(row.product_features) : row.product_features; } catch (_) {}
+    }
+
+    res.json(rows);
+  } catch (error: any) {
+    console.error('Fetch Blueprints Error:', error);
+    res.status(500).json({ error: 'Failed to retrieve blueprints' });
+  }
+});
+
+// 4c. POST /api/ideation/blueprints/:id/reuse
+router.post('/blueprints/:id/reuse', authenticateToken, async (req: any, res) => {
+  const { id } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const userId = req.user.userId;
+
+    const [rows]: any = await p.execute(
+      'SELECT * FROM project_blueprints WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Blueprint not found' });
+    }
+
+    const blueprint = rows[0];
+
+    // Create a new copy of it to make it the latest one (LIMIT 1)
+    await p.execute(
+      `INSERT INTO project_blueprints (
+        user_id, session_id, problem_statement, target_user_persona, solution_concept,
+        ai_opportunity_map, mvp_definition, learning_path, product_name, product_features,
+        complexity, estimated_build_time, recommended_track, mvp_note
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        blueprint.session_id,
+        blueprint.problem_statement,
+        blueprint.target_user_persona,
+        blueprint.solution_concept,
+        typeof blueprint.ai_opportunity_map === 'string' ? blueprint.ai_opportunity_map : JSON.stringify(blueprint.ai_opportunity_map),
+        blueprint.mvp_definition,
+        typeof blueprint.learning_path === 'string' ? blueprint.learning_path : JSON.stringify(blueprint.learning_path),
+        blueprint.product_name,
+        typeof blueprint.product_features === 'string' ? blueprint.product_features : JSON.stringify(blueprint.product_features),
+        blueprint.complexity,
+        blueprint.estimated_build_time,
+        blueprint.recommended_track,
+        blueprint.mvp_note
+      ]
+    );
+
+    res.json({ success: true, message: 'Blueprint restored as active!' });
+  } catch (error: any) {
+    console.error('Reuse Blueprint Error:', error);
+    res.status(500).json({ error: 'Failed to restore blueprint' });
+  }
+});
+
+// 4d. DELETE /api/ideation/blueprints/:id
+router.delete('/blueprints/:id', authenticateToken, async (req: any, res) => {
+  const { id } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const userId = req.user.userId;
+
+    await p.execute(
+      'DELETE FROM project_blueprints WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    res.json({ success: true, message: 'Blueprint deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete Blueprint Error:', error);
+    res.status(500).json({ error: 'Failed to delete blueprint' });
+  }
+});
+
 // 5. GET /api/ideation/blueprint/:vl_id
 router.get('/blueprint/:vl_id', async (req: any, res) => {
   const { vl_id } = req.params;

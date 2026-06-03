@@ -25,7 +25,9 @@ import {
   CheckCircle2,
   Send,
   GraduationCap,
-  X
+  X,
+  Plus,
+  Trash2
 } from "lucide-react";
 import PhaseView from "./PhaseView";
 import Leaderboard from "./Leaderboard";
@@ -47,12 +49,16 @@ interface Phase {
 
 export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: DashboardProps) {
   const [uploading, setUploading] = useState(false);
-  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions' | 'certificates' | 'leaderboard' | 'settings' | 'grading' | 'support'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'phase' | 'submissions' | 'blueprints' | 'certificates' | 'leaderboard' | 'settings' | 'grading' | 'support'>('overview');
   const [selectedPhaseId, setSelectedPhaseId] = useState<number | null>(null);
   const [phases, setPhases] = useState<Phase[]>([]);
   const [loadingPhases, setLoadingPhases] = useState(true);
   const [progressData, setProgressData] = useState<{ phaseProgress: any[], projectProgress: any[] } | null>(null);
   const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
+  const [blueprints, setBlueprints] = useState<any[]>([]);
+  const [loadingBlueprints, setLoadingBlueprints] = useState(false);
+  const [expandedBlueprintId, setExpandedBlueprintId] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [badges, setBadges] = useState<any[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -243,21 +249,73 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
     setLoadingPhases(true);
     try {
       const token = localStorage.getItem('vibelab_token');
-      const [phasesRes, progressRes, subsRes, badgesRes] = await Promise.all([
+      const [phasesRes, progressRes, subsRes, badgesRes, blueprintsRes] = await Promise.all([
         fetch('/api/phases', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/progress', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/user/submissions', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/user/badges', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/user/badges', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/ideation/blueprints', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       
       if (phasesRes.ok) setPhases(await phasesRes.json());
       if (progressRes.ok) setProgressData(await progressRes.json());
       if (subsRes.ok) setUserSubmissions(await subsRes.json());
       if (badgesRes.ok) setBadges(await badgesRes.json());
+      if (blueprintsRes.ok) setBlueprints(await blueprintsRes.json());
     } catch (err) {
       console.error("Failed to fetch dashboard data", err);
     } finally {
       setLoadingPhases(false);
+    }
+  };
+
+  const handleReuseBlueprint = async (blueprintId: number) => {
+    setActionLoading(blueprintId);
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch(`/api/ideation/blueprints/${blueprintId}/reuse`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        await fetchDashboardData();
+        alert("This blueprint has been successfully restored as your active project track!");
+      } else {
+        const d = await response.json();
+        alert(d.error || "Failed to restore blueprint");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error contacting the server.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteBlueprint = async (blueprintId: number) => {
+    if (!confirm("Are you sure you want to delete this blueprint from your history? \nThis action cannot be undone.")) return;
+    setActionLoading(blueprintId);
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const response = await fetch(`/api/ideation/blueprints/${blueprintId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        await fetchDashboardData();
+      } else {
+        const d = await response.json();
+        alert(d.error || "Failed to delete blueprint");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error contacting the server.");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -447,6 +505,16 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               >
                 <LayoutDashboard className="w-5 h-5" />
                 Overview
+              </button>
+
+              <button 
+                onClick={() => setActiveView('blueprints')}
+                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
+                  activeView === 'blueprints' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <FileText className="w-5 h-5" />
+                My Blueprints
               </button>
 
               <button 
@@ -1584,6 +1652,210 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                       {saveStatus === 'loading' ? 'Saving...' : 'Save Changes'}
                     </button>
                   </form>
+                </div>
+              </motion.div>
+            ) : activeView === 'blueprints' ? (
+              <motion.div
+                key="blueprints"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                  <div>
+                    <h1 className="text-4xl font-display font-bold text-slate-900 mb-2">My Discovery Blueprints</h1>
+                    <p className="text-slate-500 font-medium font-sans">Access, review, and restore your completed project blueprints to reuse them as your primary course track.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (onNavigate) onNavigate('ideation');
+                    }}
+                    className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm transition-all shadow-md"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Discovery Session
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {blueprints.length > 0 ? blueprints.map((bp, i) => {
+                    const isActive = i === 0; // The latest one generated is active by default
+                    const isExpanded = expandedBlueprintId === bp.id;
+
+                    const opportunities = Array.isArray(bp.ai_opportunity_map) ? bp.ai_opportunity_map : [];
+                    const learningPath = Array.isArray(bp.learning_path) ? bp.learning_path : [];
+                    const features = Array.isArray(bp.product_features) ? bp.product_features : [];
+
+                    return (
+                      <motion.div
+                        key={bp.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className={`bg-white rounded-[2.5rem] border ${
+                          isActive ? 'border-amber-400 ring-2 ring-amber-400/20 shadow-lg' : 'border-slate-200 shadow-sm'
+                        } overflow-hidden transition-all`}
+                      >
+                        {/* Header Area */}
+                        <div className="p-8 md:p-10 font-sans">
+                          <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap items-center gap-3">
+                                <h3 className="text-2xl font-display font-black text-slate-900 tracking-wide uppercase">
+                                  {bp.product_name}
+                                </h3>
+                                {isActive && (
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-100">
+                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                                    Active Project Track
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm font-semibold text-slate-500 flex flex-wrap items-center gap-3">
+                                <span>🛠️ {bp.recommended_track}</span>
+                                <span>•</span>
+                                <span>⏳ {bp.estimated_build_time}</span>
+                                <span>•</span>
+                                <span className={`capitalize inline-block px-2 py-0.5 rounded text-xs font-bold ${
+                                  bp.complexity === 'beginner' ? 'bg-emerald-50 text-emerald-600' :
+                                  bp.complexity === 'intermediate' ? 'bg-amber-50 text-amber-600' :
+                                  'bg-red-50 text-red-600'
+                                }`}>🧠 {bp.complexity}</span>
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => setExpandedBlueprintId(isExpanded ? null : bp.id)}
+                                className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all border border-slate-200"
+                              >
+                                {isExpanded ? 'Hide Spec' : 'View Full Spec'}
+                              </button>
+                              {!isActive && (
+                                <button
+                                  onClick={() => handleReuseBlueprint(bp.id)}
+                                  disabled={actionLoading !== null}
+                                  className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-md"
+                                >
+                                  {actionLoading === bp.id ? 'Restoring...' : 'Reuse / Set Active'}
+                                </button>
+                              )}
+                              {!isActive && (
+                                <button
+                                  onClick={() => handleDeleteBlueprint(bp.id)}
+                                  disabled={actionLoading !== null}
+                                  className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all border border-transparent hover:border-red-105"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <p className="text-slate-600 text-base leading-relaxed font-normal">
+                            {bp.solution_concept}
+                          </p>
+
+                          {/* Quick details summary */}
+                          <div className="mt-6 flex flex-wrap gap-4 pt-6 border-t border-slate-100 text-sm font-medium text-slate-500">
+                            <div>
+                              <span className="text-slate-400">Problem:</span> {bp.problem_statement}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Expandable full specification details */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="border-t border-slate-100 bg-slate-50/50"
+                            >
+                              <div className="p-8 md:p-10 space-y-8 text-sm font-sans">
+                                <div className="grid md:grid-cols-2 gap-8">
+                                  {/* Left col */}
+                                  <div className="space-y-6">
+                                    <div>
+                                      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Target User Persona</p>
+                                      <p className="text-slate-700 leading-relaxed font-medium bg-white p-5 rounded-2xl border border-slate-100">{bp.target_user_persona}</p>
+                                    </div>
+
+                                    <div>
+                                      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Core Features Checklist</p>
+                                      <div className="bg-white p-5 rounded-2xl border border-slate-100 space-y-2">
+                                        {features.map((f, idx) => (
+                                          <div key={idx} className="flex gap-2 items-center text-slate-700">
+                                            <span className="text-cyan-500">✓</span>
+                                            <span className="font-medium">{f}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Right col */}
+                                  <div className="space-y-6">
+                                    <div>
+                                      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">How AI Can Help</p>
+                                      <div className="bg-white p-5 rounded-2xl border border-slate-100 flex flex-wrap gap-2 animate-pulse">
+                                        {opportunities.map((o, idx) => (
+                                          <span key={idx} className="px-3 py-1 bg-cyan-50 text-cyan-700 rounded-lg text-xs font-bold border border-cyan-100">
+                                            ✨ {o}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    <div>
+                                      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">1-Week MVP Scope</p>
+                                      <p className="text-slate-700 leading-relaxed font-medium bg-white p-5 rounded-2xl border border-slate-100">{bp.mvp_definition}</p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {bp.mvp_note && (
+                                  <div className="bg-[#C9A84C]/5 border-l-4 border-amber-500 p-5 rounded-r-2xl">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">Guiding Scope Reduction Advice</p>
+                                    <p className="text-slate-700 font-medium leading-relaxed">{bp.mvp_note}</p>
+                                  </div>
+                                )}
+
+                                <div>
+                                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Suggested Learning Milestones Pattern</p>
+                                  <div className="grid sm:grid-cols-3 gap-4">
+                                    {learningPath.map((itm, idx) => (
+                                      <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-100 flex gap-3 text-slate-700">
+                                        <div className="w-6 h-6 rounded-md bg-slate-950 text-white font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                                          {idx + 1}
+                                        </div>
+                                        <span className="font-medium leading-normal">{itm}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    );
+                  }) : (
+                    <div className="py-24 text-center bg-white border border-slate-200 rounded-[3rem] shadow-sm font-sans">
+                      <FileText className="w-16 h-16 text-slate-300 mx-auto mb-6" />
+                      <h3 className="text-2xl font-bold font-display text-slate-900 mb-2">No discovery blueprints found</h3>
+                      <p className="text-slate-500 max-w-sm mx-auto font-medium">To generate and save your completed professional project blueprints, initiate a Discovery session.</p>
+                      <button
+                        onClick={() => {
+                          if (onNavigate) onNavigate('ideation');
+                        }}
+                        className="mt-8 px-8 py-3.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-md"
+                      >
+                        Launch Discovery Session
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ) : activeView === 'certificates' ? (

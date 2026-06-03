@@ -11,7 +11,7 @@ import {
   Rocket
 } from "lucide-react";
 
-const AboutHero = () => {
+const AboutHero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   return (
     <section className="relative pt-48 pb-32 px-6 overflow-hidden hero-gradient">
       <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[120px] -z-10 animate-pulse" />
@@ -38,10 +38,16 @@ const AboutHero = () => {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-6">
-            <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:shadow-xl hover:shadow-cyan-600/30 transition-all flex items-center gap-3 group">
+            <button 
+              onClick={() => onNavigate('contact')}
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:shadow-xl hover:shadow-cyan-600/30 transition-all flex items-center gap-3 group"
+            >
               Join Early Access <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="flex items-center gap-3 text-slate-900 font-bold px-8 py-5 rounded-2xl border border-slate-200 hover:bg-slate-100 transition-all">
+            <button 
+              onClick={() => onNavigate('contact')}
+              className="flex items-center gap-3 text-slate-900 font-bold px-8 py-5 rounded-2xl border border-slate-200 hover:bg-slate-100 transition-all"
+            >
               Partner With Us
             </button>
           </div>
@@ -247,7 +253,10 @@ const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           We’re not just preparing students for the future — <span className="gradient-text">we’re enabling them to build it.</span>
         </h2>
         <div className="flex flex-wrap items-center justify-center gap-6">
-          <button className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl">
+          <button 
+            onClick={() => onNavigate('contact')}
+            className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl"
+          >
             Join Early Access
           </button>
           <button 
@@ -266,7 +275,7 @@ const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 export default function AboutPage({ onNavigate }: { onNavigate: (page: string) => void }) {
   return (
     <div className="min-h-screen bg-slate-50">
-      <AboutHero />
+      <AboutHero onNavigate={onNavigate} />
       <InitiativeSection />
       <WhyExists />
       <OurApproach />
