@@ -115,10 +115,27 @@ router.get('/leaderboard', async (req, res) => {
             FROM project_submissions 
             WHERE user_id = u.id 
             ${isMonthly ? 'AND created_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY)' : ''}
-          ) as projects_count
+          ) as projects_count,
+          (
+            SELECT COUNT(*)
+            FROM user_phase_progress
+            WHERE user_id = u.id AND phase_id = 1 AND status = 'completed'
+          ) as completed_phase_1,
+          (
+            SELECT COUNT(*)
+            FROM user_phase_progress
+            WHERE user_id = u.id AND status = 'completed'
+          ) as completed_phases_count,
+          (
+            SELECT COUNT(*) FROM phases
+          ) as total_phases_count
         FROM users u
       ) as u_sub
-      WHERE role = 'student'
+      WHERE role = 'student' AND (
+        badges_count > 0 
+        OR completed_phase_1 > 0 
+        OR (completed_phases_count >= total_phases_count AND total_phases_count > 0)
+      )
     `;
 
     const params: any[] = [];

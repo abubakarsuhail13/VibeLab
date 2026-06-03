@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Medal, Crown, Globe, Calendar, Filter, User, ChevronRight, TrendingUp } from 'lucide-react';
 
-export default function Leaderboard() {
+export default function Leaderboard({ onViewProfile, hideRegionFilter = false }: { onViewProfile?: (vlId: string) => void; hideRegionFilter?: boolean }) {
   const [period, setPeriod] = useState<'all-time' | 'monthly'>('all-time');
   const [selectedCountry, setSelectedCountry] = useState('Worldwide');
   const [leaders, setLeaders] = useState<any[]>([]);
@@ -14,7 +14,8 @@ export default function Leaderboard() {
     const fetchLeaderboard = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/leaderboard?period=${period}&country=${selectedCountry}`);
+        const countryParam = hideRegionFilter ? 'Worldwide' : selectedCountry;
+        const response = await fetch(`/api/leaderboard?period=${period}&country=${countryParam}`);
         if (response.ok) {
           const data = await response.json();
           setLeaders(data);
@@ -30,6 +31,14 @@ export default function Leaderboard() {
 
   const topThree = leaders.slice(0, 3);
   const others = leaders.slice(3);
+
+  const handleLeaderClick = (lead: any) => {
+    if (onViewProfile) {
+      onViewProfile(lead.vl_id || lead.id);
+    } else {
+      window.open(`/verify/${lead.vl_id || lead.id}`, '_blank');
+    }
+  };
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -57,21 +66,23 @@ export default function Leaderboard() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
-        <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-slate-500 shrink-0">
-          <Filter size={14} />
-          <span className="text-[10px] font-black uppercase tracking-widest">Region</span>
+      {!hideRegionFilter && (
+        <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-slate-500 shrink-0">
+            <Filter size={14} />
+            <span className="text-[10px] font-black uppercase tracking-widest">Region</span>
+          </div>
+          {countries.map(c => (
+            <button
+              key={c}
+              onClick={() => setSelectedCountry(c)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${selectedCountry === c ? 'bg-white border-slate-900 text-slate-900 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'}`}
+            >
+              {c}
+            </button>
+          ))}
         </div>
-        {countries.map(c => (
-          <button
-            key={c}
-            onClick={() => setSelectedCountry(c)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${selectedCountry === c ? 'bg-white border-slate-900 text-slate-900 shadow-sm' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'}`}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
+      )}
 
       {loading ? (
         <div className="py-20 flex justify-center">
@@ -83,17 +94,17 @@ export default function Leaderboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 items-end gap-6 pt-10">
             {/* 2nd Place */}
             {topThree[1] && (
-              <PodiumSpot leader={topThree[1]} rank={2} color="slate-400" icon={<Medal className="w-6 h-6" />} delay={0.1} />
+              <PodiumSpot leader={topThree[1]} rank={2} color="slate-400" icon={<Medal className="w-6 h-6" />} delay={0.1} onClick={() => handleLeaderClick(topThree[1])} />
             )}
             
             {/* 1st Place */}
             {topThree[0] && (
-              <PodiumSpot leader={topThree[0]} rank={1} color="amber-400" icon={<Crown className="w-8 h-8" />} delay={0} featured />
+              <PodiumSpot leader={topThree[0]} rank={1} color="amber-400" icon={<Crown className="w-8 h-8" />} delay={0} featured onClick={() => handleLeaderClick(topThree[0])} />
             )}
 
             {/* 3rd Place */}
             {topThree[2] && (
-              <PodiumSpot leader={topThree[2]} rank={3} color="orange-400" icon={<Medal className="w-6 h-6" />} delay={0.2} />
+              <PodiumSpot leader={topThree[2]} rank={3} color="orange-400" icon={<Medal className="w-6 h-6" />} delay={0.2} onClick={() => handleLeaderClick(topThree[2])} />
             )}
           </div>
 
@@ -114,7 +125,7 @@ export default function Leaderboard() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
                   className="px-8 py-6 grid grid-cols-12 gap-4 items-center hover:bg-slate-50/50 transition-colors group cursor-pointer"
-                  onClick={() => window.open(`/verify/${leader.vl_id || leader.id}`, '_blank')}
+                  onClick={() => handleLeaderClick(leader)}
                 >
                   <div className="col-span-1 font-mono text-sm text-slate-400">#{i + 4}</div>
                   <div className="col-span-6 flex items-center gap-4">
@@ -167,14 +178,14 @@ export default function Leaderboard() {
   );
 }
 
-function PodiumSpot({ leader, rank, color, icon, delay, featured = false }: any) {
+function PodiumSpot({ leader, rank, color, icon, delay, featured = false, onClick }: any) {
     return (
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay, duration: 0.5 }}
           className={`flex flex-col items-center group cursor-pointer ${featured ? 'order-first md:order-none' : ''}`}
-          onClick={() => window.open(`/verify/${leader.vl_id || leader.id}`, '_blank')}
+          onClick={onClick}
         >
             <div className="relative mb-6">
                 <div className={`w-${featured ? '32' : '24'} h-${featured ? '32' : '24'} rounded-[2.5rem] bg-white p-2 shadow-2xl ring-4 ring-white relative z-10 group-hover:scale-105 transition-transform`}>

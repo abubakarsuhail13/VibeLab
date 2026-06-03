@@ -366,12 +366,18 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
             />
             <div className="truncate">
               <p className="font-bold text-slate-900 truncate">{user?.name || 'User'}</p>
-              <div className="flex items-center gap-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'Member'}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{user?.role || 'Member'}</p>
                 {user?.is_verified ? (
-                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-150 text-[8px] font-black uppercase tracking-wider shadow-sm select-none">
+                    <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
+                    Verified
+                  </span>
                 ) : (
-                  <AlertTriangle className="w-3 h-3 text-amber-500" title="Unverified" />
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-150 text-[8px] font-black uppercase tracking-wider shadow-sm select-none">
+                    <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
+                    Pending
+                  </span>
                 )}
               </div>
             </div>
@@ -1066,9 +1072,19 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                     </div>
                     <div>
                       <p className="font-bold text-slate-900">{user?.name || 'User'}</p>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2 mt-0.5">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role || 'Member'}</p>
-                        {user?.is_verified && <ShieldCheck className="w-3 h-3 text-emerald-500" />}
+                        {user?.is_verified ? (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-150 text-[8px] font-black uppercase tracking-wider shadow-sm select-none">
+                            <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-150 text-[8px] font-black uppercase tracking-wider shadow-sm select-none">
+                            <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
+                            Pending
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

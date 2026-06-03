@@ -149,7 +149,8 @@ router.post('/login', async (req, res) => {
         vl_id: user.vl_id,
         account_type: user.account_type,
         country: user.country,
-        profile_completed: !!user.profile_completed
+        profile_completed: !!user.profile_completed,
+        is_verified: !!user.is_verified
       }
     });
   } catch (error: any) {
@@ -404,7 +405,10 @@ router.get('/github/callback', async (req: any, res) => {
       email: user.email,
       role: user.role,
       avatar_url: user.avatar_url,
-      vl_id: user.vl_id
+      vl_id: user.vl_id,
+      is_verified: !!user.is_verified,
+      country: user.country,
+      profile_completed: !!user.profile_completed
     };
     
     res.setHeader('Content-Type', 'text/html');
@@ -592,7 +596,10 @@ router.get('/google/callback', async (req: any, res) => {
       email: user.email,
       role: user.role,
       avatar_url: user.avatar_url,
-      vl_id: user.vl_id
+      vl_id: user.vl_id,
+      is_verified: !!user.is_verified,
+      country: user.country,
+      profile_completed: !!user.profile_completed
     };
     
     res.setHeader('Content-Type', 'text/html');

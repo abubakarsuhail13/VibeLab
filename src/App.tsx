@@ -22,9 +22,12 @@ import {
   GraduationCap,
   MessageSquare,
   ShieldCheck,
+  AlertTriangle,
   Twitter,
   Linkedin,
-  Github
+  Github,
+  Menu,
+  X
 } from "lucide-react";
 import { useState, useRef, useEffect, FormEvent } from "react";
 import AboutPage from "./About";
@@ -41,6 +44,7 @@ import IdeationEntry from "./IdeationEntry";
 import IdeationChat from "./IdeationChat";
 import IdeationBlueprint from "./IdeationBlueprint";
 import ProfileSetupWizard from "./ProfileSetupWizard";
+import Leaderboard from "./Leaderboard";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [password, setPassword] = useState("");
@@ -269,70 +273,98 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
   user: any,
   onLogout: () => void
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleHowItWorksClick = () => {
+    setIsOpen(false);
+    if (currentPage === 'home') {
+      document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      onNavigate('home');
+      setTimeout(() => {
+        document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+  };
+
+  const navTo = (page: string) => {
+    setIsOpen(false);
+    onNavigate(page);
+  };
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6 pointer-events-none">
-      <div className="glass px-8 py-4 rounded-2xl flex items-center gap-8 max-w-6xl w-full justify-between shadow-xl shadow-slate-200/50 pointer-events-auto border border-white/20 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center p-6 pointer-events-none">
+      <div className="glass px-6 sm:px-8 py-4 rounded-2xl flex items-center gap-8 max-w-6xl w-full justify-between shadow-xl shadow-slate-200/50 pointer-events-auto border border-white/20 backdrop-blur-md relative z-50">
         <div 
           className="flex items-center gap-3 cursor-pointer group"
-          onClick={() => onNavigate('home')}
+          onClick={() => navTo('home')}
         >
           <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform">
             <BrainCircuit className="text-white w-6 h-6" />
           </div>
           <span className="font-display font-bold text-2xl tracking-tight text-slate-900">VibeLab</span>
         </div>
-        <div className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-600">
+        <div className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-semibold text-slate-600">
           <button 
-            onClick={() => onNavigate('home')} 
-            className={`hover:text-cyan-600 transition-colors ${currentPage === 'home' ? 'text-slate-900' : ''}`}
+            onClick={() => navTo('home')} 
+            className={`hover:text-cyan-600 transition-colors ${currentPage === 'home' ? 'text-slate-900 font-extrabold' : ''}`}
           >
             Home
           </button>
           
-          {user ? (
+          <button 
+            onClick={handleHowItWorksClick} 
+            className="hover:text-cyan-600 transition-colors"
+          >
+            How It Works
+          </button>
+
+          {user && (
             <button 
-              onClick={() => onNavigate('dashboard')} 
-              className={`hover:text-cyan-600 transition-colors ${currentPage === 'dashboard' ? 'text-slate-900' : ''}`}
+              onClick={() => navTo('dashboard')} 
+              className={`hover:text-cyan-600 transition-colors ${currentPage === 'dashboard' ? 'text-slate-900 font-extrabold' : ''}`}
             >
               Dashboard
             </button>
-          ) : (
-            <button 
-              onClick={() => onNavigate('about')} 
-              className={`hover:text-cyan-600 transition-colors ${currentPage === 'about' ? 'text-slate-900' : ''}`}
-            >
-              About
-            </button>
           )}
 
-          {currentPage === 'home' && (
-            <a href="#how-it-works" className="hover:text-cyan-600 transition-colors">How It Works</a>
-          )}
-          
           <button 
-            onClick={() => onNavigate('contact')} 
-            className={`hover:text-cyan-600 transition-colors ${currentPage === 'contact' ? 'text-slate-900' : ''}`}
+            onClick={() => navTo('leaderboard')} 
+            className={`hover:text-cyan-600 transition-colors ${currentPage === 'leaderboard' ? 'text-cyan-600 font-black' : ''}`}
           >
-            Contact
+            Global Leaderboard
           </button>
 
           <button 
-            onClick={() => onNavigate('verify-credential')} 
-            className={`hover:text-cyan-600 transition-colors ${currentPage === 'verify-credential' ? 'text-slate-900' : ''}`}
+            onClick={() => navTo('verify-credential')} 
+            className={`hover:text-cyan-600 transition-colors ${currentPage === 'verify-credential' ? 'text-slate-900 font-extrabold' : ''}`}
           >
             Verify Credential
           </button>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           {user ? (
             <>
               <div className="hidden sm:flex flex-col items-end mr-2">
-                <span className="text-xs font-bold text-slate-900">{user.name}</span>
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest">{user.role}</span>
+                <span className="text-xs font-bold text-slate-900 leading-tight">{user.name}</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">{user.role}</span>
+                  {user?.is_verified ? (
+                    <span className="text-[8px] font-black text-emerald-600 uppercase bg-emerald-50 border border-emerald-100/80 px-1 py-0.5 rounded flex items-center gap-0.5 leading-none select-none font-mono">
+                      <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="text-[8px] font-black text-amber-600 uppercase bg-amber-50 border border-amber-100/80 px-1 py-0.5 rounded flex items-center gap-0.5 leading-none select-none font-mono">
+                      <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
+                      Pending
+                    </span>
+                  )}
+                </div>
               </div>
               <button 
                 onClick={onLogout}
-                className="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all"
+                className="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all select-none"
               >
                 Logout
               </button>
@@ -340,21 +372,82 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
           ) : (
             <>
               <button 
-                onClick={() => onNavigate('login')}
+                onClick={() => navTo('login')}
                 className="text-slate-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:text-slate-900 transition-all"
               >
                 Login
               </button>
               <button 
-                onClick={() => onNavigate('signup')}
-                className="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
+                onClick={() => navTo('signup')}
+                className="bg-slate-905 text-white bg-slate-900 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
               >
                 Sign Up
               </button>
             </>
           )}
+
+          {/* Hamburger Mobile Toggle */}
+          <button 
+            onClick={() => setIsOpen(!isOpen)}
+            className="lg:hidden p-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors pointer-events-auto"
+            aria-label="Toggle Menu"
+          >
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="w-full max-w-6xl mt-3 p-6 rounded-2xl glass border border-white/20 shadow-2xl pointer-events-auto flex flex-col gap-4 lg:hidden relative z-40"
+          >
+            <div className="flex flex-col gap-3">
+              <button 
+                onClick={() => navTo('home')} 
+                className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'home' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                Home
+              </button>
+
+              <button 
+                onClick={handleHowItWorksClick} 
+                className="w-full py-3 px-4 rounded-xl text-left text-sm font-bold text-slate-600 hover:bg-slate-50"
+              >
+                How It Works
+              </button>
+
+              {user && (
+                <button 
+                  onClick={() => navTo('dashboard')} 
+                  className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'dashboard' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Dashboard
+                </button>
+              )}
+
+              <button 
+                onClick={() => navTo('leaderboard')} 
+                className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'leaderboard' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                Global Leaderboard
+              </button>
+
+              <button 
+                onClick={() => navTo('verify-credential')} 
+                className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'verify-credential' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
+                Verify Credential
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
@@ -1450,6 +1543,7 @@ export default function App() {
       'reset-password': '/reset-password',
       'forgot-password': '/forgot-password',
       'about': '/about',
+      'leaderboard': '/leaderboard',
       'admin': '/admin',
       'contact': '/contact',
       ideation: '/ideation',
@@ -1461,6 +1555,7 @@ export default function App() {
     if (targetPath) {
       window.history.replaceState({}, document.title, targetPath);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -1514,6 +1609,8 @@ export default function App() {
       setCurrentPage('verify-credential');
     } else if (path.startsWith('/verify/') || path.startsWith('/profile/')) {
       setCurrentPage('verify-profile');
+    } else if (path === '/leaderboard') {
+      setCurrentPage('leaderboard');
     } else if (path === '/ideation' || path === '/ideation/chat' || path === '/ideation/blueprint') {
       if (loggedInUser) {
         if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
@@ -1604,6 +1701,21 @@ export default function App() {
           <ResetPassword onNavigate={handleNavigate} />
         ) : currentPage === 'verify-credential' ? (
           <VerifyCredential onNavigate={handleNavigate} />
+        ) : currentPage === 'leaderboard' ? (
+          <div className="min-h-screen pt-44 pb-20 px-4 bg-slate-50/50 relative overflow-hidden">
+            <div className="absolute top-[20%] left-0 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[100px] -z-10 animate-pulse" />
+            <div className="absolute bottom-[20%] right-0 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] -z-10" />
+            
+            <div className="max-w-6xl mx-auto">
+              <Leaderboard 
+                hideRegionFilter={true}
+                onViewProfile={(vlId) => {
+                  window.history.pushState({}, '', `/profile/${vlId}`);
+                  setCurrentPage('verify-profile');
+                }} 
+              />
+            </div>
+          </div>
         ) : currentPage === 'verify-profile' ? (
           <PublicProfile 
             userId={
