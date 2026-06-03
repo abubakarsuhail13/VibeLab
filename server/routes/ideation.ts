@@ -120,7 +120,7 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
     `;
 
     const response = await getGeminiClient().models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-3.1-flash-lite",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -219,7 +219,7 @@ router.post('/generate-blueprint', authenticateToken, async (req: any, res) => {
     `;
 
     const response = await getGeminiClient().models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-3.1-flash-lite",
       contents: prompt,
       config: {
         responseMimeType: "application/json"
