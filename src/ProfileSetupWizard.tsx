@@ -153,10 +153,10 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
       <div className="absolute top-20 left-10 w-72 h-72 bg-cyan-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-200/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-2xl w-full flex flex-col md:flex-row gap-8 items-stretch font-sans">
+      <div className="max-w-5xl w-full flex flex-col md:flex-row gap-8 items-stretch font-sans">
         
         {/* Left Side: Dynamic Info Sidebar */}
-        <div className="w-full md:w-[240px] flex flex-col justify-between bg-slate-900 text-white p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden shrink-0 shadow-xl">
+        <div className="w-full md:w-[280px] flex flex-col justify-between bg-slate-900 text-white p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden shrink-0 shadow-xl">
           <div className="space-y-6 z-10">
             <div className="w-10 h-10 bg-cyan-500/10 rounded-2xl flex items-center justify-center border border-cyan-500/30">
               <Sparkles className="w-5 h-5 text-cyan-400" />
