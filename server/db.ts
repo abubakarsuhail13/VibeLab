@@ -452,6 +452,10 @@ export const getPool = async () => {
             console.log('DB Migration: Adding column ideation_completed_at to users...');
             await connection.execute("ALTER TABLE users ADD COLUMN ideation_completed_at TIMESTAMP NULL");
           }
+          if (!names.includes('banner_url')) {
+            console.log('DB Migration: Adding column banner_url to users...');
+            await connection.execute("ALTER TABLE users ADD COLUMN banner_url LONGTEXT");
+          }
         } catch (migErr: any) {
           console.error("Migration error inside already-initialized DB:", migErr);
         }
