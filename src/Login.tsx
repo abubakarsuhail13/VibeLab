@@ -52,7 +52,11 @@ export default function Login({ onNavigate, onLoginSuccess }: LoginProps) {
         localStorage.setItem('vibelab_token', data.token);
         localStorage.setItem('vibelab_user', JSON.stringify(data.user));
         onLoginSuccess(data.user);
-        onNavigate('dashboard');
+        if (data.user.profile_completed === false || !data.user.profile_completed) {
+          onNavigate('profile-setup');
+        } else {
+          onNavigate('dashboard');
+        }
       } else {
         setError(data.error || "Login failed");
       }

@@ -42,6 +42,57 @@ router.post('/upload-banner', authenticateToken, upload.single('banner'), async 
   }
 });
 
+router.post('/profile-setup', authenticateToken, async (req: any, res) => {
+  const {
+    avatar_url,
+    date_of_birth,
+    gender,
+    country,
+    state_province,
+    city,
+    institution_name,
+    education_level,
+    field_of_study
+  } = req.body;
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    await p.execute(
+      `UPDATE users SET 
+        avatar_url = COALESCE(?, avatar_url),
+        date_of_birth = ?,
+        gender = ?,
+        country = COALESCE(?, country),
+        state_province = ?,
+        city = ?,
+        institution_name = ?,
+        education_level = ?,
+        field_of_study = ?,
+        profile_completed = 1
+       WHERE id = ?`,
+      [
+        avatar_url || null,
+        date_of_birth || null,
+        gender || null,
+        country || null,
+        state_province || null,
+        city || null,
+        institution_name || null,
+        education_level || null,
+        field_of_study || null,
+        req.user.userId
+      ]
+    );
+
+    res.json({ success: true, message: 'Profile completed successfully' });
+  } catch (error: any) {
+    console.error('POST /profile-setup error:', error);
+    res.status(500).json({ error: `Failed to complete profile: ${error.message || error}` });
+  }
+});
+
 router.patch('/profile', authenticateToken, async (req: any, res) => {
   const { name, country, bio, github_username } = req.body;
   try {

@@ -146,7 +146,10 @@ class LocalDatabasePool {
           { Field: 'id' }, { Field: 'name' }, { Field: 'email' }, { Field: 'password' },
           { Field: 'role' }, { Field: 'is_verified' }, { Field: 'verification_token' },
           { Field: 'vl_id' }, { Field: 'current_role' }, { Field: 'github_handle' },
-          { Field: 'github_url' }, { Field: 'linkedin_url' }, { Field: 'bio' }, { Field: 'country' }, { Field: 'banner_url' }
+          { Field: 'github_url' }, { Field: 'linkedin_url' }, { Field: 'bio' }, { Field: 'country' }, { Field: 'banner_url' },
+          { Field: 'account_type' }, { Field: 'date_of_birth' }, { Field: 'gender' },
+          { Field: 'state_province' }, { Field: 'city' }, { Field: 'institution_name' },
+          { Field: 'education_level' }, { Field: 'field_of_study' }, { Field: 'profile_completed' }
         ], []];
       }
 
@@ -456,6 +459,33 @@ export const getPool = async () => {
             console.log('DB Migration: Adding column banner_url to users...');
             await connection.execute("ALTER TABLE users ADD COLUMN banner_url LONGTEXT");
           }
+          if (!names.includes('account_type')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN account_type VARCHAR(100)");
+          }
+          if (!names.includes('date_of_birth')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN date_of_birth VARCHAR(100)");
+          }
+          if (!names.includes('gender')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN gender VARCHAR(100)");
+          }
+          if (!names.includes('state_province')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN state_province VARCHAR(100)");
+          }
+          if (!names.includes('city')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN city VARCHAR(100)");
+          }
+          if (!names.includes('institution_name')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN institution_name VARCHAR(255)");
+          }
+          if (!names.includes('education_level')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN education_level VARCHAR(100)");
+          }
+          if (!names.includes('field_of_study')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN field_of_study VARCHAR(100)");
+          }
+          if (!names.includes('profile_completed')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN profile_completed BOOLEAN DEFAULT FALSE");
+          }
         } catch (migErr: any) {
           console.error("Migration error inside already-initialized DB:", migErr);
         }
@@ -733,6 +763,15 @@ export const getPool = async () => {
         await addColumnIfNeeded('users', 'banner_url', 'LONGTEXT');
         await addColumnIfNeeded('users', 'ideation_completed', 'BOOLEAN DEFAULT FALSE');
         await addColumnIfNeeded('users', 'ideation_completed_at', 'TIMESTAMP NULL');
+        await addColumnIfNeeded('users', 'account_type', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'date_of_birth', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'gender', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'state_province', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'city', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'institution_name', 'VARCHAR(255)');
+        await addColumnIfNeeded('users', 'education_level', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'field_of_study', 'VARCHAR(100)');
+        await addColumnIfNeeded('users', 'profile_completed', 'BOOLEAN DEFAULT FALSE');
 
 
         // Migrate User Project Progress Columns

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Trophy, Github, Link as LinkIcon, CheckCircle2, User, Calendar, ExternalLink, Globe, Camera } from 'lucide-react';
+import { Trophy, Github, Link as LinkIcon, CheckCircle2, User, Calendar, ExternalLink, Globe, Camera, GraduationCap, School, BookOpen, MapPin, ShieldCheck } from 'lucide-react';
 
 interface PublicProfileProps {
   userId: string;
@@ -431,6 +431,85 @@ export default function PublicProfile({ userId, currentUser }: PublicProfileProp
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">
                     <span className="font-bold text-slate-700">Solution:</span> {blueprint.solution_concept}
                   </p>
+                </div>
+              </section>
+            )}
+
+            {/* Academic & Verification Profile CARD */}
+            {(profile.account_type || profile.institution_name) && (
+              <section className="bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl -mr-16 -mt-16" />
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center">
+                      <GraduationCap size={16} className="text-cyan-600" />
+                    </div>
+                    <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Verification Status</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    {profile.account_type && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 border border-slate-100">
+                          <User className="w-5 h-5 text-indigo-500" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Account Role</p>
+                          <p className="text-xs font-bold text-slate-800">{profile.account_type}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profile.institution_name && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 border border-slate-100">
+                          <School className="w-5 h-5 text-cyan-500" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Institution</p>
+                          <p className="text-xs font-bold text-slate-800 truncate" title={profile.institution_name}>{profile.institution_name}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profile.education_level && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 border border-slate-100">
+                          <GraduationCap className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Level</p>
+                          <p className="text-xs font-bold text-slate-800">{profile.education_level}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {profile.field_of_study && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 border border-slate-100">
+                          <BookOpen className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-sans">Field of Study</p>
+                          <p className="text-xs font-bold text-slate-800 font-sans">{profile.field_of_study}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {(profile.city || profile.state_province) && (
+                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 border border-slate-100">
+                          <MapPin className="w-5 h-5 text-rose-500" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Coordinates</p>
+                          <p className="text-xs font-bold text-slate-800 font-sans">
+                            {[profile.city, profile.state_province].filter(Boolean).join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </section>
             )}

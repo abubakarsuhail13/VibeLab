@@ -146,7 +146,7 @@ router.get('/profile/:vl_id', async (req, res) => {
 
     // Find user by VL-ID
     const [userRows]: any = await p.execute(
-      'SELECT id, name, email, avatar_url, banner_url, role, country, bio, github_url, github_handle, linkedin_url, current_role, created_at FROM users WHERE vl_id = ?',
+      'SELECT id, name, email, avatar_url, banner_url, role, country, bio, github_url, github_handle, linkedin_url, current_role, created_at, account_type, date_of_birth, gender, state_province, city, institution_name, education_level, field_of_study FROM users WHERE vl_id = ?',
       [vl_id]
     );
 
@@ -204,7 +204,15 @@ router.get('/profile/:vl_id', async (req, res) => {
         current_role: user.current_role,
         vl_id,
         created_at: user.created_at,
-        registration_date: user.created_at
+        registration_date: user.created_at,
+        account_type: user.account_type,
+        date_of_birth: user.date_of_birth,
+        gender: user.gender,
+        state_province: user.state_province,
+        city: user.city,
+        institution_name: user.institution_name,
+        education_level: user.education_level,
+        field_of_study: user.field_of_study
       },
       activePhase,
       badges: badgeRows,
@@ -268,7 +276,7 @@ router.get('/user/:userId/profile', async (req, res) => {
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
-    const [rows]: any = await p.execute('SELECT id, name, avatar_url, banner_url, role, country, bio, linkedin_url, github_url, github_handle, current_role, vl_id, created_at FROM users WHERE id = ?', [userId]);
+    const [rows]: any = await p.execute('SELECT id, name, avatar_url, banner_url, role, country, bio, linkedin_url, github_url, github_handle, current_role, vl_id, created_at, account_type, date_of_birth, gender, state_province, city, institution_name, education_level, field_of_study FROM users WHERE id = ?', [userId]);
     if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
     const user = rows[0];
     user.github_username = user.github_handle;

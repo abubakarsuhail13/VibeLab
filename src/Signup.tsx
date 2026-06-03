@@ -1,17 +1,37 @@
 import { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, Mail, Lock, User, GraduationCap, School, ArrowRight, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { Sparkles, Mail, Lock, User, GraduationCap, School, ArrowRight, AlertCircle, Loader2, CheckCircle2, Globe, ShieldCheck, BookOpen } from "lucide-react";
 
 interface SignupProps {
   onNavigate: (page: string) => void;
   onLoginSuccess: (user: any) => void;
 }
 
+// List of standard countries for simple visual select
+const countries = [
+  "United States",
+  "India",
+  "Bangladesh",
+  "Pakistan",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "United Arab Emirates",
+  "Singapore",
+  "Saudi Arabia",
+  "Malaysia",
+  "Other"
+];
+
 export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"student" | "teacher">("student");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [accountType, setAccountType] = useState<"School Student" | "College / University Student" | "Teacher">("School Student");
+  const [country, setCountry] = useState("United Kingdom");
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isRegistered, setIsRegistered] = useState(false);
@@ -23,11 +43,30 @@ export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
     setLoading(true);
     setError("");
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    if (!acceptTerms) {
+      setError("You must accept the Terms and Privacy Policy to register");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role: accountType === "Teacher" ? "teacher" : "student",
+          account_type: accountType,
+          country
+        }),
       });
 
       const data = await response.json();
@@ -37,6 +76,7 @@ export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
         setShowToast(true);
         setIsRegistered(true);
         setPassword("");
+        setConfirmPassword("");
       } else {
         setError(data.error || "Registration failed");
       }
@@ -110,7 +150,7 @@ export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
             </div>
             
             <h2 className="font-display text-3xl font-bold text-slate-900 text-center mb-2">Join VibeLab</h2>
-            <p className="text-slate-500 text-center mb-8 font-medium">Start your project-based learning adventure</p>
+            <p className="text-slate-400 text-center text-sm mb-6 font-medium">Start your project-based learning adventure</p>
 
             {error && (
               <motion.div 
@@ -123,34 +163,50 @@ export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in">
-              <div className="flex gap-4 p-1 bg-slate-100 rounded-[1.25rem] mb-6">
-                <button
-                  type="button"
-                  onClick={() => setRole("student")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-                    role === "student" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  <GraduationCap className="w-4 h-4" />
-                  Student
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole("teacher")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-                    role === "teacher" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  <School className="w-4 h-4" />
-                  Teacher
-                </button>
+            <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in">
+              
+              {/* Account Type Sector Selection */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Account Type *</label>
+                <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setAccountType("School Student")}
+                    className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+                      accountType === "School Student" ? "bg-white text-slate-900 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>School</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAccountType("College / University Student")}
+                    className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+                      accountType === "College / University Student" ? "bg-white text-slate-900 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <GraduationCap className="w-3.5 h-3.5" />
+                    <span>College</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAccountType("Teacher")}
+                    className={`flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+                      accountType === "Teacher" ? "bg-white text-slate-900 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    <School className="w-3.5 h-3.5" />
+                    <span>Teacher</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Full Name</label>
+              {/* Full Name */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Full Name *</label>
                 <div className="relative">
-                  <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <User className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input 
                     type="text" 
                     required
@@ -158,31 +214,54 @@ export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="First & Last Name"
                     autoComplete="name"
-                    className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 font-medium placeholder:text-slate-300"
+                    className="w-full pl-12 pr-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 text-sm font-medium placeholder:text-slate-300 shadow-sm"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Email Address</label>
+              {/* Email */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Email Address *</label>
                 <div className="relative">
-                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input 
                     type="email" 
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="yours@example.com"
+                    placeholder="name@example.com"
                     autoComplete="email"
-                    className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 font-medium placeholder:text-slate-300"
+                    className="w-full pl-12 pr-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 text-sm font-medium placeholder:text-slate-300 shadow-sm"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Password</label>
+              {/* Country Selection */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Country *</label>
                 <div className="relative">
-                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Globe className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <select
+                    value={country}
+                    required
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full pl-12 pr-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 text-sm font-medium shadow-sm appearance-none"
+                  >
+                    {countries.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none border-l border-slate-100 pl-3">
+                    <span className="text-slate-400 text-xs">▼</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Password *</label>
+                <div className="relative">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input 
                     type="password" 
                     required
@@ -190,29 +269,60 @@ export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Minimum 8 characters"
                     autoComplete="new-password"
-                    className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 font-medium placeholder:text-slate-300"
+                    className="w-full pl-12 pr-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 text-sm font-medium placeholder:text-slate-300 shadow-sm"
                   />
                 </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Confirm Password *</label>
+                <div className="relative">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input 
+                    type="password" 
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Verify your password"
+                    autoComplete="new-password"
+                    className="w-full pl-12 pr-5 py-3 rounded-2xl bg-slate-50 border border-slate-100 focus:border-cyan-500 focus:bg-white transition-all outline-none text-slate-900 text-sm font-medium placeholder:text-slate-300 shadow-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Terms Checkbox */}
+              <div className="flex items-start gap-3 pt-2">
+                <input
+                  type="checkbox"
+                  id="accept-terms"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-1 accent-cyan-600 rounded cursor-pointer w-4 h-4"
+                />
+                <label htmlFor="accept-terms" className="text-xs text-slate-500 font-medium select-none cursor-pointer leading-relaxed">
+                  I accept the <a href="#" onClick={(e) => e.preventDefault()} className="text-cyan-600 hover:underline">Terms of Service</a> & <a href="#" onClick={(e) => e.preventDefault()} className="text-cyan-600 hover:underline">Privacy Policy</a>
+                </label>
               </div>
 
               <button 
                 type="submit"
                 disabled={loading}
-                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-cyan-900/10 flex items-center justify-center gap-3 group disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white py-3.5 rounded-2xl font-bold transition-all shadow-lg shadow-cyan-900/10 flex items-center justify-center gap-3 group disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer mt-4"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
                     Create Account
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
             </form>
 
-            <div className="mt-10 pt-8 border-t border-slate-100 text-center">
-              <p className="text-sm text-slate-500 font-medium font-sans">
+            <div className="mt-8 pt-6 border-t border-slate-150 text-center">
+              <p className="text-xs text-slate-500 font-medium font-sans">
                 Already have an account?{" "}
                 <button 
                   onClick={() => onNavigate('login')}

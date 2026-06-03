@@ -10,9 +10,19 @@ import { JWT_SECRET } from '../auth.js';
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
-  const { name, email, password, role } = req.body;
-  if (!name || !email || !password || !role) {
-    return res.status(400).json({ error: 'All fields are required' });
+  const { name, email, password, role, account_type, country } = req.body;
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'Name, email, and password are required' });
+  }
+
+  // Determine role from account_type if specified
+  let finalRole = role || 'student';
+  if (account_type) {
+    if (account_type.toLowerCase().includes('teacher')) {
+      finalRole = 'teacher';
+    } else {
+      finalRole = 'student';
+    }
   }
 
   try {
@@ -45,8 +55,8 @@ router.post('/register', async (req, res) => {
     }
 
     const [result]: any = await p.execute(
-      'INSERT INTO users (name, email, password, role, verification_token, vl_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, email, hashedPassword, role, verificationToken, vlId]
+      'INSERT INTO users (name, email, password, role, verification_token, vl_id, account_type, country, profile_completed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)',
+      [name, email, hashedPassword, finalRole, verificationToken, vlId, account_type || null, country || 'Worldwide']
     );
 
     const userId = result.insertId;
@@ -136,7 +146,10 @@ router.post('/login', async (req, res) => {
         email: user.email,
         role: user.role,
         avatar_url: user.avatar_url,
-        vl_id: user.vl_id
+        vl_id: user.vl_id,
+        account_type: user.account_type,
+        country: user.country,
+        profile_completed: !!user.profile_completed
       }
     });
   } catch (error: any) {

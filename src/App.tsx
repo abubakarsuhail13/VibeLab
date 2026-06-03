@@ -40,6 +40,7 @@ import VerifyCredential from "./VerifyCredential";
 import IdeationEntry from "./IdeationEntry";
 import IdeationChat from "./IdeationChat";
 import IdeationBlueprint from "./IdeationBlueprint";
+import ProfileSetupWizard from "./ProfileSetupWizard";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [password, setPassword] = useState("");
@@ -1515,18 +1516,25 @@ export default function App() {
       setCurrentPage('verify-profile');
     } else if (path === '/ideation' || path === '/ideation/chat' || path === '/ideation/blueprint') {
       if (loggedInUser) {
-        if (path === '/ideation') setCurrentPage('ideation');
-        else if (path === '/ideation/chat') setCurrentPage('ideation-chat');
-        else setCurrentPage('ideation-blueprint');
+        if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
+          setCurrentPage('profile-setup');
+        } else {
+          if (path === '/ideation') setCurrentPage('ideation');
+          else if (path === '/ideation/chat') setCurrentPage('ideation-chat');
+          else setCurrentPage('ideation-blueprint');
+        }
       } else {
         setCurrentPage('login');
         window.history.replaceState({}, document.title, '/login');
       }
     } else if (loggedInUser) {
-      // Logged in users belong on the dashboard instead of home, login, or signup
-      setCurrentPage('dashboard');
-      if (path !== '/') {
-        window.history.replaceState({}, document.title, '/');
+      if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
+        setCurrentPage('profile-setup');
+      } else {
+        setCurrentPage('dashboard');
+        if (path !== '/') {
+          window.history.replaceState({}, document.title, '/');
+        }
       }
     } else if (path === '/login') {
       setCurrentPage('login');
@@ -1584,6 +1592,8 @@ export default function App() {
           <Login onNavigate={handleNavigate} onLoginSuccess={setUser} />
         ) : currentPage === 'signup' ? (
           <Signup onNavigate={handleNavigate} onLoginSuccess={setUser} />
+        ) : currentPage === 'profile-setup' ? (
+          <ProfileSetupWizard user={user} onUpdateUser={setUser} onNavigate={handleNavigate} />
         ) : currentPage === 'dashboard' ? (
           <Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />
         ) : currentPage === 'verify-email' ? (
@@ -1613,7 +1623,7 @@ export default function App() {
           <ContactPage onNavigate={handleNavigate} />
         )}
       </main>
-      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && currentPage !== 'ideation' && currentPage !== 'ideation-chat' && currentPage !== 'ideation-blueprint' && <Footer onNavigate={handleNavigate} />}
+      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && currentPage !== 'ideation' && currentPage !== 'ideation-chat' && currentPage !== 'ideation-blueprint' && currentPage !== 'profile-setup' && <Footer onNavigate={handleNavigate} />}
     </div>
   );
 }
