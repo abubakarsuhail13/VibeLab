@@ -357,15 +357,15 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
             {currentSlide === 5 && (
               <div className="space-y-8 max-w-5xl w-full">
                 <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white">
-                  YOUR JOURNEY HAS <span className="text-[#C9A84C]">5 PHASES</span>
+                  YOUR PROJECT LIFECYCLE HAS <span className="text-[#C9A84C]">5 PHASES</span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-4 w-full">
                   {[
-                    { phase: "PHASE 1", title: "Ideation", icon: "🔍", desc: "Discover your problem" },
-                    { phase: "PHASE 2", title: "Product Creation", icon: "🏗️", desc: "Build your product" },
-                    { phase: "PHASE 3", title: "Testing & Validation", icon: "🧪", desc: "Test and improve" },
-                    { phase: "PHASE 4", title: "Deployment", icon: "🚀", desc: "Launch it live" },
-                    { phase: "PHASE 5", title: "Portfolio", icon: "🏆", desc: "Show the world" }
+                    { phase: "PHASE 1", title: "Ideation", icon: "🔍", desc: "Brainstorm and discover your project" },
+                    { phase: "PHASE 2", title: "Product Creation", icon: "🏗️", desc: "Build modular custom tools" },
+                    { phase: "PHASE 3", title: "Testing & Validation", icon: "🧪", desc: "Validate logic and run sandbox tests" },
+                    { phase: "PHASE 4", title: "Deployment", icon: "🚀", desc: "Deploy your containerized service live" },
+                    { phase: "PHASE 5", title: "Portfolio", icon: "🏆", desc: "Show your verified badges to the world" }
                   ].map((step, idx) => (
                     <motion.div
                       key={idx}
@@ -384,8 +384,8 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                   ))}
                 </div>
                 <div className="space-y-1 text-slate-400 font-medium text-sm md:text-base">
-                  <p>Each phase builds on the last.</p>
-                  <p className="text-[#C9A84C]/90 font-bold uppercase tracking-wide text-xs">You will finish with a real product you can be proud of.</p>
+                  <p>You conquer these checkpoints by following VibeLab's 7-Phase Python-to-Agent Mastery Path.</p>
+                  <p className="text-[#C9A84C]/90 font-bold uppercase tracking-wide text-xs">Unlock certificates, solid badges, and full deployment validation in every milestone!</p>
                 </div>
               </div>
             )}

@@ -74,6 +74,14 @@ interface PhaseViewProps {
   onProgress?: () => void;
 }
 
+export function formatPhaseNameForUI(name: string): string {
+  if (!name) return name;
+  return name.replace(/Phase\s+(\d+)/gi, (match, digit) => {
+    const num = parseInt(digit, 10);
+    return `Phase ${num + 1}`;
+  });
+}
+
 export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProps) {
   const [phase, setPhase] = useState<Phase | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -880,7 +888,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           </button>
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-display font-bold text-slate-900">{phase.name}</h1>
+              <h1 className="text-3xl font-display font-bold text-slate-900">{formatPhaseNameForUI(phase.name)}</h1>
               {hasBadge && (
                 <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100 shadow-sm">
                   <Trophy className="w-3 h-3" />
@@ -2055,13 +2063,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
 
                <div className="aspect-video bg-slate-100 rounded-3xl flex flex-col items-center justify-center text-slate-400 mb-8 border-2 border-dashed border-slate-200">
                   <Play className="w-12 h-12 mb-4 opacity-20" />
-                  <p className="text-sm font-medium">Resource content preview for Phase 1</p>
+                  <p className="text-sm font-medium">Resource content preview for Phase 2</p>
                   <p className="text-[10px] uppercase tracking-widest font-black mt-2">Locked to VibeLab premium</p>
                </div>
 
                <div className="space-y-4">
                  <p className="text-slate-600 leading-relaxed">
-                   This resource covers essential concepts required for the {phase.name.split(':')[1]?.trim()} module. 
+                   This resource covers essential concepts required for the {(formatPhaseNameForUI(phase.name).split(/[:—]/)[1] || formatPhaseNameForUI(phase.name)).trim()} module. 
                    Review the content carefully as these topics will be directly applied in your builds.
                  </p>
                  <div className="flex gap-3">
@@ -2100,7 +2108,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                
                <h2 className="text-3xl font-display font-bold text-slate-900 mb-4">Congratulations!</h2>
                <p className="text-slate-600 mb-8 leading-relaxed">
-                 You have successfully completed all projects and requirements for <strong>{phase.name}</strong>. 
+                 You have successfully completed all projects and requirements for <strong>{formatPhaseNameForUI(phase.name)}</strong>. 
                  Your badge has been issued and your digital profile is updated.
                </p>
 

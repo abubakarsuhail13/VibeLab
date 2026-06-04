@@ -160,7 +160,7 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
         <span>VibeLab Ideation Suite</span>
       </div>
       <div className="absolute bottom-8 right-8 hidden sm:block text-slate-500 font-jetbrains text-[10px] tracking-widest uppercase">
-        <span>PHASE 00</span>
+        <span>PHASE 01</span>
       </div>
     </div>
   );

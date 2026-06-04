@@ -28,7 +28,8 @@ import {
   GraduationCap,
   X,
   Plus,
-  Trash2
+  Trash2,
+  BrainCircuit
 } from "lucide-react";
 import PhaseView from "./PhaseView";
 import Leaderboard from "./Leaderboard";
@@ -46,6 +47,14 @@ interface Phase {
   description: string;
   status: 'locked' | 'active' | 'completed';
   progress_percentage: number;
+}
+
+export function formatPhaseNameForUI(name: string): string {
+  if (!name) return name;
+  return name.replace(/Phase\s+(\d+)/gi, (match, digit) => {
+    const num = parseInt(digit, 10);
+    return `Phase ${num + 1}`;
+  });
 }
 
 export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: DashboardProps) {
@@ -368,9 +377,11 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
 
   const completedProjects = progressData?.projectProgress.filter(p => p.is_completed).length || 0;
   const activeProjects = progressData?.projectProgress.filter(p => !p.is_completed).length || 0;
-  const totalPhaseProgress = phases.length > 0 
-    ? Math.round(phases.reduce((acc, p) => acc + (p.progress_percentage || 0), 0) / phases.length)
+  const ideationProgress = user?.ideation_completed ? 100 : 0;
+  const dbPhasesProgressTotal = phases.length > 0 
+    ? phases.reduce((acc, p) => acc + (p.progress_percentage || 0), 0)
     : 0;
+  const totalPhaseProgress = Math.round((ideationProgress + dbPhasesProgressTotal) / 8);
 
   const stats = [
     { label: "Active Projects", value: activeProjects.toString(), icon: <Rocket className="w-5 h-5 text-cyan-500" />, bg: "bg-cyan-50" },
@@ -607,35 +618,63 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                   ))}
                 </div>
               ) : (
-                phases.map((phase) => {
-                  const isPhase1Locked = phase.id === 1 && (user?.ideation_completed === false || user?.ideation_completed === undefined);
-                  return (
-                    <button 
-                      key={phase.id}
-                      onClick={() => handlePhaseClick(phase.id)}
-                      disabled={phase.status === 'locked' && !isPhase1Locked}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
-                        activeView === 'phase' && selectedPhaseId === phase.id
-                          ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
-                          : (phase.status === 'locked' && !isPhase1Locked)
-                            ? 'text-slate-300 cursor-not-allowed'
-                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center gap-4 overflow-hidden">
-                        {isPhase1Locked ? (
-                          <Lock className="w-5 h-5 shrink-0 text-[#C9A84C]" />
-                        ) : phase.status === 'locked' ? (
-                           <Lock className="w-5 h-5 shrink-0" />
-                        ) : (
-                           <BookOpen className="w-5 h-5 shrink-0" />
-                        )}
-                        <span className="truncate">{phase.name}</span>
-                      </div>
-                      {phase.status === 'completed' && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
-                    </button>
-                  );
-                })
+                <>
+                  {/* Phase 1: Discovery & Ideation */}
+                  <button
+                    onClick={() => {
+                      if (onNavigate) {
+                        onNavigate(user?.ideation_completed ? 'ideation-blueprint' : 'ideation');
+                      } else {
+                        navigate(user?.ideation_completed ? '/ideation/blueprint' : '/ideation');
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
+                      activeView === 'ideation' 
+                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
+                        : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      {user?.ideation_completed ? (
+                        <BookOpen className="w-5 h-5 shrink-0 text-emerald-500" />
+                      ) : (
+                        <BrainCircuit className="w-5 h-5 shrink-0 text-[#C9A84C]" />
+                      )}
+                      <span className="truncate">Phase 1 — Discovery & Ideation</span>
+                    </div>
+                    {user?.ideation_completed && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
+                  </button>
+
+                  {phases.map((phase) => {
+                    const isPhase1Locked = phase.id === 1 && (user?.ideation_completed === false || user?.ideation_completed === undefined);
+                    return (
+                      <button 
+                        key={phase.id}
+                        onClick={() => handlePhaseClick(phase.id)}
+                        disabled={phase.status === 'locked' && !isPhase1Locked}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
+                          activeView === 'phase' && selectedPhaseId === phase.id
+                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
+                            : (phase.status === 'locked' && !isPhase1Locked)
+                              ? 'text-slate-300 cursor-not-allowed'
+                              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          {isPhase1Locked ? (
+                            <Lock className="w-5 h-5 shrink-0 text-[#C9A84C]" />
+                          ) : phase.status === 'locked' ? (
+                             <Lock className="w-5 h-5 shrink-0" />
+                          ) : (
+                             <BookOpen className="w-5 h-5 shrink-0" />
+                          )}
+                          <span className="truncate">{formatPhaseNameForUI(phase.name)}</span>
+                        </div>
+                        {phase.status === 'completed' && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </>
               )}
             </>
           )}
@@ -1257,7 +1296,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                  </div>
                                  <div className="min-w-0">
                                     <p className="text-xs font-bold text-slate-900 truncate">
-                                      {phases.find(p => p.status === 'active')?.name || 'None Active'}
+                                      {formatPhaseNameForUI(phases.find(p => p.status === 'active')?.name || 'None Active')}
                                     </p>
                                     <p className="text-[10px] text-slate-400 font-medium tracking-wide">Current Focus</p>
                                  </div>
@@ -1279,40 +1318,50 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
 
                               {/* Progress Markers */}
                               <div className="relative flex justify-between items-center h-20">
-                                 {phases.map((phase, idx) => {
-                                   const isCompleted = phase.status === 'completed';
-                                   const isActive = phase.status === 'active';
-                                   return (
-                                     <div key={idx} className="relative flex flex-col items-center">
-                                       <motion.div 
-                                         initial={{ scale: 0 }}
-                                         animate={{ scale: 1 }}
-                                         transition={{ delay: 0.5 + (idx * 0.1) }}
-                                         className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 z-10 ${
-                                           isCompleted ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 
-                                           isActive ? 'bg-white border-4 border-emerald-500 text-emerald-500 shadow-xl' :
-                                           'bg-white border-2 border-slate-200 text-slate-300'
-                                         }`}
-                                       >
-                                         {isCompleted ? <CheckCircle2 size={16} /> : <span className="text-xs font-black">{idx + 1}</span>}
-                                       </motion.div>
-                                       {isActive && (
+                                 {(() => {
+                                   const checkpoints = [
+                                     { name: 'Discovery & Ideation', isCompleted: !!user?.ideation_completed, isActive: !user?.ideation_completed },
+                                     ...phases.map((p) => ({
+                                       name: formatPhaseNameForUI(p.name),
+                                       isCompleted: !!user?.ideation_completed && p.status === 'completed',
+                                       isActive: !!user?.ideation_completed && p.status === 'active'
+                                     }))
+                                   ];
+                                   return checkpoints.map((chk, idx) => {
+                                     const isCompleted = chk.isCompleted;
+                                     const isActive = chk.isActive;
+                                     return (
+                                       <div key={idx} className="relative flex flex-col items-center">
                                          <motion.div 
-                                           initial={{ opacity: 0, y: 10 }}
-                                           animate={{ opacity: 1, y: 0 }}
-                                           className="absolute -bottom-8 whitespace-nowrap text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100"
+                                           initial={{ scale: 0 }}
+                                           animate={{ scale: 1 }}
+                                           transition={{ delay: 0.5 + (idx * 0.1) }}
+                                           className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-500 z-10 ${
+                                             isCompleted ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 
+                                             isActive ? 'bg-white border-4 border-emerald-500 text-emerald-500 shadow-xl' :
+                                             'bg-white border-2 border-slate-200 text-slate-300'
+                                           }`}
                                          >
-                                           In Progress
+                                           {isCompleted ? <CheckCircle2 size={16} /> : <span className="text-xs font-black">{idx + 1}</span>}
                                          </motion.div>
-                                       )}
-                                       {idx === phases.length - 1 && (
-                                         <div className="absolute -top-8 right-0 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                           Goal: {phases.length}
-                                         </div>
-                                       )}
-                                     </div>
-                                   );
-                                 })}
+                                         {isActive && (
+                                           <motion.div 
+                                             initial={{ opacity: 0, y: 10 }}
+                                             animate={{ opacity: 1, y: 0 }}
+                                             className="absolute -bottom-8 whitespace-nowrap text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100"
+                                           >
+                                             In Progress
+                                           </motion.div>
+                                         )}
+                                         {idx === checkpoints.length - 1 && (
+                                           <div className="absolute -top-8 right-0 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                             Goal: {checkpoints.length}
+                                           </div>
+                                         )}
+                                       </div>
+                                     );
+                                   });
+                                 })()}
                               </div>
                            </div>
                            
@@ -1976,11 +2025,11 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                       </div>
                       
                       <h2 className="font-bebas text-3xl sm:text-5xl text-white tracking-widest leading-none">
-                        Complete the Ideation Lab first
+                        Complete Phase 1 Ideation first
                       </h2>
                       
                       <p className="text-slate-400 text-sm leading-relaxed font-medium">
-                        Discover your project idea before you start coding
+                        Discover your project idea in Phase 1 before you start coding in Phase 2
                       </p>
                       
                       <div className="pt-4">
@@ -1994,7 +2043,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                           }}
                           className="w-full sm:w-auto inline-flex items-center justify-center bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-extrabold text-sm px-8 py-4 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/15 active:scale-[0.98] cursor-pointer"
                         >
-                          Go to Ideation Lab →
+                          Go to Phase 1 Ideation →
                         </button>
                       </div>
                     </div>

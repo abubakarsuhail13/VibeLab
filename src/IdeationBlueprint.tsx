@@ -379,7 +379,7 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
               onClick={() => onNavigate("dashboard")}
               className="flex-grow bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-extrabold text-base px-8 py-4.5 rounded-2xl transition-all shadow-xl shadow-[#C9A84C]/10 active:scale-[0.98] select-none text-center"
             >
-              Unlock Phase 1 — Start Building →
+              Unlock Phase 2 — Start Building →
             </button>
             <button
               onClick={handleShare}

@@ -792,7 +792,7 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           </h1>
           
           <p className="text-xl text-slate-600 max-w-xl mb-12 leading-relaxed">
-            Master software engineering and AI through a project-driven 7-phase journey. From core foundations to career-ready fullstack architect.
+            Master software engineering and AI systems through a project-driven 7-phase journey. From Python foundations to certified AI agent developers and cloud-ready architects.
           </p>
 
           <form onSubmit={handleWaitlistJoin} className="flex flex-col sm:flex-row gap-3 mb-8 max-w-lg">
@@ -1481,13 +1481,13 @@ const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 
 const LearningPathSection = () => {
   const phases = [
-    { id: 1, name: "Foundations", desc: "Web fundamentals & core logic." },
-    { id: 2, name: "Frontend", desc: "Modern UI with React & Tailwind." },
-    { id: 3, name: "Backend", desc: "Server-side logic & robust APIs." },
-    { id: 4, name: "Databases", desc: "Data structures & optimization." },
-    { id: 5, name: "AI Systems", desc: "LLM integration & prompt engineering." },
-    { id: 6, name: "Architecture", desc: "Fullstack patterns at scale." },
-    { id: 7, name: "Career", desc: "Portfolio & interview prep." }
+    { id: 1, name: "Learn Python", desc: "Master variables, HTTP requests, APIs, JSON parsing, and solid OOP fundamentals in Python." },
+    { id: 2, name: "LLM & AI Basics", desc: "Understand tokens, context windows, text/image embeddings, prompt techniques, and vector DBs." },
+    { id: 3, name: "Build Projects", desc: "Build applications chaining multiple LLM prompts, structured data pipelines, and user flows." },
+    { id: 4, name: "AI Agents & MCP", desc: "Explore agent memory, reactive loops, tool-calling pipelines, and Model Context Protocol (MCP)." },
+    { id: 5, name: "Academic Literature", desc: "Analyze research papers on ReAct, Toolformer, Tree of Thoughts, and reflective architectures." },
+    { id: 6, name: "Live Courses & Certs", desc: "Solve interactive capstone courses from DeepLearning.AI and LangChain to earn verified badges." },
+    { id: 7, name: "Deployment & Scale", desc: "Publish production ready, containerized FastAPI and Docker services to cloud clusters with CI/CD." }
   ];
 
   return (
