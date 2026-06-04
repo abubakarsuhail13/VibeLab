@@ -34,6 +34,8 @@
     "prismjs": "^1.30.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.16.0",
     "react-simple-code-editor": "^0.14.1",
     "resend": "^6.12.3",
     "vite": "^6.2.0"

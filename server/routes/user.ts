@@ -42,6 +42,45 @@ router.post('/upload-banner', authenticateToken, upload.single('banner'), async 
   }
 });
 
+router.get('/me', authenticateToken, async (req: any, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [rows]: any = await p.execute(
+      `SELECT id, vl_id, name, email, role, avatar_url, country,
+              profile_completed, onboarding_completed, intro_completed, ideation_completed
+       FROM users WHERE id = ?`,
+      [req.user.userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const u = rows[0];
+    res.json({
+      success: true,
+      user: {
+        id: u.id,
+        vl_id: u.vl_id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        avatar_url: u.avatar_url,
+        country: u.country,
+        profile_completed: u.profile_completed === 1 || u.profile_completed === true || u.onboarding_completed === 1 || u.onboarding_completed === true,
+        onboarding_completed: u.onboarding_completed === 1 || u.onboarding_completed === true || u.profile_completed === 1 || u.profile_completed === true,
+        intro_completed: u.intro_completed === 1 || u.intro_completed === true,
+        ideation_completed: u.ideation_completed === 1 || u.ideation_completed === true
+      }
+    });
+  } catch (error: any) {
+    console.error('GET /me error:', error);
+    res.status(500).json({ error: 'Failed to retrieve current user details' });
+  }
+});
+
 router.post('/profile-setup', authenticateToken, async (req: any, res) => {
   const {
     avatar_url,
@@ -70,7 +109,9 @@ router.post('/profile-setup', authenticateToken, async (req: any, res) => {
         institution_name = ?,
         education_level = ?,
         field_of_study = ?,
-        profile_completed = 1
+        profile_completed = 1,
+        onboarding_completed = 1,
+        onboarding_completed_at = NOW()
        WHERE id = ?`,
       [
         avatar_url || null,
@@ -86,7 +127,12 @@ router.post('/profile-setup', authenticateToken, async (req: any, res) => {
       ]
     );
 
-    res.json({ success: true, message: 'Profile completed successfully' });
+    res.json({
+      success: true,
+      message: 'Profile completed successfully',
+      onboarding_completed: true,
+      profile_completed: true
+    });
   } catch (error: any) {
     console.error('POST /profile-setup error:', error);
     res.status(500).json({ error: `Failed to complete profile: ${error.message || error}` });

@@ -30,6 +30,8 @@ import {
   X
 } from "lucide-react";
 import { useState, useRef, useEffect, FormEvent } from "react";
+import { Toaster } from "react-hot-toast";
+import { Routes, Route, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import AboutPage from "./About";
 import ContactPage from "./Contact";
 import Login from "./Login";
@@ -1527,16 +1529,50 @@ const LearningPathSection = () => {
   );
 };
 
+const PublicProfileWrapper = ({ currentUser }: { currentUser: any }) => {
+  const { id } = useParams<{ id: string }>();
+  return <PublicProfile userId={id || ""} currentUser={currentUser} />;
+};
+
+const LandingPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
+  return (
+    <>
+      <Hero onNavigate={onNavigate} />
+      <TrustedBy />
+      <LearningPathSection />
+      <Problem />
+      <Solution />
+      <HowItWorks />
+      <LearningZones />
+      <Audience />
+      <FinalCTA onNavigate={onNavigate} />
+    </>
+  );
+};
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Load user from localStorage immediately
+  const [user, setUser] = useState<any>(() => {
+    const savedUser = localStorage.getItem('vibelab_user');
+    if (savedUser && savedUser !== 'undefined') {
+      try {
+        return JSON.parse(savedUser);
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+      }
+    }
+    return null;
+  });
+
+  const [loadingSession, setLoadingSession] = useState(true);
 
   const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-
     const routeMap: Record<string, string> = {
       home: '/',
-      dashboard: '/',
+      dashboard: '/dashboard',
       login: '/login',
       signup: '/signup',
       'verify-credential': '/verify-credential',
@@ -1550,12 +1586,14 @@ export default function App() {
       ideation: '/ideation',
       'ideation-chat': '/ideation/chat',
       'ideation-blueprint': '/ideation/blueprint',
-      intro: '/intro'
+      intro: '/intro',
+      'profile-setup': '/onboarding',
+      'employers': '/employers'
     };
 
     const targetPath = routeMap[page];
     if (targetPath) {
-      window.history.replaceState({}, document.title, targetPath);
+      navigate(targetPath);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1566,120 +1604,137 @@ export default function App() {
     const oauthToken = params.get('token');
     const oauthUser = params.get('user');
 
-    let loggedInUser: any = null;
-
     if (oauthToken && oauthUser) {
       try {
         const parsedUser = JSON.parse(decodeURIComponent(oauthUser));
         localStorage.setItem('vibelab_token', oauthToken);
         localStorage.setItem('vibelab_user', JSON.stringify(parsedUser));
         setUser(parsedUser);
-        loggedInUser = parsedUser;
-        setCurrentPage('dashboard');
-
-        // Clean up the URL query params without reloading the page
-        window.history.replaceState({}, document.title, '/');
+        navigate('/dashboard', { replace: true });
+        setLoadingSession(false);
       } catch (err) {
         console.error("Failed to parse OAuth callback user parameters", err);
+        setLoadingSession(false);
       }
     } else {
-      // 2. Load existing session
-      const savedUser = localStorage.getItem('vibelab_user');
-      if (savedUser && savedUser !== 'undefined') {
-        try {
-          const parsed = JSON.parse(savedUser);
-          setUser(parsed);
-          loggedInUser = parsed;
-        } catch (e) {
-          console.error("Failed to parse user from localStorage", e);
-        }
-      }
-    }
-
-    // 3. Handle URL based routing with logged in state awareness
-    const path = window.location.pathname;
-    if (path === '/verify-email') {
-      if (loggedInUser) {
-        setCurrentPage('dashboard');
-        window.history.replaceState({}, document.title, '/');
+      // Fetch latest user status to synchronize session flags
+      const storedToken = localStorage.getItem('vibelab_token');
+      if (storedToken) {
+        fetch('/api/user/me', {
+          headers: {
+            'Authorization': `Bearer ${storedToken}`
+          }
+        })
+          .then(res => {
+            if (res.ok) return res.json();
+            throw new Error('Failed to validate session');
+          })
+          .then(data => {
+            if (data.user) {
+              localStorage.setItem('vibelab_user', JSON.stringify(data.user));
+              setUser(data.user);
+            }
+          })
+          .catch(err => {
+            console.error("Session sync failed:", err);
+          })
+          .finally(() => {
+            setLoadingSession(false);
+          });
       } else {
-        setCurrentPage('verify-email');
+        setLoadingSession(false);
       }
-    } else if (path === '/reset-password') {
-      setCurrentPage('reset-password');
-    } else if (path === '/verify-credential' || path === '/verify') {
-      setCurrentPage('verify-credential');
-    } else if (path.startsWith('/verify/') || path.startsWith('/profile/')) {
-      setCurrentPage('verify-profile');
-    } else if (path === '/leaderboard') {
-      setCurrentPage('leaderboard');
-    } else if (path === '/intro') {
-      if (loggedInUser) {
-        if (loggedInUser.intro_completed) {
-          setCurrentPage('dashboard');
-          window.history.replaceState({}, document.title, '/');
-        } else {
-          setCurrentPage('intro');
-        }
-      } else {
-        setCurrentPage('login');
-        window.history.replaceState({}, document.title, '/login');
-      }
-    } else if (path === '/ideation' || path === '/ideation/chat' || path === '/ideation/blueprint') {
-      if (loggedInUser) {
-        if (!loggedInUser.intro_completed) {
-          setCurrentPage('intro');
-          window.history.replaceState({}, document.title, '/intro');
-        } else if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
-          setCurrentPage('profile-setup');
-        } else {
-          if (path === '/ideation') setCurrentPage('ideation');
-          else if (path === '/ideation/chat') setCurrentPage('ideation-chat');
-          else setCurrentPage('ideation-blueprint');
-        }
-      } else {
-        setCurrentPage('login');
-        window.history.replaceState({}, document.title, '/login');
-      }
-    } else if (loggedInUser) {
-      if (!loggedInUser.intro_completed) {
-        setCurrentPage('intro');
-        window.history.replaceState({}, document.title, '/intro');
-      } else if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
-        setCurrentPage('profile-setup');
-      } else {
-        setCurrentPage('dashboard');
-        if (path !== '/') {
-          window.history.replaceState({}, document.title, '/');
-        }
-      }
-    } else if (path === '/login') {
-      setCurrentPage('login');
-    } else if (path === '/signup') {
-      setCurrentPage('signup');
-    } else {
-      setCurrentPage('home');
     }
 
     // Clean up modern script-injected OAuth redirection flag if any
     if (localStorage.getItem('vibelab_oauth_redirect') === 'true') {
       localStorage.removeItem('vibelab_oauth_redirect');
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentPage]);
+    if (loadingSession) return;
+
+    const path = location.pathname;
+    const isPublicPath = 
+      path === '/' || 
+      path === '/login' || 
+      path === '/signup' || 
+      path === '/verify-credential' || 
+      path === '/employers' ||
+      path === '/leaderboard' || 
+      path === '/reset-password' || 
+      path === '/forgot-password' || 
+      path === '/verify-email' || 
+      path === '/about' || 
+      path === '/contact' || 
+      path.startsWith('/profile/') || 
+      path.startsWith('/verify/');
+
+    if (!user) {
+      // If NOT logged in, restrict access to private paths
+      if (!isPublicPath) {
+        navigate('/login', { replace: true });
+      }
+    } else {
+      // If logged in
+      const hasCompletedOnboarding = user.onboarding_completed === true || user.profile_completed === true || (user.profile_completed !== false && user.profile_completed !== undefined);
+      const hasCompletedIntro = user.intro_completed === true;
+
+      if (!hasCompletedOnboarding) {
+        if (path !== '/onboarding') {
+          navigate('/onboarding', { replace: true });
+        }
+      } else if (!hasCompletedIntro) {
+        if (path !== '/intro') {
+          navigate('/intro', { replace: true });
+        }
+      } else {
+        // If they completed both, and are on onboarding / intro / login / signup, send them to dashboard
+        if (path === '/intro' || path === '/onboarding' || path === '/login' || path === '/signup') {
+          navigate('/dashboard', { replace: true });
+        }
+      }
+    }
+  }, [user, location.pathname, loadingSession, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('vibelab_user');
     localStorage.removeItem('vibelab_token');
     setUser(null);
-    handleNavigate('home');
+    navigate('/', { replace: true });
   };
+
+  // Derive "currentPage" for backwards compatibility of navbar/footers that depend on it
+  const getPageNameFromPath = (path: string) => {
+    if (path === '/') return 'home';
+    if (path.startsWith('/dashboard')) return 'dashboard';
+    if (path === '/login') return 'login';
+    if (path === '/signup') return 'signup';
+    if (path === '/onboarding') return 'profile-setup';
+    if (path === '/intro') return 'intro';
+    if (path === '/ideation') return 'ideation';
+    if (path === '/ideation/chat') return 'ideation-chat';
+    if (path === '/ideation/blueprint') return 'ideation-blueprint';
+    if (path.startsWith('/phase/')) return 'phase';
+    if (path.startsWith('/profile/') || path.startsWith('/verify/')) return 'verify-profile';
+    if (path === '/verify-credential' || path === '/employers') return 'verify-credential';
+    if (path === '/leaderboard') return 'leaderboard';
+    if (path === '/settings') return 'settings';
+    if (path === '/about') return 'about';
+    if (path === '/contact') return 'contact';
+    if (path === '/admin') return 'admin';
+    if (path === '/verify-email') return 'verify-email';
+    if (path === '/forgot-password') return 'forgot-password';
+    if (path === '/reset-password') return 'reset-password';
+    return 'home';
+  };
+
+  const currentPage = getPageNameFromPath(location.pathname);
 
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
+      <Toaster position="top-center" reverseOrder={false} />
       {currentPage !== 'ideation-chat' && currentPage !== 'ideation' && currentPage !== 'ideation-blueprint' && currentPage !== 'intro' && (
         <Navbar 
           onNavigate={handleNavigate} 
@@ -1689,73 +1744,56 @@ export default function App() {
         />
       )}
       <main>
-        {currentPage === 'home' ? (
-          <>
-            <Hero onNavigate={handleNavigate} />
-            <TrustedBy />
-            <LearningPathSection />
-            <Problem />
-            <Solution />
-            <HowItWorks />
-            <LearningZones />
-            <Audience />
-            <FinalCTA onNavigate={handleNavigate} />
-          </>
-        ) : currentPage === 'about' ? (
-          <AboutPage onNavigate={handleNavigate} />
-        ) : currentPage === 'admin' ? (
-          <AdminPanel onNavigate={handleNavigate} />
-        ) : currentPage === 'login' ? (
-          <Login onNavigate={handleNavigate} onLoginSuccess={setUser} />
-        ) : currentPage === 'signup' ? (
-          <Signup onNavigate={handleNavigate} onLoginSuccess={setUser} />
-        ) : currentPage === 'profile-setup' ? (
-          <ProfileSetupWizard user={user} onUpdateUser={setUser} onNavigate={handleNavigate} />
-        ) : currentPage === 'dashboard' ? (
-          <Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />
-        ) : currentPage === 'verify-email' ? (
-          <VerifyEmail onNavigate={handleNavigate} />
-        ) : currentPage === 'forgot-password' ? (
-          <ForgotPassword onNavigate={handleNavigate} />
-        ) : currentPage === 'reset-password' ? (
-          <ResetPassword onNavigate={handleNavigate} />
-        ) : currentPage === 'verify-credential' ? (
-          <VerifyCredential onNavigate={handleNavigate} />
-        ) : currentPage === 'leaderboard' ? (
-          <div className="min-h-screen pt-44 pb-20 px-4 bg-slate-50/50 relative overflow-hidden">
-            <div className="absolute top-[20%] left-0 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[100px] -z-10 animate-pulse" />
-            <div className="absolute bottom-[20%] right-0 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] -z-10" />
-            
-            <div className="max-w-6xl mx-auto">
-              <Leaderboard 
-                hideRegionFilter={true}
-                onViewProfile={(vlId) => {
-                  window.history.pushState({}, '', `/profile/${vlId}`);
-                  setCurrentPage('verify-profile');
-                }} 
-              />
+        <Routes>
+          <Route path="/" element={<LandingPage onNavigate={handleNavigate} />} />
+          <Route path="/login" element={<Login onNavigate={handleNavigate} onLoginSuccess={setUser} />} />
+          <Route path="/signup" element={<Signup onNavigate={handleNavigate} onLoginSuccess={setUser} />} />
+          <Route path="/onboarding" element={<ProfileSetupWizard user={user} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          <Route path="/intro" element={<IntroPage onNavigate={handleNavigate} onUpdateUser={setUser} />} />
+          
+          <Route path="/dashboard" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          <Route path="/dashboard/blueprints" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          <Route path="/dashboard/submissions" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          <Route path="/dashboard/certificates" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          <Route path="/dashboard/grading" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          <Route path="/dashboard/support" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          
+          <Route path="/ideation" element={<IdeationEntry onNavigate={handleNavigate} />} />
+          <Route path="/ideation/chat" element={<IdeationChat onNavigate={handleNavigate} />} />
+          <Route path="/ideation/blueprint" element={<IdeationBlueprint onNavigate={handleNavigate} onUpdateUser={setUser} />} />
+          <Route path="/phase/:id" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          
+          <Route path="/profile/:id" element={<PublicProfileWrapper currentUser={user} />} />
+          <Route path="/verify/:id" element={<PublicProfileWrapper currentUser={user} />} />
+          
+          <Route path="/employers" element={<VerifyCredential onNavigate={handleNavigate} />} />
+          <Route path="/verify-credential" element={<VerifyCredential onNavigate={handleNavigate} />} />
+          
+          <Route path="/leaderboard" element={
+            <div className="min-h-screen pt-44 pb-20 px-4 bg-slate-50/50 relative overflow-hidden">
+              <div className="absolute top-[20%] left-0 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[100px] -z-10 animate-pulse" />
+              <div className="absolute bottom-[20%] right-0 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] -z-10" />
+              
+              <div className="max-w-6xl mx-auto">
+                <Leaderboard 
+                  hideRegionFilter={true}
+                  onViewProfile={(vlId) => {
+                    navigate(`/profile/${vlId}`);
+                  }} 
+                />
+              </div>
             </div>
-          </div>
-        ) : currentPage === 'verify-profile' ? (
-          <PublicProfile 
-            userId={
-              window.location.pathname.startsWith('/profile/')
-                ? window.location.pathname.split('/profile/')[1]
-                : window.location.pathname.split('/verify/')[1]
-            } 
-            currentUser={user}
-          />
-        ) : currentPage === 'ideation' ? (
-          <IdeationEntry onNavigate={handleNavigate} />
-        ) : currentPage === 'ideation-chat' ? (
-          <IdeationChat onNavigate={handleNavigate} />
-        ) : currentPage === 'ideation-blueprint' ? (
-          <IdeationBlueprint onNavigate={handleNavigate} onUpdateUser={setUser} />
-        ) : currentPage === 'intro' ? (
-          <IntroPage onNavigate={handleNavigate} onUpdateUser={setUser} />
-        ) : (
-          <ContactPage onNavigate={handleNavigate} />
-        )}
+          } />
+          
+          <Route path="/settings" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          
+          <Route path="/about" element={<AboutPage onNavigate={handleNavigate} />} />
+          <Route path="/contact" element={<ContactPage onNavigate={handleNavigate} />} />
+          <Route path="/admin" element={<AdminPanel onNavigate={handleNavigate} />} />
+          <Route path="/verify-email" element={<VerifyEmail onNavigate={handleNavigate} />} />
+          <Route path="/forgot-password" element={<ForgotPassword onNavigate={handleNavigate} />} />
+          <Route path="/reset-password" element={<ResetPassword onNavigate={handleNavigate} />} />
+        </Routes>
       </main>
       {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && currentPage !== 'ideation' && currentPage !== 'ideation-chat' && currentPage !== 'ideation-blueprint' && currentPage !== 'profile-setup' && currentPage !== 'intro' && <Footer onNavigate={handleNavigate} />}
     </div>

@@ -149,7 +149,9 @@ router.post('/login', async (req, res) => {
         vl_id: user.vl_id,
         account_type: user.account_type,
         country: user.country,
-        profile_completed: !!user.profile_completed,
+        profile_completed: !!user.profile_completed || !!user.onboarding_completed,
+        onboarding_completed: !!user.onboarding_completed || !!user.profile_completed,
+        intro_completed: !!user.intro_completed,
         is_verified: !!user.is_verified
       }
     });
@@ -408,7 +410,9 @@ router.get('/github/callback', async (req: any, res) => {
       vl_id: user.vl_id,
       is_verified: !!user.is_verified,
       country: user.country,
-      profile_completed: !!user.profile_completed
+      profile_completed: !!user.profile_completed || !!user.onboarding_completed,
+      onboarding_completed: !!user.onboarding_completed || !!user.profile_completed,
+      intro_completed: !!user.intro_completed
     };
     
     res.setHeader('Content-Type', 'text/html');
@@ -599,7 +603,9 @@ router.get('/google/callback', async (req: any, res) => {
       vl_id: user.vl_id,
       is_verified: !!user.is_verified,
       country: user.country,
-      profile_completed: !!user.profile_completed
+      profile_completed: !!user.profile_completed || !!user.onboarding_completed,
+      onboarding_completed: !!user.onboarding_completed || !!user.profile_completed,
+      intro_completed: !!user.intro_completed
     };
     
     res.setHeader('Content-Type', 'text/html');

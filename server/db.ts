@@ -149,7 +149,8 @@ class LocalDatabasePool {
           { Field: 'github_url' }, { Field: 'linkedin_url' }, { Field: 'bio' }, { Field: 'country' }, { Field: 'banner_url' },
           { Field: 'account_type' }, { Field: 'date_of_birth' }, { Field: 'gender' },
           { Field: 'state_province' }, { Field: 'city' }, { Field: 'institution_name' },
-          { Field: 'education_level' }, { Field: 'field_of_study' }, { Field: 'profile_completed' }
+          { Field: 'education_level' }, { Field: 'field_of_study' }, { Field: 'profile_completed' },
+          { Field: 'onboarding_completed' }, { Field: 'onboarding_completed_at' }
         ], []];
       }
 
@@ -486,6 +487,23 @@ export const getPool = async () => {
           if (!names.includes('profile_completed')) {
             await connection.execute("ALTER TABLE users ADD COLUMN profile_completed BOOLEAN DEFAULT FALSE");
           }
+          if (!names.includes('onboarding_completed')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN onboarding_completed BOOLEAN DEFAULT FALSE");
+          }
+          if (!names.includes('onboarding_completed_at')) {
+            await connection.execute("ALTER TABLE users ADD COLUMN onboarding_completed_at TIMESTAMP NULL");
+          }
+          console.log('DB Migration: updating onboarding_completed for existing users...');
+          try {
+            await connection.execute(`
+              UPDATE users
+              SET onboarding_completed = TRUE,
+                  onboarding_completed_at = NOW()
+              WHERE (date_of_birth IS NOT NULL OR city IS NOT NULL OR state_province IS NOT NULL)
+            `);
+          } catch (updateErr: any) {
+            console.error("Migration warning during updating onboarding_completed:", updateErr.message);
+          }
           if (!names.includes('intro_completed')) {
             console.log('DB Migration: Adding column intro_completed to users...');
             await connection.execute("ALTER TABLE users ADD COLUMN intro_completed BOOLEAN DEFAULT FALSE");
@@ -789,6 +807,23 @@ export const getPool = async () => {
         await addColumnIfNeeded('users', 'education_level', 'VARCHAR(100)');
         await addColumnIfNeeded('users', 'field_of_study', 'VARCHAR(100)');
         await addColumnIfNeeded('users', 'profile_completed', 'BOOLEAN DEFAULT FALSE');
+        await addColumnIfNeeded('users', 'onboarding_completed', 'BOOLEAN DEFAULT FALSE');
+        await addColumnIfNeeded('users', 'onboarding_completed_at', 'TIMESTAMP NULL');
+
+        // Mark existing users who already submitted the form as complete
+        try {
+          const [conn]: any = await pool.getConnection();
+          try {
+            await conn.execute(`
+              UPDATE users
+              SET onboarding_completed = TRUE,
+                  onboarding_completed_at = NOW()
+              WHERE (date_of_birth IS NOT NULL OR city IS NOT NULL OR state_province IS NOT NULL)
+            `);
+          } finally {
+            conn.release();
+          }
+        } catch (_) {}
 
 
         // Migrate User Project Progress Columns

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Send, ArrowRight, Loader2, RefreshCw, Sparkles, BrainCircuit } from "lucide-react";
+import { Send, ArrowRight, Loader2, RefreshCw, Sparkles, BrainCircuit, X, Check } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Message {
   id: string;
@@ -44,6 +45,25 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto expand/shrink height logic based on scrollHeight
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      const scrollHeight = textareaRef.current.scrollHeight;
+      // Set height bounded between 115px (approx 5 rows) and 280px
+      textareaRef.current.style.height = `${Math.min(Math.max(115, scrollHeight), 280)}px`;
+    }
+  }, [inputValue]);
+
+  // Handle enter key to send message without shift key
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   // Auto scroll to bottom
   const scrollToBottom = () => {
@@ -224,10 +244,61 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
 
       const data = await res.json();
       
-      // Save output or proceed directly to blueprint screen
-      // Wait: "On success: navigate to /ideation/blueprint using Motion page transition"
-      // Let's call the navigation callback for 'ideation-blueprint'
-      onNavigate("ideation-blueprint");
+      // Navigate to /dashboard
+      onNavigate("dashboard");
+
+      // Immediately show a custom gorgeous toast notification
+      toast.custom((t) => (
+        <div
+          className={`${
+            t.visible ? "animate-enter opacity-100 translate-y-0" : "animate-leave opacity-0 -translate-y-4"
+          } max-w-md w-full bg-[#0a1126] border border-white/10 shadow-2xl rounded-2xl pointer-events-auto flex flex-col p-5 font-sans text-left relative overflow-hidden transition-all duration-300`}
+          style={{ borderLeft: "4px solid #C9A84C" }}
+        >
+          <div className="flex items-start gap-4">
+            {/* Green success indicator */}
+            <div className="flex-shrink-0 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-2 rounded-xl">
+              <Check className="w-5 h-5" />
+            </div>
+            
+            {/* Content block */}
+            <div className="flex-1 space-y-2">
+              <h3 className="text-sm font-bold text-white tracking-wide font-dmsans">
+                Ideation Complete 🎉
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed font-normal font-dmsans">
+                Your blueprint is ready. You can review it anytime from the Ideation section. Phase 2 is now unlocked &mdash; you're ready to start building.
+              </p>
+              
+              {/* Action Button */}
+              <div className="pt-1 flex justify-start">
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    onNavigate("ideation-blueprint");
+                  }}
+                  className="px-3 py-1.5 bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-bold text-xs rounded-xl transition-all tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                >
+                  View Blueprint →
+                </button>
+              </div>
+            </div>
+            
+            {/* Close Button */}
+            <button 
+              type="button"
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-shrink-0 text-slate-500 hover:text-slate-300 transition-colors p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ), {
+        duration: 8000,
+        position: "top-center"
+      });
     } catch (err) {
       console.error("Blueprint compilation failure:", err);
       setIsGeneratingBlueprint(false);
@@ -376,22 +447,24 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
       <footer className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#02050e] via-[#02050e]/95 to-transparent pt-6 pb-8 px-4 z-20">
         <form
           onSubmit={handleSend}
-          className="max-w-3xl mx-auto flex gap-3 bg-[#0a1126]/90 border border-white/5 rounded-2xl p-2 shadow-2xl backdrop-blur-md items-center"
+          className="max-w-3xl mx-auto flex gap-3 bg-[#0a1126]/90 border border-white/5 rounded-2xl p-2 shadow-2xl backdrop-blur-md items-end"
         >
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
+            rows={5}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
             disabled={loading || typing || isGeneratingBlueprint}
             placeholder={
               isGeneratingBlueprint ? "Assembling framework config..." : "Type your answer..."
             }
-            className="flex-grow bg-transparent text-sm text-white px-4 py-3 placeholder-slate-500 focus:outline-none disabled:opacity-50"
+            className="flex-grow bg-transparent text-sm text-white px-4 py-3 placeholder-slate-500 focus:outline-none disabled:opacity-50 resize-none min-h-[115px] max-h-[280px] custom-scrollbar overflow-y-auto leading-relaxed"
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || loading || typing || isGeneratingBlueprint}
-            className="bg-[#C9A84C] hover:bg-[#D9B95C] text-black h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-[0.93] disabled:opacity-40 disabled:hover:bg-[#C9A84C] flex-shrink-0"
+            className="bg-[#C9A84C] hover:bg-[#D9B95C] text-black h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-[0.93] disabled:opacity-40 disabled:hover:bg-[#C9A84C] flex-shrink-0 mb-1"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

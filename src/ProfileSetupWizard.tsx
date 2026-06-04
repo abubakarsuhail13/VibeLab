@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { 
   Sparkles, User, Calendar, MapPin, GraduationCap, 
   School, ChevronRight, ChevronLeft, Loader2, 
-  Check, Camera, HelpCircle, BookOpen, UserCheck, Shield, AlertCircle
+  Check, Camera, HelpCircle, BookOpen, UserCheck, Shield, AlertCircle, X
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface ProfileSetupWizardProps {
   user: any;
@@ -131,11 +132,55 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
           avatar_url: avatarUrl,
           country,
           profile_completed: true,
+          onboarding_completed: true,
           account_type: user?.account_type || (educationLevel === "Teacher" ? "Teacher" : "School Student")
         };
         localStorage.setItem("vibelab_user", JSON.stringify(updatedUser));
         onUpdateUser(updatedUser);
-        onNavigate("dashboard");
+
+        // Show success toast
+        toast.custom((t) => (
+          <div
+            className={`${
+              t.visible ? "animate-enter opacity-100 translate-y-0" : "animate-leave opacity-0 -translate-y-4"
+            } max-w-md w-full bg-[#0a1126] border border-white/10 shadow-2xl rounded-2xl pointer-events-auto flex flex-col p-5 font-sans text-left relative overflow-hidden transition-all duration-300`}
+            style={{ borderLeft: "4px solid #C9A84C" }}
+          >
+            <div className="flex items-start gap-4">
+              {/* Green success indicator */}
+              <div className="flex-shrink-0 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-2 rounded-xl">
+                <Check className="w-5 h-5" />
+              </div>
+              
+              {/* Content block */}
+              <div className="flex-1 space-y-1.5">
+                <h3 className="text-sm font-bold text-white tracking-wide font-dmsans">
+                  You're all set! 🚀
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed font-normal font-dmsans">
+                  Welcome to VibeLab. Your profile is ready. Let's build something amazing.
+                </p>
+              </div>
+              
+              {/* Close Button */}
+              <button 
+                type="button"
+                onClick={() => toast.dismiss(t.id)}
+                className="flex-shrink-0 text-slate-500 hover:text-slate-300 transition-colors p-1 text-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ), {
+          duration: 4000,
+          position: "top-center"
+        });
+
+        // Redirect to /dashboard after a 1.5 second delay
+        setTimeout(() => {
+          onNavigate("dashboard");
+        }, 1500);
       } else {
         setError(data.error || "Failed to complete profile registration");
       }

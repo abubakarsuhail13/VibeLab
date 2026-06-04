@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent, useEffect, FormEvent } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Rocket, 
@@ -90,6 +91,45 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
 
   // Student communication helper
   const [studentChatOpen, setStudentChatOpen] = useState(false);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/dashboard') {
+      setActiveView('overview');
+      setSelectedPhaseId(null);
+    } else if (path === '/dashboard/blueprints') {
+      setActiveView('blueprints');
+      setSelectedPhaseId(null);
+    } else if (path === '/dashboard/submissions') {
+      setActiveView('submissions');
+      setSelectedPhaseId(null);
+    } else if (path === '/dashboard/certificates') {
+      setActiveView('certificates');
+      setSelectedPhaseId(null);
+    } else if (path === '/settings') {
+      setActiveView('settings');
+      setSelectedPhaseId(null);
+    } else if (path === '/leaderboard') {
+      setActiveView('leaderboard');
+      setSelectedPhaseId(null);
+    } else if (path === '/dashboard/grading') {
+      setActiveView('grading');
+      setSelectedPhaseId(null);
+    } else if (path === '/dashboard/support') {
+      setActiveView('support');
+      setSelectedPhaseId(null);
+    } else if (path.startsWith('/phase/')) {
+      const match = path.match(/\/phase\/(\d+)/);
+      if (match) {
+        const phaseId = parseInt(match[1], 10);
+        setSelectedPhaseId(phaseId);
+        setActiveView('phase');
+      }
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (user?.role === 'teacher') {
@@ -323,8 +363,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
     const phase = phases.find(p => p.id === phaseId);
     if (phase?.status === 'locked') return;
     
-    setSelectedPhaseId(phaseId);
-    setActiveView('phase');
+    navigate(`/phase/${phaseId}`);
   };
 
   const completedProjects = progressData?.projectProgress.filter(p => p.is_completed).length || 0;
@@ -446,7 +485,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
           {user?.role === "teacher" ? (
             <>
               <button 
-                onClick={() => { setActiveView('overview'); fetchTeacherData(); }}
+                onClick={() => { navigate('/dashboard'); fetchTeacherData(); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'overview' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -456,7 +495,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => { setActiveView('grading'); fetchTeacherData(); }}
+                onClick={() => { navigate('/dashboard/grading'); fetchTeacherData(); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'grading' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -466,7 +505,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => { setActiveView('support'); fetchTeacherData(); }}
+                onClick={() => { navigate('/dashboard/support'); fetchTeacherData(); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'support' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -476,7 +515,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => { setActiveView('leaderboard'); fetchDashboardData(); }}
+                onClick={() => { navigate('/leaderboard'); fetchDashboardData(); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -486,7 +525,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => setActiveView('settings')}
+                onClick={() => navigate('/settings')}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -498,7 +537,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
           ) : (
             <>
               <button 
-                onClick={() => setActiveView('overview')}
+                onClick={() => navigate('/dashboard')}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'overview' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -508,7 +547,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => setActiveView('blueprints')}
+                onClick={() => navigate('/dashboard/blueprints')}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'blueprints' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -518,7 +557,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => setActiveView('submissions')}
+                onClick={() => navigate('/dashboard/submissions')}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'submissions' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -528,7 +567,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => setActiveView('certificates')}
+                onClick={() => navigate('/dashboard/certificates')}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'certificates' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -538,7 +577,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => setActiveView('leaderboard')}
+                onClick={() => navigate('/leaderboard')}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -548,7 +587,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => setActiveView('settings')}
+                onClick={() => navigate('/settings')}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -1485,7 +1524,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                       <h3 className="text-xl font-bold text-slate-900 mb-2">No submissions yet</h3>
                       <p className="text-slate-500 max-w-sm mx-auto">Complete all steps in a project to unlock the submission form and start building your portfolio.</p>
                       <button 
-                        onClick={() => setActiveView('overview')}
+                        onClick={() => navigate('/dashboard')}
                         className="mt-8 px-8 py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all"
                       >
                         Browse Projects
@@ -1911,7 +1950,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                     <h3 className="text-xl font-bold text-slate-900 mb-2">Greatness awaits</h3>
                     <p className="text-slate-500 max-w-sm mx-auto font-medium">Complete all projects in a phase to unlock your first verified certification badge.</p>
                     <button 
-                      onClick={() => setActiveView('overview')}
+                      onClick={() => navigate('/dashboard')}
                       className="mt-8 px-8 py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
                     >
                       Start Learning
@@ -1964,7 +2003,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                   <PhaseView 
                     phaseId={selectedPhaseId!} 
                     onBack={() => {
-                      setActiveView('overview');
+                      navigate('/dashboard');
                       fetchDashboardData(); // Update phases and progress
                     }} 
                     onProgress={fetchDashboardData}
