@@ -51,20 +51,13 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
+      // Reset height to auto to get the correct scrollHeight
       textarea.style.height = "auto";
       
-      const computed = window.getComputedStyle(textarea);
-      const lineHeight = parseFloat(computed.lineHeight) || 20;
-      const paddingTop = parseFloat(computed.paddingTop) || 12;
-      const paddingBottom = parseFloat(computed.paddingBottom) || 12;
+      const minHeight = 44; // Perfect height for single line to avoid layout shift
+      const maxHeight = 240; // Max height before internal vertical scrolling
       
-      const minHeight = 44; // Perfect alignment for single line
-      const maxRows = 5;
-      const maxHeight = (lineHeight * maxRows) + paddingTop + paddingBottom;
-
       const currentScrollHeight = textarea.scrollHeight;
-
-      // Bound between single line and maximum 5 rows
       let targetHeight = Math.max(minHeight, currentScrollHeight);
       
       if (targetHeight >= maxHeight) {
@@ -73,7 +66,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
       } else {
         textarea.style.overflowY = "hidden";
       }
-
+      
       textarea.style.height = `${targetHeight}px`;
     }
   }, [inputValue]);
@@ -468,7 +461,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
       <footer className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#02050e] via-[#02050e]/95 to-transparent pt-6 pb-8 px-4 z-20">
         <form
           onSubmit={handleSend}
-          className="max-w-3xl mx-auto flex gap-3 bg-[#0a1126]/90 border border-white/5 rounded-2xl p-2 shadow-2xl backdrop-blur-md items-end"
+          className="max-w-3xl mx-auto flex gap-3 bg-[#0a1126]/90 border border-white/5 rounded-3xl p-2.5 shadow-2xl backdrop-blur-md items-end"
         >
           <textarea
             ref={textareaRef}
@@ -480,12 +473,12 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
             placeholder={
               isGeneratingBlueprint ? "Assembling framework config..." : "Type your answer..."
             }
-            className="flex-grow bg-transparent text-sm text-white px-4 py-3 placeholder-slate-500 focus:outline-none disabled:opacity-50 resize-none min-h-[44px] h-[44px] custom-scrollbar overflow-y-hidden leading-relaxed"
+            className="flex-grow bg-transparent text-sm text-white px-4 py-3 placeholder-slate-500 focus:outline-none disabled:opacity-50 resize-none min-h-[44px] chat-input leading-relaxed"
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || loading || typing || isGeneratingBlueprint}
-            className="bg-[#C9A84C] hover:bg-[#D9B95C] text-black h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-[0.93] disabled:opacity-40 disabled:hover:bg-[#C9A84C] flex-shrink-0"
+            className="bg-[#C9A84C] hover:bg-[#D9B95C] text-black h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-300 active:scale-[0.93] disabled:opacity-40 disabled:hover:bg-[#C9A84C] flex-shrink-0"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
