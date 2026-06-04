@@ -167,20 +167,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
         if (nextIdx !== -1) {
           setCurrIndex(nextIdx);
           setCompletedPercent(Math.round(((nextIdx) / QUESTIONS.length) * 100));
-          
-          // If the AI message doesn't contain the next question already, append it
-          if (nextQ && !data.ai_message.includes(nextQ)) {
-            setMessages([
-              ...updatedHistory,
-              {
-                id: `q-${Date.now()}`,
-                sender: "ai",
-                text: nextQ
-              }
-            ]);
-          } else {
-            setMessages(updatedHistory);
-          }
+          setMessages(updatedHistory);
         } else {
           setMessages(updatedHistory);
         }
