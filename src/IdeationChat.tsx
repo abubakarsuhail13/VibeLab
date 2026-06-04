@@ -49,11 +49,32 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
 
   // Auto expand/shrink height logic based on scrollHeight
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      const scrollHeight = textareaRef.current.scrollHeight;
-      // Set height bounded between 115px (approx 5 rows) and 280px
-      textareaRef.current.style.height = `${Math.min(Math.max(115, scrollHeight), 280)}px`;
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      
+      const computed = window.getComputedStyle(textarea);
+      const lineHeight = parseFloat(computed.lineHeight) || 20;
+      const paddingTop = parseFloat(computed.paddingTop) || 12;
+      const paddingBottom = parseFloat(computed.paddingBottom) || 12;
+      
+      const minHeight = 44; // Perfect alignment for single line
+      const maxRows = 5;
+      const maxHeight = (lineHeight * maxRows) + paddingTop + paddingBottom;
+
+      const currentScrollHeight = textarea.scrollHeight;
+
+      // Bound between single line and maximum 5 rows
+      let targetHeight = Math.max(minHeight, currentScrollHeight);
+      
+      if (targetHeight >= maxHeight) {
+        targetHeight = maxHeight;
+        textarea.style.overflowY = "auto";
+      } else {
+        textarea.style.overflowY = "hidden";
+      }
+
+      textarea.style.height = `${targetHeight}px`;
     }
   }, [inputValue]);
 
@@ -451,7 +472,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
         >
           <textarea
             ref={textareaRef}
-            rows={5}
+            rows={1}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -459,12 +480,12 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
             placeholder={
               isGeneratingBlueprint ? "Assembling framework config..." : "Type your answer..."
             }
-            className="flex-grow bg-transparent text-sm text-white px-4 py-3 placeholder-slate-500 focus:outline-none disabled:opacity-50 resize-none min-h-[115px] max-h-[280px] custom-scrollbar overflow-y-auto leading-relaxed"
+            className="flex-grow bg-transparent text-sm text-white px-4 py-3 placeholder-slate-500 focus:outline-none disabled:opacity-50 resize-none min-h-[44px] h-[44px] custom-scrollbar overflow-y-hidden leading-relaxed"
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || loading || typing || isGeneratingBlueprint}
-            className="bg-[#C9A84C] hover:bg-[#D9B95C] text-black h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-[0.93] disabled:opacity-40 disabled:hover:bg-[#C9A84C] flex-shrink-0 mb-1"
+            className="bg-[#C9A84C] hover:bg-[#D9B95C] text-black h-11 w-11 rounded-xl flex items-center justify-center transition-all duration-300 active:scale-[0.93] disabled:opacity-40 disabled:hover:bg-[#C9A84C] flex-shrink-0"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
