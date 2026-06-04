@@ -44,6 +44,7 @@ import IdeationEntry from "./IdeationEntry";
 import IdeationChat from "./IdeationChat";
 import IdeationBlueprint from "./IdeationBlueprint";
 import ProfileSetupWizard from "./ProfileSetupWizard";
+import IntroPage from "./pages/Intro";
 import Leaderboard from "./Leaderboard";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
@@ -1548,7 +1549,8 @@ export default function App() {
       'contact': '/contact',
       ideation: '/ideation',
       'ideation-chat': '/ideation/chat',
-      'ideation-blueprint': '/ideation/blueprint'
+      'ideation-blueprint': '/ideation/blueprint',
+      intro: '/intro'
     };
 
     const targetPath = routeMap[page];
@@ -1611,9 +1613,24 @@ export default function App() {
       setCurrentPage('verify-profile');
     } else if (path === '/leaderboard') {
       setCurrentPage('leaderboard');
+    } else if (path === '/intro') {
+      if (loggedInUser) {
+        if (loggedInUser.intro_completed) {
+          setCurrentPage('dashboard');
+          window.history.replaceState({}, document.title, '/');
+        } else {
+          setCurrentPage('intro');
+        }
+      } else {
+        setCurrentPage('login');
+        window.history.replaceState({}, document.title, '/login');
+      }
     } else if (path === '/ideation' || path === '/ideation/chat' || path === '/ideation/blueprint') {
       if (loggedInUser) {
-        if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
+        if (!loggedInUser.intro_completed) {
+          setCurrentPage('intro');
+          window.history.replaceState({}, document.title, '/intro');
+        } else if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
           setCurrentPage('profile-setup');
         } else {
           if (path === '/ideation') setCurrentPage('ideation');
@@ -1625,7 +1642,10 @@ export default function App() {
         window.history.replaceState({}, document.title, '/login');
       }
     } else if (loggedInUser) {
-      if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
+      if (!loggedInUser.intro_completed) {
+        setCurrentPage('intro');
+        window.history.replaceState({}, document.title, '/intro');
+      } else if (loggedInUser.profile_completed === false || !loggedInUser.profile_completed) {
         setCurrentPage('profile-setup');
       } else {
         setCurrentPage('dashboard');
@@ -1660,7 +1680,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
-      {currentPage !== 'ideation-chat' && currentPage !== 'ideation' && currentPage !== 'ideation-blueprint' && (
+      {currentPage !== 'ideation-chat' && currentPage !== 'ideation' && currentPage !== 'ideation-blueprint' && currentPage !== 'intro' && (
         <Navbar 
           onNavigate={handleNavigate} 
           currentPage={currentPage} 
@@ -1731,11 +1751,13 @@ export default function App() {
           <IdeationChat onNavigate={handleNavigate} />
         ) : currentPage === 'ideation-blueprint' ? (
           <IdeationBlueprint onNavigate={handleNavigate} onUpdateUser={setUser} />
+        ) : currentPage === 'intro' ? (
+          <IntroPage onNavigate={handleNavigate} onUpdateUser={setUser} />
         ) : (
           <ContactPage onNavigate={handleNavigate} />
         )}
       </main>
-      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && currentPage !== 'ideation' && currentPage !== 'ideation-chat' && currentPage !== 'ideation-blueprint' && currentPage !== 'profile-setup' && <Footer onNavigate={handleNavigate} />}
+      {currentPage !== 'dashboard' && currentPage !== 'verify-profile' && currentPage !== 'ideation' && currentPage !== 'ideation-chat' && currentPage !== 'ideation-blueprint' && currentPage !== 'profile-setup' && currentPage !== 'intro' && <Footer onNavigate={handleNavigate} />}
     </div>
   );
 }

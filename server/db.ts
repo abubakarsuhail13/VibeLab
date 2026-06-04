@@ -486,6 +486,21 @@ export const getPool = async () => {
           if (!names.includes('profile_completed')) {
             await connection.execute("ALTER TABLE users ADD COLUMN profile_completed BOOLEAN DEFAULT FALSE");
           }
+          if (!names.includes('intro_completed')) {
+            console.log('DB Migration: Adding column intro_completed to users...');
+            await connection.execute("ALTER TABLE users ADD COLUMN intro_completed BOOLEAN DEFAULT FALSE");
+          }
+          if (!names.includes('intro_completed_at')) {
+            console.log('DB Migration: Adding column intro_completed_at to users...');
+            await connection.execute("ALTER TABLE users ADD COLUMN intro_completed_at TIMESTAMP NULL");
+          }
+          console.log('DB Migration: marking existing users with completed ideation as intro_completed...');
+          await connection.execute(`
+            UPDATE users
+            SET intro_completed = TRUE,
+                intro_completed_at = NOW()
+            WHERE (ideation_completed = TRUE OR ideation_completed = 1) AND (intro_completed = FALSE OR intro_completed = 0)
+          `);
         } catch (migErr: any) {
           console.error("Migration error inside already-initialized DB:", migErr);
         }
@@ -531,6 +546,8 @@ export const getPool = async () => {
             reset_token VARCHAR(255),
             reset_token_expires DATETIME,
             avatar_url LONGTEXT,
+            intro_completed BOOLEAN DEFAULT FALSE,
+            intro_completed_at TIMESTAMP NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         `);

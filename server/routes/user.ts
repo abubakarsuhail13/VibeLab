@@ -146,4 +146,21 @@ router.get('/submissions', authenticateToken, async (req: any, res) => {
   }
 });
 
+router.post('/intro-complete', authenticateToken, async (req: any, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    await p.execute(
+      'UPDATE users SET intro_completed = 1, intro_completed_at = NOW() WHERE id = ?',
+      [req.user.userId]
+    );
+
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error('Intro complete error:', error);
+    res.status(500).json({ error: 'Failed to mark intro as completed' });
+  }
+});
+
 export default router;
