@@ -1,11 +1,72 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Sparkles, User, Calendar, MapPin, GraduationCap, 
   School, ChevronRight, ChevronLeft, Loader2, 
-  Check, Camera, HelpCircle, BookOpen, UserCheck, Shield, AlertCircle, X
+  Check, Camera, HelpCircle, BookOpen, UserCheck, Shield, AlertCircle, X, CheckCircle2
 } from "lucide-react";
 import toast from "react-hot-toast";
+
+// Beautiful Custom Success Toast with smooth, stable countdown matching the Contact success feel
+const OnboardingSuccessToast = ({ t, onRedirect }: { t: any; onRedirect: () => void }) => {
+  const [timeLeft, setTimeLeft] = useState(3);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onRedirect();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [onRedirect]);
+
+  return (
+    <div
+      className={`${
+        t.visible ? "animate-enter opacity-100 translate-y-0" : "animate-leave opacity-0 -translate-y-4"
+      } max-w-md w-full bg-white border border-slate-200/80 shadow-2xl rounded-2xl pointer-events-auto flex flex-col p-5 font-sans text-left relative overflow-hidden transition-all duration-300`}
+      style={{ borderLeft: "4px solid #C9A84C" }}
+    >
+      <div className="flex items-start gap-4">
+        {/* Emerald green success indicator icon, polished/consistent with the contact form submission page */}
+        <div className="flex-shrink-0 bg-emerald-50 text-emerald-600 p-2.5 rounded-full border border-emerald-100 shadow-sm">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+        </div>
+        
+        {/* Content Section */}
+        <div className="flex-1 space-y-1">
+          <h3 className="text-sm font-bold text-slate-900 font-sans tracking-tight">
+            Submission Successful! 🚀
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed font-normal font-sans">
+            Your educational student profile has been saved successfully.
+          </p>
+          <div className="text-[11px] font-bold text-amber-600 font-mono mt-2.5 flex items-center gap-1.5 bg-amber-50/50 px-2.5 py-1.5 rounded-xl border border-amber-100/40 w-fit">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            Redirecting to Intro Phase in {timeLeft} {timeLeft === 1 ? 'second' : 'seconds'}...
+          </div>
+        </div>
+        
+        {/* Close and Navigate Instantly button */}
+        <button 
+          type="button"
+          onClick={() => {
+            toast.dismiss(t.id);
+            onRedirect();
+          }}
+          className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors p-1"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface ProfileSetupWizardProps {
   user: any;
@@ -138,49 +199,13 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
         localStorage.setItem("vibelab_user", JSON.stringify(updatedUser));
         onUpdateUser(updatedUser);
 
-        // Show success toast
+        // Show success toast with a smooth 3-second countdown redirect to the Intro Phase
         toast.custom((t) => (
-          <div
-            className={`${
-              t.visible ? "animate-enter opacity-100 translate-y-0" : "animate-leave opacity-0 -translate-y-4"
-            } max-w-md w-full bg-[#0a1126] border border-white/10 shadow-2xl rounded-2xl pointer-events-auto flex flex-col p-5 font-sans text-left relative overflow-hidden transition-all duration-300`}
-            style={{ borderLeft: "4px solid #C9A84C" }}
-          >
-            <div className="flex items-start gap-4">
-              {/* Green success indicator */}
-              <div className="flex-shrink-0 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-2 rounded-xl">
-                <Check className="w-5 h-5" />
-              </div>
-              
-              {/* Content block */}
-              <div className="flex-1 space-y-1.5">
-                <h3 className="text-sm font-bold text-white tracking-wide font-dmsans">
-                  You're all set! 🚀
-                </h3>
-                <p className="text-xs text-slate-300 leading-relaxed font-normal font-dmsans">
-                  Welcome to VibeLab. Your profile is ready. Let's build something amazing.
-                </p>
-              </div>
-              
-              {/* Close Button */}
-              <button 
-                type="button"
-                onClick={() => toast.dismiss(t.id)}
-                className="flex-shrink-0 text-slate-500 hover:text-slate-300 transition-colors p-1 text-xs"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
+          <OnboardingSuccessToast t={t} onRedirect={() => onNavigate("intro")} />
         ), {
           duration: 4000,
           position: "top-center"
         });
-
-        // Redirect to /dashboard after a 1.5 second delay
-        setTimeout(() => {
-          onNavigate("dashboard");
-        }, 1500);
       } else {
         setError(data.error || "Failed to complete profile registration");
       }
