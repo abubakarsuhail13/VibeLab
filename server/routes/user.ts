@@ -49,7 +49,7 @@ router.get('/me', authenticateToken, async (req: any, res) => {
 
     const [rows]: any = await p.execute(
       `SELECT id, vl_id, name, email, role, avatar_url, country,
-              profile_completed, onboarding_completed, intro_completed, ideation_completed
+              profile_completed, onboarding_completed, intro_completed, ideation_completed, is_verified
        FROM users WHERE id = ?`,
       [req.user.userId]
     );
@@ -72,7 +72,8 @@ router.get('/me', authenticateToken, async (req: any, res) => {
         profile_completed: u.profile_completed === 1 || u.profile_completed === true || u.onboarding_completed === 1 || u.onboarding_completed === true,
         onboarding_completed: u.onboarding_completed === 1 || u.onboarding_completed === true || u.profile_completed === 1 || u.profile_completed === true,
         intro_completed: u.intro_completed === 1 || u.intro_completed === true,
-        ideation_completed: u.ideation_completed === 1 || u.ideation_completed === true
+        ideation_completed: u.ideation_completed === 1 || u.ideation_completed === true,
+        is_verified: u.is_verified === 1 || u.is_verified === true
       }
     });
   } catch (error: any) {
