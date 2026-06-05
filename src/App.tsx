@@ -1491,13 +1491,11 @@ const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 
 const LearningPathSection = () => {
   const phases = [
-    { id: 1, name: "Learn Python", desc: "Master variables, HTTP requests, APIs, JSON parsing, and solid OOP fundamentals in Python." },
-    { id: 2, name: "LLM & AI Basics", desc: "Understand tokens, context windows, text/image embeddings, prompt techniques, and vector DBs." },
-    { id: 3, name: "Build Projects", desc: "Build applications chaining multiple LLM prompts, structured data pipelines, and user flows." },
-    { id: 4, name: "AI Agents & MCP", desc: "Explore agent memory, reactive loops, tool-calling pipelines, and Model Context Protocol (MCP)." },
-    { id: 5, name: "Academic Literature", desc: "Analyze research papers on ReAct, Toolformer, Tree of Thoughts, and reflective architectures." },
-    { id: 6, name: "Live Courses & Certs", desc: "Solve interactive capstone courses from DeepLearning.AI and LangChain to earn verified badges." },
-    { id: 7, name: "Deployment & Scale", desc: "Publish production ready, containerized FastAPI and Docker services to cloud clusters with CI/CD." }
+    { id: 1, name: "Discovery & Ideation", desc: "Discover your project idea and define your MVP." },
+    { id: 2, name: "Product Creation", desc: "Turn your idea into a working product. Think like a creator." },
+    { id: 3, name: "Testing & Validation", desc: "Test your product, understand how it works, and improve it." },
+    { id: 4, name: "Deployment", desc: "Launch your project and share it with the world." },
+    { id: 5, name: "Portfolio & Showcase", desc: "Build your portfolio and present your achievements." }
   ];
 
   return (
@@ -1507,14 +1505,14 @@ const LearningPathSection = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24">
           <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 leading-tight text-white">
-            The 7-Phase <span className="text-cyan-400">Mastery Path.</span>
+            The 5-Phase <span className="text-cyan-400">Mastery Path.</span>
           </h2>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
             A cohesive journey designed to bridge the gap between "tutorial student" and "production engineer."
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {phases.map((phase) => (
             <div key={phase.id} className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 hover:bg-white/10 transition-all group backdrop-blur-sm">
               <div className="flex items-center justify-between mb-8">
