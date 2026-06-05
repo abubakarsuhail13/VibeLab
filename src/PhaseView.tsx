@@ -76,10 +76,45 @@ interface PhaseViewProps {
 
 export function formatPhaseNameForUI(name: string): string {
   if (!name) return name;
-  return name.replace(/Phase\s+(\d+)/gi, (match, digit) => {
-    const num = parseInt(digit, 10);
-    return `Phase ${num + 1}`;
+  let parsedName = name;
+  
+  // Map textual phase names to standard numbers
+  const wordMap: { [key: string]: string } = {
+    'one': '1',
+    'two': '2',
+    'three': '3',
+    'four': '4',
+    'five': '5',
+    'six': '6',
+    'seven': '7',
+    'eight': '8'
+  };
+  
+  Object.keys(wordMap).forEach(key => {
+    const regex = new RegExp(`Phase\\s+${key}`, 'gi');
+    parsedName = parsedName.replace(regex, `Phase ${wordMap[key]}`);
   });
+  
+  // If the parsed string doesn't start with "Phase X", prepend it based on standard named matching
+  if (!/Phase\s+\d+/i.test(parsedName)) {
+    if (parsedName.toLowerCase().includes('discovery') || parsedName.toLowerCase().includes('ideation')) {
+      return `Phase 1 — Discovery & Ideation`;
+    }
+    if (parsedName.toLowerCase().includes('product') || parsedName.toLowerCase().includes('creation')) {
+      return `Phase 2 — Product Creation`;
+    }
+    if (parsedName.toLowerCase().includes('testing') || parsedName.toLowerCase().includes('validation')) {
+      return `Phase 3 — Testing & Validation`;
+    }
+    if (parsedName.toLowerCase().includes('deployment')) {
+      return `Phase 4 — Deployment`;
+    }
+    if (parsedName.toLowerCase().includes('portfolio') || parsedName.toLowerCase().includes('showcase')) {
+      return `Phase 5 — Portfolio & Showcase`;
+    }
+  }
+  
+  return parsedName;
 }
 
 export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProps) {

@@ -136,17 +136,38 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
   }
 
   // Parse arrays safely
-  const opportunities = Array.isArray(blueprint.ai_opportunity_map)
-    ? blueprint.ai_opportunity_map
-    : [];
+  let opportunities: string[] = [];
+  try {
+    if (typeof blueprint.ai_opportunity_map === 'string') {
+      opportunities = JSON.parse(blueprint.ai_opportunity_map);
+    } else if (Array.isArray(blueprint.ai_opportunity_map)) {
+      opportunities = blueprint.ai_opportunity_map;
+    }
+  } catch (e) {
+    console.error("Failed to parse opportunities map:", e);
+  }
   
-  const learningPath = Array.isArray(blueprint.learning_path)
-    ? blueprint.learning_path
-    : [];
+  let learningPath: string[] = [];
+  try {
+    if (typeof blueprint.learning_path === 'string') {
+      learningPath = JSON.parse(blueprint.learning_path);
+    } else if (Array.isArray(blueprint.learning_path)) {
+      learningPath = blueprint.learning_path;
+    }
+  } catch (e) {
+    console.error("Failed to parse learning path:", e);
+  }
 
-  const features = Array.isArray(blueprint.product_features)
-    ? blueprint.product_features
-    : [];
+  let features: string[] = [];
+  try {
+    if (typeof blueprint.product_features === 'string') {
+      features = JSON.parse(blueprint.product_features);
+    } else if (Array.isArray(blueprint.product_features)) {
+      features = blueprint.product_features;
+    }
+  } catch (e) {
+    console.error("Failed to parse product features:", e);
+  }
 
   // Determine complexity badge color
   const getComplexityStyles = (comp: string) => {

@@ -234,12 +234,72 @@ class LocalDatabasePool {
       if (!colsMatch) return [[], []];
       const columns = colsMatch[1].split(',').map(c => c.trim().replace(/[`']/g, ''));
 
+      const valuesMatch = cleanedSql.match(/VALUES\s*\(([^)]+)\)/i);
+      if (!valuesMatch) return [[], []];
+      const valueStrings = valuesMatch[1].split(',').map(x => x.trim());
+
       const item: Record<string, any> = {};
+      let paramIdx = 0;
       columns.forEach((col, idx) => {
-        item[col] = params[idx];
+        const valStr = valueStrings[idx];
+        if (!valStr) {
+          item[col] = undefined;
+          return;
+        }
+        if (valStr === '?') {
+          item[col] = params[paramIdx++];
+        } else if (valStr.toUpperCase() === 'NULL') {
+          item[col] = null;
+        } else if (valStr.startsWith("'") && valStr.endsWith("'")) {
+          item[col] = valStr.substring(1, valStr.length - 1);
+        } else if (valStr.startsWith('"') && valStr.endsWith('"')) {
+          item[col] = valStr.substring(1, valStr.length - 1);
+        } else if (!isNaN(Number(valStr))) {
+          item[col] = Number(valStr);
+        } else {
+          item[col] = valStr;
+        }
       });
 
       const data = getTableData(tableName);
+
+      // Support ON DUPLICATE KEY UPDATE (specifically for user_phase_progress on user_id + phase_id)
+      const duplicateIdx = upperSql.indexOf('ON DUPLICATE KEY UPDATE');
+      if (duplicateIdx !== -1) {
+        let existingRowIndex = -1;
+        if (tableName === 'user_phase_progress') {
+          existingRowIndex = data.findIndex(r => r.user_id == item.user_id && r.phase_id == item.phase_id);
+        } else {
+          existingRowIndex = data.findIndex(r => r.id == item.id);
+        }
+
+        if (existingRowIndex !== -1) {
+          const dupPart = cleanedSql.substring(duplicateIdx + 23).trim();
+          const dupParts = dupPart.split(',');
+          let dupParamIdx = paramIdx; // duplicate keys can have their own parameters
+          const existingRow = data[existingRowIndex];
+          for (const p of dupParts) {
+            const eqIdx = p.indexOf('=');
+            if (eqIdx !== -1) {
+              const col = p.substring(0, eqIdx).trim().replace(/[`']/g, '');
+              const valPart = p.substring(eqIdx + 1).trim();
+              let val: any = undefined;
+              if (valPart === '?') {
+                val = params[dupParamIdx++];
+              } else if (valPart.toUpperCase() === 'NULL') {
+                val = null;
+              } else {
+                val = valPart.replace(/['"`]/g, '').trim();
+                if (!isNaN(Number(val))) val = Number(val);
+              }
+              existingRow[col] = val;
+            }
+          }
+          saveTableData(tableName, data);
+          return [{ insertId: existingRow.id, affectedRows: 1 }, []];
+        }
+      }
+
       const newId = data.length > 0 ? Math.max(...data.map(d => d.id || 0)) + 1 : 1;
       item.id = newId;
       item.created_at = new Date().toISOString();

@@ -52,10 +52,45 @@ interface Phase {
 
 export function formatPhaseNameForUI(name: string): string {
   if (!name) return name;
-  return name.replace(/Phase\s+(\d+)/gi, (match, digit) => {
-    const num = parseInt(digit, 10);
-    return `Phase ${num + 1}`;
+  let parsedName = name;
+  
+  // Map textual phase names to standard numbers
+  const wordMap: { [key: string]: string } = {
+    'one': '1',
+    'two': '2',
+    'three': '3',
+    'four': '4',
+    'five': '5',
+    'six': '6',
+    'seven': '7',
+    'eight': '8'
+  };
+  
+  Object.keys(wordMap).forEach(key => {
+    const regex = new RegExp(`Phase\\s+${key}`, 'gi');
+    parsedName = parsedName.replace(regex, `Phase ${wordMap[key]}`);
   });
+  
+  // If the parsed string doesn't start with "Phase X", prepend it based on standard named matching
+  if (!/Phase\s+\d+/i.test(parsedName)) {
+    if (parsedName.toLowerCase().includes('discovery') || parsedName.toLowerCase().includes('ideation')) {
+      return `Phase 1 — Discovery & Ideation`;
+    }
+    if (parsedName.toLowerCase().includes('product') || parsedName.toLowerCase().includes('creation')) {
+      return `Phase 2 — Product Creation`;
+    }
+    if (parsedName.toLowerCase().includes('testing') || parsedName.toLowerCase().includes('validation')) {
+      return `Phase 3 — Testing & Validation`;
+    }
+    if (parsedName.toLowerCase().includes('deployment')) {
+      return `Phase 4 — Deployment`;
+    }
+    if (parsedName.toLowerCase().includes('portfolio') || parsedName.toLowerCase().includes('showcase')) {
+      return `Phase 5 — Portfolio & Showcase`;
+    }
+  }
+  
+  return parsedName;
 }
 
 export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: DashboardProps) {
@@ -662,23 +697,18 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                     {user?.ideation_completed && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
                   </button>
 
-                  {phases.map((phase) => {
-                    const isPhase1Locked = phase.id === 1 && (user?.ideation_completed === false || user?.ideation_completed === undefined);
-                    
-                    // Specific design criteria overrides for Phase 2 & Phase 3 completion screens
+                  {phases.filter(p => p.id !== 1).map((phase) => {
                     let displayStatus = phase.status;
                     let displayName = formatPhaseNameForUI(phase.name);
-                    let isGoldCheck = false;
                     
-                    if (phase.id === 2) {
-                      displayStatus = 'completed';
-                      isGoldCheck = true;
-                    } else if (phase.id === 3) {
-                      displayStatus = 'active'; // unlocked
-                      displayName = "Phase 3 — Testing & Validation";
+                    // If Phase 1 (ideation_completed) is done, Phase 2 is automatically unlocked
+                    if (phase.id === 2 && user?.ideation_completed) {
+                      if (displayStatus === 'locked') {
+                        displayStatus = 'active';
+                      }
                     }
                     
-                    const isLocked = displayStatus === 'locked' && !isPhase1Locked;
+                    const isLocked = displayStatus === 'locked';
 
                     return (
                       <button 
@@ -694,9 +724,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                         }`}
                       >
                         <div className="flex items-center gap-4 overflow-hidden">
-                          {isPhase1Locked ? (
-                            <Lock className="w-5 h-5 shrink-0 text-[#C9A84C]" />
-                          ) : displayStatus === 'locked' ? (
+                          {isLocked ? (
                              <Lock className="w-5 h-5 shrink-0" />
                           ) : (
                              <BookOpen className="w-5 h-5 shrink-0" />
@@ -705,14 +733,8 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                         </div>
                         {displayStatus === 'completed' && (
                           <div className="flex items-center gap-1 shrink-0">
-                            {isGoldCheck ? (
-                              <>
-                                <span className="text-[10px] text-[#C9A84C] font-black uppercase tracking-wider">Completed ✓</span>
-                                <ShieldCheck className="w-4 h-4 text-[#C9A84C]" />
-                              </>
-                            ) : (
-                              <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                            )}
+                            <span className="text-[10px] text-[#C9A84C] font-black uppercase tracking-wider">Completed ✓</span>
+                            <ShieldCheck className="w-4 h-4 text-[#C9A84C]" />
                           </div>
                         )}
                       </button>
@@ -1330,7 +1352,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                     <CheckCircle2 size={18} />
                                  </div>
                                  <div>
-                                    <p className="text-xs font-bold text-slate-900">{phases.filter(p => p.status === 'completed' || p.id === 2).length} Completed</p>
+                                    <p className="text-xs font-bold text-slate-900">{phases.filter(p => p.status === 'completed' || (p.id === 1 && !!user?.ideation_completed)).length} Completed</p>
                                     <p className="text-[10px] text-slate-400 font-medium tracking-wide">Phases Mastered</p>
                                  </div>
                               </div>
@@ -1341,11 +1363,14 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                  <div className="min-w-0">
                                     <p className="text-xs font-bold text-slate-900 truncate">
                                       {(() => {
-                                         const activePhase = phases.find(p => p.status === 'active');
-                                         if (!activePhase || activePhase.id <= 3) {
-                                           return "Phase 3 — Testing & Validation";
+                                         if (!user?.ideation_completed) {
+                                            return "Phase 1 — Discovery & Ideation";
                                          }
-                                         return formatPhaseNameForUI(activePhase.name);
+                                         const activePhase = phases.find(p => p.status === 'active' || (p.id === 2 && !phases.some(x => x.id === 2 && x.status === 'completed')));
+                                         if (activePhase) {
+                                            return formatPhaseNameForUI(activePhase.name);
+                                         }
+                                         return "Completed Curriculum!";
                                       })()}
                                     </p>
                                     <p className="text-[10px] text-slate-400 font-medium tracking-wide">Current Focus</p>
@@ -1369,15 +1394,23 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                               {/* Progress Markers */}
                               <div className="relative flex justify-between items-center h-20">
                                  {(() => {
-                                   const checkpoints = [
-                                     { name: 'Discovery & Ideation', isCompleted: !!user?.ideation_completed, isActive: !user?.ideation_completed },
-                                     ...phases.map((p) => ({
-                                       name: p.id === 3 ? "Phase 3 — Testing & Validation" : formatPhaseNameForUI(p.name),
-                                       isCompleted: p.id === 2 ? true : (!!user?.ideation_completed && p.status === 'completed'),
-                                       isActive: p.id === 3 ? true : p.id === 2 ? false : (!!user?.ideation_completed && p.status === 'active')
-                                     }))
-                                   ];
-                                   return checkpoints.map((chk, idx) => {
+                                    const checkpoints = phases.map((p) => {
+                                      const isP1 = p.id === 1;
+                                      const isCompleted = isP1 ? !!user?.ideation_completed : (!!user?.ideation_completed && p.status === 'completed');
+                                      let isActive = isP1 ? !user?.ideation_completed : false;
+                                      
+                                      if (!isP1 && !!user?.ideation_completed) {
+                                        const isP2Active = p.id === 2 && !phases.some(x => x.id === 2 && x.status === 'completed');
+                                        isActive = p.status === 'active' || isP2Active;
+                                      }
+                                      
+                                      return {
+                                        name: formatPhaseNameForUI(p.name),
+                                        isCompleted,
+                                        isActive
+                                      };
+                                    });
+                                    return checkpoints.map((chk, idx) => {
                                      const isCompleted = chk.isCompleted;
                                      const isActive = chk.isActive;
                                      return (
