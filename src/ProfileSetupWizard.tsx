@@ -85,6 +85,16 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+
+  useEffect(() => {
+    if (showSuccessOverlay) {
+      const timer = setTimeout(() => {
+        onNavigate("intro");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessOverlay, onNavigate]);
 
   // Step 1: Personal Coordinates
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || AVATAR_PRESETS[0]);
@@ -156,6 +166,7 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
   };
 
   const handleFormSubmit = async () => {
+    if (loading || showSuccessOverlay) return;
     setError("");
     if (!institutionName) {
       setError("Please key in your School / College / University Name");
@@ -199,13 +210,8 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
         localStorage.setItem("vibelab_user", JSON.stringify(updatedUser));
         onUpdateUser(updatedUser);
 
-        // Show success toast with a smooth 3-second countdown redirect to the Intro Phase
-        toast.custom((t) => (
-          <OnboardingSuccessToast t={t} onRedirect={() => onNavigate("intro")} />
-        ), {
-          duration: 4000,
-          position: "top-center"
-        });
+        // Set success overlay to true to show the centered success message card with dimmed/blurred background
+        setShowSuccessOverlay(true);
       } else {
         setError(data.error || "Failed to complete profile registration");
       }
@@ -546,7 +552,7 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
               <button
                 type="button"
                 onClick={handleFormSubmit}
-                disabled={loading}
+                disabled={loading || showSuccessOverlay}
                 className="flex-1 py-3 bg-cyan-650 hover:bg-cyan-700 text-white bg-cyan-600 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 cursor-pointer text-xs disabled:opacity-75"
               >
                 {loading ? (
@@ -563,6 +569,47 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
         </div>
 
       </div>
+
+      {/* Centered Success State Confirmation Modal / Overlay */}
+      <AnimatePresence>
+        {showSuccessOverlay && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 15, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 15, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-white p-8 md:p-10 max-w-sm w-full rounded-[2.5rem] border border-slate-100 shadow-2xl flex flex-col items-center text-center relative"
+            >
+              {/* Centered Green Circle Badge with check icon */}
+              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-100 shadow-sm mb-6 animate-bounce">
+                <Check className="w-8 h-8 text-emerald-600" strokeWidth={2.5} />
+              </div>
+
+              {/* Heading */}
+              <h2 className="text-2xl md:text-3xl font-display font-black text-slate-950 tracking-tight mb-3">
+                Thank You!
+              </h2>
+
+              {/* Message */}
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                Your educational information has been saved successfully.
+              </p>
+
+              {/* Progress loader or subtle countdown */}
+              <div className="mt-6 flex items-center gap-1.5 text-[11px] font-bold text-cyan-600 font-mono bg-cyan-50/50 px-3 py-1.5 rounded-full border border-cyan-100/40">
+                <Loader2 className="w-3 h-3 animate-spin text-cyan-600" />
+                <span>Redirecting to Introduction...</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
