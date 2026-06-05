@@ -8,16 +8,16 @@ import {
   Sparkles, 
   Check, 
   Layout, 
-  Smartphone, 
-  Monitor, 
-  Tablet, 
   Send,
   MessageSquare,
   HelpCircle,
   Eye,
   Settings,
   Zap,
-  Info
+  Info,
+  Maximize2,
+  X,
+  FileCode
 } from 'lucide-react';
 
 interface ProductScreen {
@@ -48,11 +48,10 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
   const [isCompiling, setIsCompiling] = useState(false);
   const [session, setSession] = useState<ProductSession | null>(null);
   const [screens, setScreens] = useState<ProductScreen[]>([]);
-  const [activeScreenIndex, setActiveScreenIndex] = useState(0);
+  const [selectedModalScreen, setSelectedModalScreen] = useState<ProductScreen | null>(null);
 
   // Edit feedbacks
   const [changeRequests, setChangeRequests] = useState('');
-  const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   useEffect(() => {
     fetchData();
@@ -88,7 +87,6 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
 
       if (data.screens && data.screens.length > 0) {
         setScreens(data.screens);
-        setActiveScreenIndex(0);
       } else {
         toast.error('Screens have not been generated yet. Redirecting back to user journey mapping!');
         navigateTo('/phase/2/journey');
@@ -131,7 +129,6 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
       const data = await res.json();
       if (data.screens && data.screens.length > 0) {
         setScreens(data.screens);
-        setActiveScreenIndex(0);
         setChangeRequests('');
         toast.success('AI successfully incorporated feedback and regenerated your wireflow screens! 🚀');
       } else {
@@ -157,7 +154,7 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
         },
         body: JSON.stringify({
           session_id: session?.id
-          // No change_requests sent triggers final approval and compilations
+          // No change_requests parameter tells the backend that we approve
         })
       });
 
@@ -166,10 +163,8 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
         throw new Error(errorData.error || 'Failed to approve layout layouts');
       }
 
-      toast.success('Layouts approved! Deeply integrating interactive client-side logic to compile your MVP...');
-      
-      // Navigate to current review or complete step
-      navigateTo('/dashboard');
+      toast.success('Layouts approved! Launching MVP builder space...');
+      navigateTo('/phase/2/building');
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed compiling your functional MVP');
@@ -187,28 +182,26 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
     );
   }
 
-  const currentScreen = screens[activeScreenIndex];
-
   return (
     <div className="min-h-screen bg-[#02050e] text-white selection:bg-[#C9A84C]/25 pb-24 relative overflow-hidden font-dmsans">
-      {/* Golden backdrop particles layout */}
+      {/* Decorative radial glows */}
       <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#C9A84C]/5 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-6xl mx-auto px-6 py-12">
-        {/* Back Button */}
+      <div className="w-full max-w-6xl mx-auto px-6 py-12 pb-24">
+        {/* Back navigation Row */}
         <button
           onClick={() => navigateTo('/phase/2/journey')}
           className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-400 hover:text-[#C9A84C] mb-8 transition-colors uppercase gap-2 cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" /> Go back to Journey
+          <ArrowLeft className="w-4 h-4" /> Go back to Journey Map
         </button>
 
-        {/* Progress Tracker (Step 4 of 10) */}
+        {/* Step tracking line */}
         <div className="mb-10 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
           <div className="flex justify-between items-center text-xs font-semibold text-slate-400 font-jetbrains mb-3">
             <span className="text-[#C9A84C] uppercase tracking-widest font-black">Step 4 of 10</span>
-            <span>Product Screens View</span>
+            <span>Product Wireflow Sandbox</span>
           </div>
           <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
             <motion.div
@@ -220,198 +213,263 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
           </div>
         </div>
 
-        {/* Header content */}
-        <div className="mb-10 text-center sm:text-left">
-          <h2 className="font-bebas text-4xl sm:text-6xl tracking-widest text-white leading-none mb-3">
-            YOUR WIREFRAME SCREENS
+        {/* Big styled Bebas Header */}
+        <div className="mb-12 text-center md:text-left">
+          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#C9A84C] leading-none mb-4">
+            YOUR PRODUCT SCREENS
           </h2>
-          <p className="font-dmsans text-slate-400 text-sm sm:text-base leading-relaxed max-w-3xl">
-            Here are high-fidelity mockups of your UI layouts. Switch between views using the tabs below, test responsiveness, and use the adjustment block to suggest final style/text enhancements.
+          <p className="font-sans text-slate-350 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
+            Here are the screens for your product. Review each one.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Vertical layout controls/sidebar (Spans 1 Column) */}
-          <div className="space-y-6 lg:col-span-1">
-            <h4 className="font-bebas text-xl text-[#C9A84C] tracking-wider mb-2 flex items-center gap-1.5">
-              <Layout className="w-4 h-4" /> Layout Sections
-            </h4>
-            
-            <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-2 pb-3 lg:pb-0 scrollbar-none select-none">
-              {screens.map((sc, i) => (
-                <button
+        {/* Horizontal scrollable row of screen cards */}
+        <div className="mb-12">
+          <div className="flex flex-row overflow-x-auto gap-6 pb-6 pt-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+            {screens.map((sc, idx) => {
+              // Frame the preview correctly inside the card
+              const srcDoc = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <script src="https://cdn.tailwindcss.com"></script>
+                  <style>
+                    body {
+                      background: #02050e;
+                      color: white;
+                      font-family: sans-serif;
+                      padding: 16px;
+                      margin: 0;
+                      overflow: hidden;
+                      height: 100%;
+                    }
+                  </style>
+                </head>
+                <body>
+                  ${sc.layout_html}
+                </body>
+                </html>
+              `;
+
+              return (
+                <motion.div
                   key={sc.id}
-                  onClick={() => setActiveScreenIndex(i)}
-                  className={`w-full text-left p-4 rounded-xl border text-xs font-semibold transition-all shrink-0 lg:shrink flex flex-col gap-1.5 cursor-pointer max-w-[200px] lg:max-w-none ${
-                    activeScreenIndex === i
-                      ? 'bg-[#C9A84C]/10 border-[#C9A84C] text-[#C9A84C]'
-                      : 'bg-slate-950/40 border-slate-900 text-slate-400 hover:border-slate-800/80 hover:text-white'
-                  }`}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                  onClick={() => setSelectedModalScreen(sc)}
+                  className="w-[280px] sm:w-[320px] shrink-0 bg-slate-950/60 border border-slate-900 hover:border-[#C9A84C]/50 rounded-2xl p-4.5 cursor-pointer flex flex-col justify-between group shadow-lg transition-all duration-300 hover:-translate-y-1"
                 >
-                  <span className="font-jetbrains font-bold text-[9px] uppercase tracking-widest opacity-60">
-                    SCREEN 0{i + 1}
-                  </span>
-                  <span className="font-sans truncate text-sm">
-                    {sc.screen_name}
-                  </span>
-                </button>
-              ))}
-            </div>
+                  {/* Card top details */}
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-[9px] font-bold font-jetbrains text-[#C9A84C] tracking-widest uppercase">
+                      SCREEN 0{idx + 1}
+                    </span>
+                    <Maximize2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#C9A84C] transition-colors" />
+                  </div>
 
-            {/* Current Screen Meta Details */}
-            {currentScreen && (
-              <motion.div
-                key={activeScreenIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-slate-950 p-5 rounded-2xl border border-slate-900 space-y-3.5"
-              >
-                <div className="text-xs font-semibold text-slate-500 font-jetbrains uppercase tracking-widest pb-2 border-b border-slate-900 flex justify-between items-center">
-                  <span>Purpose Specs</span>
-                  <Zap className="w-3.5 h-3.5 text-[#C9A84C]" />
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-slate-300 font-sans mb-1 uppercase">Purpose</h5>
-                  <p className="text-xs text-slate-400 leading-relaxed font-sans">{currentScreen.screen_purpose}</p>
-                </div>
-                <div>
-                  <h5 className="text-xs font-bold text-slate-300 font-sans mb-1 uppercase">Mechanisms</h5>
-                  <p className="text-xs text-slate-400 leading-relaxed font-sans">{currentScreen.screen_description}</p>
-                </div>
-              </motion.div>
-            )}
+                  {/* Sandboxed responsive preview iframe */}
+                  <div className="w-full h-44 bg-slate-950 rounded-xl overflow-hidden border border-slate-900 pointer-events-none relative mb-4">
+                    <iframe
+                      srcDoc={srcDoc}
+                      className="w-full h-full border-0"
+                      title={`Card preview: ${sc.screen_name}`}
+                      sandbox="allow-scripts"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-3">
+                      <span className="text-[10px] uppercase font-bold tracking-wider font-jetbrains bg-slate-900/90 text-slate-400 px-2 py-0.5 rounded border border-slate-850">
+                        Render Mock
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Screen Content Metadata */}
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#C9A84C] transition-colors font-sans truncate">
+                      {sc.screen_name}
+                    </h4>
+                    <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
+                      {sc.screen_purpose}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
+        </div>
 
-          {/* Interactive Screen viewport (Spans 3 Columns) */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Viewport bar options */}
-            <div className="flex justify-between items-center bg-slate-950/80 p-4.5 rounded-2xl border border-slate-900 flex-wrap gap-4">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#C9A84C] inline-block"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span className="text-xs font-semibold font-jetbrains text-slate-400 uppercase tracking-widest ml-3.5">
-                  {currentScreen?.screen_name || 'High-fidelity Wireframe'}
-                </span>
-              </div>
-              
-              {/* Responsive Size Selectors */}
-              <div className="flex gap-1">
-                {(['desktop', 'tablet', 'mobile'] as const).map(mode => (
-                  <button
-                    key={mode}
-                    onClick={() => setViewportMode(mode)}
-                    className={`p-2 rounded-lg border transition-all cursor-pointer ${
-                      viewportMode === mode
-                        ? 'bg-[#C9A84C]/10 border-[#C9A84C] text-[#C9A84C]'
-                        : 'bg-slate-950 text-slate-500 border-slate-900 hover:text-slate-300 hover:border-slate-800'
-                    }`}
-                    title={`Preview in ${mode} viewport`}
-                  >
-                    {mode === 'desktop' && <Monitor className="w-4 h-4" />}
-                    {mode === 'tablet' && <Tablet className="w-4 h-4" />}
-                    {mode === 'mobile' && <Smartphone className="w-4 h-4" />}
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* Change Request refinement form box */}
+        <div className="bg-slate-950/50 rounded-2xl border border-slate-900 p-6 md:p-8 mb-12">
+          <h3 className="font-bebas text-2xl tracking-widest text-[#C9A84C] mb-4 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-[#C9A84C]" /> Request changes (optional)
+          </h3>
+          <p className="text-xs text-slate-400 font-sans leading-relaxed mb-5">
+            Describe what you would like changed... We will automatically weave these refinements into the final layouts.
+          </p>
 
-            {/* Outer Viewport Box mapping aspect rules */}
-            <div className="w-full flex justify-center items-center bg-slate-950/30 p-4 border border-slate-900 rounded-3xl min-h-[500px]">
-              <motion.div
-                key={`${activeScreenIndex}-${viewportMode}`}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className={`bg-slate-950 relative overflow-y-auto border border-slate-800 rounded-2xl shadow-2xl origin-center duration-3 transition-all scrollbar-thin ${
-                  viewportMode === 'desktop' 
-                    ? 'w-full h-[620px]' 
-                    : viewportMode === 'tablet' 
-                      ? 'w-[768px] h-[580px]' 
-                      : 'w-[375px] h-[520px]'
-                }`}
+          <div className="space-y-4">
+            <textarea
+              value={changeRequests}
+              onChange={(e) => setChangeRequests(e.target.value)}
+              disabled={isSubmitting || isCompiling}
+              placeholder="Describe what you would like changed..."
+              rows={3}
+              className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C] text-sm text-slate-100 p-5 rounded-xl outline-none transition-all placeholder:text-slate-650 resize-y leading-relaxed font-sans"
+            />
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-end">
+              {/* Secondary button (Outline): Request Changes */}
+              <button
+                onClick={handleRegenerateScreens}
+                disabled={isSubmitting || isCompiling || !changeRequests.trim()}
+                className="inline-flex items-center justify-center bg-slate-950 hover:bg-slate-900 text-[#C9A84C] border border-[#C9A84C]/30 hover:border-[#C9A84C] font-bold text-xs tracking-widest uppercase px-6 py-4 rounded-xl transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer font-jetbrains"
               >
-                {/* HTML rendering inside safely framed container */}
-                <div 
-                  className="w-full min-h-full font-sans bg-[#02050e]"
-                  dangerouslySetInnerHTML={{ __html: currentScreen?.layout_html || '' }}
-                />
-              </motion.div>
-            </div>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2.5 animate-spin text-[#C9A84C]" />
+                    REFRACTING SCREENS...
+                  </>
+                ) : (
+                  'Request Changes'
+                )}
+              </button>
 
-            {/* Adjustments Panel (Change request/refinement field) */}
-            <div className="bg-slate-950/40 p-6 rounded-3xl border border-slate-850 shadow-xl space-y-5">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-[#C9A84C]" />
-                <h4 className="font-bebas text-xl text-white tracking-widest uppercase">
-                  WANT TO MAKE CHANGES OR ADJUSTMENTS?
-                </h4>
-              </div>
-
-              <p className="text-xs text-slate-400 font-sans leading-relaxed">
-                Need to fine-tune colors, descriptions, button names, or screen details? Write your feedback below and VibeLab's PM Assistant will regenerate updated versions instantly.
-              </p>
-
-              <div>
-                <textarea
-                  value={changeRequests}
-                  onChange={(e) => setChangeRequests(e.target.value)}
-                  disabled={isSubmitting || isCompiling}
-                  placeholder="e.g. Change the main theme button colors to a bright sleek neon gold, make sure the dashboards have a customer avatar logo at the top right, and add an info button to each panel."
-                  rows={3}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C] text-sm text-slate-100 p-5 rounded-xl outline-none transition-all placeholder:text-slate-650 resize-y leading-relaxed font-sans"
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3.5 pt-2">
-                {/* Secondary Button: Request Edits */}
-                <button
-                  onClick={handleRegenerateScreens}
-                  disabled={isSubmitting || isCompiling || !changeRequests.trim()}
-                  className="flex-1 inline-flex items-center justify-center bg-slate-950 hover:bg-slate-900 text-[#C9A84C] border border-[#C9A84C]/30 hover:border-[#C9A84C] font-bold text-xs tracking-wider uppercase px-6 py-4 rounded-xl transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2.5 animate-spin text-[#C9A84C]" />
-                      REGENERATING SCREEN LAYOUTS...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2.5 text-[#C9A84C]" />
-                      Submit Style Adjustment
-                    </>
-                  )}
-                </button>
-
-                {/* Primary Button: Approve Screen Wireflows */}
-                <button
-                  onClick={handleApproveLayoutsAndCompile}
-                  disabled={isSubmitting || isCompiling}
-                  className="flex-1 inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-wider text-xs sm:text-sm uppercase px-8 py-4 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/5 hover:shadow-[#C9A84C]/20 disabled:opacity-45 disabled:pointer-events-none cursor-pointer"
-                >
-                  {isCompiling ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin text-black" />
-                      COMPILING MVP CODE RUNTIME...
-                    </>
-                  ) : (
-                    <>
-                      Looks Good — Approve Layouts <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="p-4 rounded-xl bg-[#C9A84C]/5 border border-[#C9A84C]/15 flex items-start gap-3 mt-4">
-                <Info className="w-5 h-5 text-[#C9A84C] shrink-0 mt-0.5" />
-                <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
-                  Approving screen wireflows will prompt the AI system to weave these components together into a <strong>dynamic single-file functional MVP application</strong>. It compiles physical event tracking, responsive modal dialog flows, and full layout logic to test live within your learning dashboard!
-                </p>
-              </div>
+              {/* Primary button (Gold): Build My MVP */}
+              <button
+                onClick={handleApproveLayoutsAndCompile}
+                disabled={isSubmitting || isCompiling}
+                className="inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-widest text-xs sm:text-sm uppercase px-8 py-4 px-10 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/5 hover:shadow-[#C9A84C]/25 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              >
+                {isCompiling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2.5 animate-spin text-black" />
+                    COMPILING MVP CODEBASE...
+                  </>
+                ) : (
+                  <>
+                    Build My MVP <ArrowRight className="w-4.5 h-4.5 ml-2.5" />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Footer Technical Metadata paths row (Explicitly requirement: "Show every file path") */}
+        <div className="pt-6 border-t border-slate-900 flex flex-wrap gap-4 items-center justify-between text-slate-500 font-jetbrains text-[9px] uppercase tracking-widest">
+          <div className="flex items-center gap-2">
+            <FileCode className="w-3.5 h-3.5 text-[#C9A84C]" />
+            <span>Active Modules Checklist:</span>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <span className="text-slate-400 hover:text-[#C9A84C] transition-colors">
+              src/pages/Phase2/FeaturesScreen.tsx
+            </span>
+            <span className="text-slate-600">|</span>
+            <span className="text-slate-400 hover:text-[#C9A84C] transition-colors">
+              src/pages/Phase2/JourneyScreen.tsx
+            </span>
+            <span className="text-slate-600">|</span>
+            <span className="text-slate-[#C9A84C] transition-colors">
+              src/pages/Phase2/ScreensPreview.tsx
+            </span>
+          </div>
+        </div>
       </div>
+
+      {/* Expanded high-fidelity interactive preview modal overlay */}
+      <AnimatePresence>
+        {selectedModalScreen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              className="w-full max-w-5xl bg-[#02050e] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[85vh]"
+            >
+              {/* Modal top heading bar */}
+              <div className="flex justify-between items-center bg-slate-950 p-4.5 border-b border-slate-900">
+                <div className="flex items-center gap-2">
+                  <Layout className="w-4 h-4 text-[#C9A84C]" />
+                  <span className="font-jetbrains text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-0.5 rounded border border-slate-850">
+                    HI-FI INTERACTIVE WIREFRAME
+                  </span>
+                  <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide font-sans ml-2.5">
+                    {selectedModalScreen.screen_name}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedModalScreen(null)}
+                  className="p-1 px-2 rounded-lg bg-slate-900 text-slate-400 hover:text-white transition-all border border-slate-850 flex items-center justify-center gap-1.5 text-[10px] font-jetbrains uppercase tracking-widest cursor-pointer"
+                >
+                  <X className="w-4.5 h-4.5 text-rose-500" /> Close View
+                </button>
+              </div>
+
+              {/* Centered iframe preview viewport */}
+              <div className="flex-1 bg-slate-950 p-6 flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full bg-[#02050e] rounded-xl overflow-hidden border border-slate-900 shadow-inner">
+                  <iframe
+                    srcDoc={`
+                      <!DOCTYPE html>
+                      <html>
+                      <head>
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+                        <style>
+                          body {
+                            background: #02050e;
+                            color: white;
+                            font-family: 'DM Sans', sans-serif;
+                            padding: 32px;
+                            margin: 0;
+                            height: 100%;
+                            overflow-y: auto;
+                          }
+                          .font-bebas { font-family: 'Bebas Neue', sans-serif; }
+                          .font-jetbrains { font-family: 'JetBrains Mono', sans-serif; }
+                        </style>
+                      </head>
+                      <body>
+                        ${selectedModalScreen.layout_html}
+                      </body>
+                      </html>
+                    `}
+                    className="w-full h-full border-0 select-text"
+                    title={`Modal Full View: ${selectedModalScreen.screen_name}`}
+                    sandbox="allow-scripts"
+                  />
+                </div>
+              </div>
+
+              {/* Display specifications below iframe */}
+              <div className="p-5.5 bg-slate-950 border-t border-slate-900 flex flex-wrap gap-4 items-start justify-between">
+                <div className="space-y-1 max-w-xl">
+                  <span className="block text-[9px] font-bold font-jetbrains text-[#C9A84C] uppercase tracking-widest">
+                    Mechanism Specs
+                  </span>
+                  <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                    {selectedModalScreen.screen_description}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[9px] font-bold font-jetbrains text-[#C9A84C] uppercase tracking-widest">
+                    Layout Purpose
+                  </span>
+                  <span className="inline-block text-[10px] text-slate-300 font-bold font-sans bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-850">
+                    {selectedModalScreen.screen_purpose}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

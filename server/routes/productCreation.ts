@@ -313,6 +313,44 @@ router.post('/features/update', authenticateToken, async (req: any, res) => {
   }
 });
 
+// 4b. POST /api/product/features/add
+router.post('/features/add', authenticateToken, async (req: any, res) => {
+  const { session_id, feature_name, feature_description, category } = req.body;
+
+  if (!session_id || !feature_name || !feature_description) {
+    return res.status(400).json({ error: 'Missing feature parameters' });
+  }
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [result]: any = await p.execute(
+      `INSERT INTO product_features (session_id, feature_name, feature_description, category, added_by, is_included)
+       VALUES (?, ?, ?, ?, 'student', TRUE)`,
+      [session_id, feature_name, feature_description, category || 'must_have']
+    );
+
+    const newFeatureId = result.insertId;
+
+    res.json({
+      success: true,
+      feature: {
+        id: newFeatureId,
+        feature_name,
+        feature_description,
+        category: category || 'must_have',
+        is_included: true,
+        added_by: 'student',
+        student_rationale: ''
+      }
+    });
+  } catch (error: any) {
+    console.error('Failed to add custom feature:', error);
+    res.status(500).json({ error: 'Failed to add custom feature' });
+  }
+});
+
 // 5. POST /api/product/features/approve
 router.post('/features/approve', authenticateToken, async (req: any, res) => {
   const { session_id } = req.body;
