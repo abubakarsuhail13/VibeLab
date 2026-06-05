@@ -267,15 +267,27 @@ router.post('/generate-blueprint', authenticateToken, async (req: any, res) => {
       [userId]
     );
 
-    // Fetch Phase 1 Id (where order_index = 1) and activate it
-    const [phases]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
-    const phase1Id = (phases && phases.length > 0) ? phases[0].id : 1;
+    // Fetch Phase 1 Id and Phase 2 Id
+    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
+    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
+    const phase1Id = (p1Rows && p1Rows.length > 0) ? p1Rows[0].id : null;
+    const phase2Id = (p2Rows && p2Rows.length > 0) ? p2Rows[0].id : null;
 
-    // Set user progress active for Python Phase 1
-    await p.execute(
-      'INSERT INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, "active") ON DUPLICATE KEY UPDATE status = "active"',
-      [userId, phase1Id]
-    );
+    // Set user progress to completed for Phase 1
+    if (phase1Id) {
+      await p.execute(
+        'INSERT INTO user_phase_progress (user_id, phase_id, status, progress_percentage) VALUES (?, ?, "completed", 100) ON DUPLICATE KEY UPDATE status = "completed", progress_percentage = 100',
+        [userId, phase1Id]
+      );
+    }
+
+    // Set user progress active for Phase 2 (Product Creation)
+    if (phase2Id) {
+      await p.execute(
+        'INSERT INTO user_phase_progress (user_id, phase_id, status) VALUES (?, ?, "active") ON DUPLICATE KEY UPDATE status = "active"',
+        [userId, phase2Id]
+      );
+    }
 
     res.json({ blueprint });
   } catch (error: any) {

@@ -17,13 +17,11 @@ function getTableData(table: string): any[] {
     // Seed default data for key tables
     if (table === 'phases') {
       const defaultPhases = [
-        {id: 1, name: "Phase 1 — Learn Python", description: "Master Python variables, functions, HTTP requests, APIs, JSON handling, and OOP.", order_index: 1, is_locked_default: 0},
-        {id: 2, name: "Phase 2 — LLMs & AI Fundamentals", description: "Delve into tokens, context windows, embeddings, prompt engineering, RAG, and vector databases.", order_index: 2, is_locked_default: 1},
-        {id: 3, name: "Phase 3 — Build Projects", description: "Build full applications chaining LLM calls, handling data pipelines, and integrating AI into clean UX.", order_index: 3, is_locked_default: 1},
-        {id: 4, name: "Phase 4 — Learn AI Agents", description: "Understand Model Context Protocol (MCP), tool-calling, agent memory, and multi-agent system pipelines.", order_index: 4, is_locked_default: 1},
-        {id: 5, name: "Phase 5 — Read Papers", description: "Explore deep theoretical fundamentals of ReAct, Toolformer, Tree of Thoughts, Reflexion, and classic surveys.", order_index: 5, is_locked_default: 1},
-        {id: 6, name: "Phase 6 — Courses", description: "Earn practical validation inside DeepLearning.AI or LangChain for LLMs/Agents, completing interactive capstones.", order_index: 6, is_locked_default: 1},
-        {id: 7, name: "Phase 7 — Deployment", description: "Publish containerized services with FastAPI, Docker, CI/CD, and serverless Cloud tools.", order_index: 7, is_locked_default: 1}
+        {id: 1, name: "Phase 1 — Discovery & Ideation", description: "Discover your project idea and define your MVP.", order_index: 1, is_locked_default: 0},
+        {id: 2, name: "Phase 2 — Product Creation", description: "Turn your idea into a working product. Think like a creator.", order_index: 2, is_locked_default: 1},
+        {id: 3, name: "Phase 3 — Testing & Validation", description: "Test your product, understand how it works, and improve it.", order_index: 3, is_locked_default: 1},
+        {id: 4, name: "Phase 4 — Deployment", description: "Launch your project and share it with the world.", order_index: 4, is_locked_default: 1},
+        {id: 5, name: "Phase 5 — Portfolio & Showcase", description: "Build your portfolio and present your achievements.", order_index: 5, is_locked_default: 1}
       ];
       fs.writeFileSync(filePath, JSON.stringify(defaultPhases, null, 2), 'utf-8');
       return defaultPhases;
@@ -768,6 +766,101 @@ export const getPool = async () => {
           )
         `);
 
+        // Create Phase 2: Product Creation Tables
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS product_sessions (
+            id                  INT PRIMARY KEY AUTO_INCREMENT,
+            user_id             INT NOT NULL,
+            ideation_session_id INT,
+            current_step        ENUM(
+              'blueprint','features','user_journey','screens',
+              'mvp_generation','review','description',
+              'feature_explanation','demo_prep','approved'
+            ) DEFAULT 'blueprint',
+            status              ENUM('in_progress','completed') DEFAULT 'in_progress',
+            created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS product_blueprints (
+            id                INT PRIMARY KEY AUTO_INCREMENT,
+            session_id        INT NOT NULL,
+            user_id           INT NOT NULL,
+            project_name      VARCHAR(255),
+            problem_statement TEXT,
+            target_users      TEXT,
+            mvp_scope         TEXT,
+            student_approved  BOOLEAN DEFAULT FALSE,
+            approved_at       TIMESTAMP NULL,
+            FOREIGN KEY (session_id) REFERENCES product_sessions(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id)    REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS product_features (
+            id                  INT PRIMARY KEY AUTO_INCREMENT,
+            session_id          INT NOT NULL,
+            feature_name        VARCHAR(255) NOT NULL,
+            feature_description TEXT,
+            category            ENUM('must_have','nice_to_have','future') NOT NULL,
+            added_by            ENUM('ai','student') DEFAULT 'ai',
+            is_included         BOOLEAN DEFAULT TRUE,
+            student_rationale   TEXT,
+            ai_feedback         TEXT,
+            FOREIGN KEY (session_id) REFERENCES product_sessions(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS user_journeys (
+            id          INT PRIMARY KEY AUTO_INCREMENT,
+            session_id  INT NOT NULL,
+            steps       JSON,
+            key_actions JSON,
+            approved    BOOLEAN DEFAULT FALSE,
+            approved_at TIMESTAMP NULL,
+            FOREIGN KEY (session_id) REFERENCES product_sessions(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS product_screens (
+            id                 INT PRIMARY KEY AUTO_INCREMENT,
+            session_id         INT NOT NULL,
+            screen_name        VARCHAR(255),
+            screen_description TEXT,
+            screen_purpose     TEXT,
+            layout_html        LONGTEXT,
+            approved           BOOLEAN DEFAULT FALSE,
+            change_requests    TEXT,
+            FOREIGN KEY (session_id) REFERENCES product_sessions(id) ON DELETE CASCADE
+          )
+        `);
+
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS mvp_builds (
+            id                       INT PRIMARY KEY AUTO_INCREMENT,
+            session_id               INT NOT NULL,
+            user_id                  INT NOT NULL,
+            mvp_html                 LONGTEXT,
+            architecture_explanation TEXT,
+            product_description      TEXT,
+            demo_script              TEXT,
+            key_talking_points       JSON,
+            builder_reflection       TEXT,
+            status                   ENUM('generating','ready_for_review','approved','ready_for_qa')
+                                     DEFAULT 'generating',
+            generated_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            approved_at              TIMESTAMP NULL,
+            FOREIGN KEY (session_id) REFERENCES product_sessions(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id)    REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+
         // Safe, isolated column generator for all tables
         const addColumnIfNeeded = async (tableName: string, columnName: string, columnDef: string) => {
           try {
@@ -877,34 +970,64 @@ export const getPool = async () => {
           console.error("Error migrating vl_id for existing users:", vlErr.message);
         }
 
-        // Check and reconstruct the curriculum if it does not match Python-first v2 spec - Wrapped beautifully in try-catch to keep it robust against permission levels (e.g. Hostinger/shared MySQL blocks FOREIGN_KEY_CHECKS = 0)
+        // Check and reconstruct the curriculum to match the new 5-phase structure - Wrapped beautifully in try-catch to keep it robust against permission levels (e.g. Hostinger/shared MySQL blocks FOREIGN_KEY_CHECKS = 0)
         try {
           try {
             await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
           } catch (_) {}
           
-          const [pCheck]: any = await connection.execute('SELECT name FROM phases WHERE order_index = 1');
-          const needsCurriculumReset = pCheck.length === 0 || !pCheck[0].name.toLowerCase().includes('python');
+          const [pCheck]: any = await connection.execute('SELECT id, name FROM phases WHERE order_index = 1');
           
-          if (needsCurriculumReset) {
-            console.log('Curriculum is outdated. Resetting and updating to VibeLab AI Skills path...');
-            await connection.execute('TRUNCATE TABLE phase_resources');
-            await connection.execute('TRUNCATE TABLE quiz_questions');
-            await connection.execute('TRUNCATE TABLE phase_projects');
-            await connection.execute('TRUNCATE TABLE phases');
+          if (pCheck.length === 0) {
+            console.log('DB Migration: Inserting Phase 1 - Discovery & Ideation...');
+            await connection.execute(
+              'INSERT INTO phases (name, description, order_index, is_locked_default) VALUES (?, ?, ?, ?)',
+              ['Discovery & Ideation', 'Discover your project idea and define your MVP.', 1, 0]
+            );
+          } else if (pCheck[0].name.toLowerCase().includes('python')) {
+            console.log('DB Migration: Renaming Phase 1 to Discovery & Ideation...');
+            await connection.execute(
+              'UPDATE phases SET name = ?, description = ? WHERE id = ?',
+              ['Discovery & Ideation', 'Discover your project idea and define your MVP.', pCheck[0].id]
+            );
+          }
+
+          const [oldPhasesCheck]: any = await connection.execute('SELECT COUNT(*) as count FROM phases WHERE order_index > 5');
+          const [p2Check]: any = await connection.execute('SELECT COUNT(*) as count FROM phases WHERE order_index = 2 AND name LIKE "%Product Creation%"');
+          
+          if (oldPhasesCheck[0].count > 0 || p2Check[0].count === 0) {
+            console.log('DB Migration: Transitioning old phases 2-8 to the new 5-phase structure...');
             
-            const initialPhases = [
-              ['Phase 1 — Learn Python', 'Master Python variables, functions, HTTP requests, APIs, JSON handling, and OOP.', 1, 0],
-              ['Phase 2 — LLMs & AI Fundamentals', 'Delve into tokens, context windows, embeddings, prompt engineering, RAG, and vector databases.', 2, 1],
-              ['Phase 3 — Build Projects', 'Build full applications chaining LLM calls, handling data pipelines, and integrating AI into clean UX.', 3, 1],
-              ['Phase 4 — Learn AI Agents', 'Understand Model Context Protocol (MCP), tool-calling, agent memory, and multi-agent system pipelines.', 4, 1],
-              ['Phase 5 — Read Papers', 'Explore deep theoretical fundamentals of ReAct, Toolformer, Tree of Thoughts, Reflexion, and classic surveys.', 5, 1],
-              ['Phase 6 — Courses', 'Earn practical validation inside DeepLearning.AI or LangChain for LLMs/Agents, completing interactive capstones.', 6, 1],
-              ['Phase 7 — Deployment', 'Publish containerized services with FastAPI, Docker, CI/CD, and serverless Cloud tools.', 7, 1]
+            // Delete old relationships first
+            await connection.execute(`
+              DELETE FROM user_phase_progress WHERE phase_id IN (
+                SELECT id FROM phases WHERE order_index > 1
+              )
+            `);
+            await connection.execute(`
+              DELETE FROM phase_projects WHERE phase_id IN (
+                SELECT id FROM phases WHERE order_index > 1
+              )
+            `);
+            await connection.execute(`
+              DELETE FROM phases WHERE order_index > 1
+            `);
+
+            // Insert new 4 phases (indices 2 to 5)
+            const newPhases = [
+              ['Product Creation', 'Turn your idea into a working product. Think like a creator.', 2, 1],
+              ['Testing & Validation', 'Test your product, understand how it works, and improve it.', 3, 1],
+              ['Deployment', 'Launch your project and share it with the world.', 4, 1],
+              ['Portfolio & Showcase', 'Build your portfolio and present your achievements.', 5, 1]
             ];
-            for (const phase of initialPhases) {
-              await connection.execute('INSERT INTO phases (name, description, order_index, is_locked_default) VALUES (?, ?, ?, ?)', phase);
+
+            for (const phase of newPhases) {
+              await connection.execute(
+                'INSERT INTO phases (name, description, order_index, is_locked_default) VALUES (?, ?, ?, ?)',
+                phase
+              );
             }
+            console.log('DB Migration: Phase migration completed successfully.');
           }
           
           try {
