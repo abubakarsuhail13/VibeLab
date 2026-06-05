@@ -86,15 +86,18 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [pendingUser, setPendingUser] = useState<any>(null);
 
   useEffect(() => {
-    if (showSuccessOverlay) {
+    if (showSuccessOverlay && pendingUser) {
       const timer = setTimeout(() => {
+        localStorage.setItem("vibelab_user", JSON.stringify(pendingUser));
+        onUpdateUser(pendingUser);
         onNavigate("intro");
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [showSuccessOverlay, onNavigate]);
+  }, [showSuccessOverlay, pendingUser, onNavigate, onUpdateUser]);
 
   // Step 1: Personal Coordinates
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || AVATAR_PRESETS[0]);
@@ -207,8 +210,7 @@ export default function ProfileSetupWizard({ user, onUpdateUser, onNavigate }: P
           onboarding_completed: true,
           account_type: user?.account_type || (educationLevel === "Teacher" ? "Teacher" : "School Student")
         };
-        localStorage.setItem("vibelab_user", JSON.stringify(updatedUser));
-        onUpdateUser(updatedUser);
+        setPendingUser(updatedUser);
 
         // Set success overlay to true to show the centered success message card with dimmed/blurred background
         setShowSuccessOverlay(true);
