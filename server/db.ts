@@ -928,6 +928,7 @@ export const getPool = async () => {
 
         // Migrate User Phase Progress Columns
         await addColumnIfNeeded('user_phase_progress', 'topics_checklist', 'JSON');
+        await addColumnIfNeeded('user_phase_progress', 'unlocked_at', 'TIMESTAMP NULL DEFAULT NULL');
 
         // Migrate Badges Columns
         await addColumnIfNeeded('badges', 'certificate_url', 'TEXT');

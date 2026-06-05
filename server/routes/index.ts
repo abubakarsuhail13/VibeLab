@@ -6,6 +6,7 @@ import publicRoutes from './public.js';
 import tutorRoutes from './tutor.js';
 import teacherRoutes from './teacher.js';
 import ideationRoutes from './ideation.js';
+import productCreationRoutes from './productCreation.js';
 
 const router = express.Router();
 
@@ -13,6 +14,7 @@ const router = express.Router();
 router.use('/', publicRoutes);
 router.use('/auth', authRoutes);
 router.use('/ideation', ideationRoutes);
+router.use('/product', productCreationRoutes);
 
 
 // Protected routes (middleware applied within modules or here if preferred)
