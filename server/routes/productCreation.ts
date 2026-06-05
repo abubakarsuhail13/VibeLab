@@ -884,4 +884,135 @@ router.get('/deliverables', authenticateToken, async (req: any, res) => {
   }
 });
 
+// 10. POST /api/product/description/save
+router.post('/description/save', authenticateToken, async (req: any, res) => {
+  const { session_id, product_description } = req.body;
+
+  if (!session_id || product_description === undefined) {
+    return res.status(400).json({ error: 'Missing session_id or product_description' });
+  }
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    await p.execute(
+      `UPDATE mvp_builds SET product_description = ? WHERE session_id = ?`,
+      [product_description, session_id]
+    );
+
+    res.json({ success: true, message: 'Description updated successfully' });
+  } catch (error: any) {
+    console.error('Failed to save description:', error);
+    res.status(500).json({ error: error.message || 'Failed saving description' });
+  }
+});
+
+// 11. POST /api/product/features/explain
+router.post('/features/explain', authenticateToken, async (req: any, res) => {
+  const { session_id, feature_id, student_rationale } = req.body;
+
+  if (!session_id || !feature_id || student_rationale === undefined) {
+    return res.status(400).json({ error: 'Missing session_id, feature_id or student_rationale' });
+  }
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // Fetch feature details
+    const [featRows]: any = await p.execute(
+      'SELECT id, feature_name, feature_description FROM product_features WHERE id = ? AND session_id = ?',
+      [feature_id, session_id]
+    );
+
+    if (!featRows || featRows.length === 0) {
+      return res.status(404).json({ error: 'Feature not found.' });
+    }
+
+    const feat = featRows[0];
+    let feedbackText = '';
+
+    if (student_rationale.trim().length > 0) {
+      const prompt = `
+        You are an empathetic, encouraging startup mentor for a student aged 13-16.
+        Review the student's rationale for including a specific feature in their app.
+        
+        Feature Name: ${feat.feature_name}
+        Feature Description: ${feat.feature_description}
+        Student's Rationale of why they included it: "${student_rationale}"
+        
+        Write exactly one professional, highly encouraging sentence of feedback addressing their logic.
+        Keep the tone warm, positive, validating, and direct. Use plain, friendly, zero-jargon language. Say things like "Great thinking — this shows real empathy for your users." or "This is a super smart way to make your app easy for everyday users to trust."
+        
+        Return ONLY the one-sentence feedback. No markdown, no quotes, no extra text.
+      `;
+
+      const geminiRes = await getGeminiClient().models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt
+      });
+
+      feedbackText = parseGeminiResponse(geminiRes).trim();
+    } else {
+      feedbackText = 'Explain your rationale above to receive a helpful mentor review!';
+    }
+
+    // Save to database
+    await p.execute(
+      `UPDATE product_features SET student_rationale = ?, ai_feedback = ? WHERE id = ? AND session_id = ?`,
+      [student_rationale, feedbackText, feature_id, session_id]
+    );
+
+    res.json({
+      success: true,
+      student_rationale,
+      ai_feedback: feedbackText
+    });
+  } catch (error: any) {
+    console.error('Failed feature explain:', error);
+    res.status(500).json({ error: error.message || 'Failed to save rationale' });
+  }
+});
+
+// 12. POST /api/product/demo/save
+router.post('/demo/save', authenticateToken, async (req: any, res) => {
+  const { session_id, demo_script, key_talking_points } = req.body;
+
+  if (!session_id) {
+    return res.status(400).json({ error: 'Missing session_id' });
+  }
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const updates: string[] = [];
+    const params: any[] = [];
+
+    if (demo_script !== undefined) {
+      updates.push('demo_script = ?');
+      params.push(demo_script);
+    }
+
+    if (key_talking_points !== undefined) {
+      updates.push('key_talking_points = ?');
+      params.push(JSON.stringify(key_talking_points));
+    }
+
+    if (updates.length > 0) {
+      params.push(session_id);
+      await p.execute(
+        `UPDATE mvp_builds SET ${updates.join(', ')} WHERE session_id = ?`,
+        params
+      );
+    }
+
+    res.json({ success: true, message: 'Demo presentation prepared!' });
+  } catch (error: any) {
+    console.error('Failed to save demo details:', error);
+    res.status(500).json({ error: error.message || 'Failed saving demo details' });
+  }
+});
+
 export default router;
