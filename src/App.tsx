@@ -51,6 +51,8 @@ import Phase2Page from "./pages/Phase2";
 import FeaturesScreen from "./pages/Phase2/FeaturesScreen";
 import JourneyScreen from "./pages/Phase2/JourneyScreen";
 import ScreensPreview from "./pages/Phase2/ScreensPreview";
+import MVPBuilding from "./pages/Phase2/MVPBuilding";
+import MVPReview from "./pages/Phase2/MVPReview";
 import Leaderboard from "./Leaderboard";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
@@ -1770,6 +1772,8 @@ export default function App() {
           <Route path="/phase/2/features" element={<FeaturesScreen onNavigate={handleNavigate} />} />
           <Route path="/phase/2/journey" element={<JourneyScreen onNavigate={handleNavigate} />} />
           <Route path="/phase/2/screens" element={<ScreensPreview onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/building" element={<MVPBuilding onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/review" element={<MVPReview onNavigate={handleNavigate} />} />
           <Route path="/phase/:id" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
           
           <Route path="/profile/:id" element={<PublicProfileWrapper currentUser={user} />} />

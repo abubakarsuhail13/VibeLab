@@ -142,35 +142,9 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
     }
   };
 
-  const handleApproveLayoutsAndCompile = async () => {
-    setIsCompiling(true);
-    try {
-      const token = localStorage.getItem('vibelab_token');
-      const res = await fetch('/api/product/screens/approve', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          session_id: session?.id
-          // No change_requests parameter tells the backend that we approve
-        })
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to approve layout layouts');
-      }
-
-      toast.success('Layouts approved! Launching MVP builder space...');
-      navigateTo('/phase/2/building');
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Failed compiling your functional MVP');
-    } finally {
-      setIsCompiling(false);
-    }
+  const handleApproveLayoutsAndCompile = () => {
+    toast.success('Layouts approved! Launching MVP builder space...');
+    navigateTo('/phase/2/building');
   };
 
   if (isLoading) {

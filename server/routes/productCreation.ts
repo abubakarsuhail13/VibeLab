@@ -624,10 +624,23 @@ router.post('/screens/approve', authenticateToken, async (req: any, res) => {
     // Else: approve screens, generate MVP
     const userId = req.user.userId;
 
+    const systemPrompt = `You are a frontend developer building a working MVP prototype for a student aged 13-16.
+Generate a complete single-file HTML with embedded CSS and JavaScript.
+
+Rules:
+- HTML, CSS, vanilla JS only — no external libraries or CDN links
+- Fully self-contained — works when opened directly in any browser
+- All product screens as separate views, navigated with JS (show/hide divs)
+- Realistic placeholder/sample data so it looks real and usable
+- Clean design: white background, clear fonts, obvious buttons
+- Add footer: "Built with VibeLab 🚀"
+- Prototype quality — simple and clear, not complex
+
+Return ONLY the complete HTML file.
+No markdown. No explanation. No code fences. Just the raw HTML.`;
+
     const prompt = `
-      You are a Principal Software Engineer. Build a fully functional, highly polished, immersive single-file HTML/CSS/JS MVP prototype for this product.
-      
-      Project Details:
+      You are compiling an MVP for a student product session. Build a complete working MVP prototype for:
       Name: ${bp.project_name}
       Problem: ${bp.problem_statement}
       Scope: ${bp.mvp_scope}
@@ -635,26 +648,13 @@ router.post('/screens/approve', authenticateToken, async (req: any, res) => {
       Approved Features:
       ${featureRows.map((f: any) => `- ${f.feature_name}: ${f.feature_description}`).join('\n')}
       
-      Visual Reference Screens to package:
+      Visual Reference Screens to map:
       ${screenRows.map((s: any) => `* Screen: ${s.screen_name}\nDescription: ${s.screen_description}\nPurpose: ${s.screen_purpose}`).join('\n')}
       
-      Build a complete, stunningly integrated, fully interactive single-file app.
-      Requirements:
-      1. Must include the Tailwind CSS CDN script tag: <script src="https://cdn.tailwindcss.com"></script>
-      2. Set up a classy, beautiful, high-contrast UI (e.g. glowing modern dark glassmorphism or sleek minimalist dashboard).
-      3. Implement standard HTML structures with inline CSS/Tailwind classes, and real client-side Javascript to support mockup functionality:
-         - Dynamic state tracking (such as submitting messages, creating tasks, adding records, editing data).
-         - Seamless tab navigation so students can switch views to review different screens easily!
-         - Rich responsive action fields (form validations, dialog boxes/modals, success messages/toasts).
-         - Graphical representation (mock SVG analytics chart or responsive data grids).
-      4. Avoid hardcoded static pages; make the buttons, forms, and toggles fully active inside the sandbox so they look and feel like a real operating digital product.
-      
-      Generate also a precise technical explanation ('architecture_explanation') detailing the routing, state model, and structural elements of this prototype.
-      
-      Return ONLY a JSON response matching the schema below, without Markdown block quotes or preamble:
+      Return a JSON response matching the following schema, with no markdown backticks and no preamble:
       {
-        "mvp_html": "FULL HTML CODE AS A SINGLE STRING starting with <!DOCTYPE html>...",
-        "architecture_explanation": "Technical details of the app structure..."
+        "mvp_html": "The complete, single-file HTML generated strictly in accordance with the system instruction.",
+        "architecture_explanation": "🏗️ How It's Built\\nDescribe how it was made using simple self-contained HTML/CSS/JS in a child-friendly way.\\n\\n✨ What It Does\\nWrite a clear list of the working mock features.\\n\\n👥 Who It Helps\\nWrite who this solves a problem for and how it changes their day."
       }
     `;
 
@@ -662,6 +662,7 @@ router.post('/screens/approve', authenticateToken, async (req: any, res) => {
       model: "gemini-3.5-flash",
       contents: prompt,
       config: {
+        systemInstruction: systemPrompt,
         responseMimeType: "application/json"
       }
     });
