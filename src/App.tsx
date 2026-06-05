@@ -47,6 +47,10 @@ import IdeationChat from "./IdeationChat";
 import IdeationBlueprint from "./IdeationBlueprint";
 import ProfileSetupWizard from "./ProfileSetupWizard";
 import IntroPage from "./pages/Intro";
+import Phase2Page from "./pages/Phase2";
+import FeaturesScreen from "./pages/Phase2/FeaturesScreen";
+import JourneyScreen from "./pages/Phase2/JourneyScreen";
+import ScreensPreview from "./pages/Phase2/ScreensPreview";
 import Leaderboard from "./Leaderboard";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
@@ -1716,6 +1720,7 @@ export default function App() {
     if (path === '/ideation') return 'ideation';
     if (path === '/ideation/chat') return 'ideation-chat';
     if (path === '/ideation/blueprint') return 'ideation-blueprint';
+    if (path.startsWith('/phase/2')) return 'phase-2';
     if (path.startsWith('/phase/')) return 'phase';
     if (path.startsWith('/profile/') || path.startsWith('/verify/')) return 'verify-profile';
     if (path === '/verify-credential' || path === '/employers') return 'verify-credential';
@@ -1735,7 +1740,7 @@ export default function App() {
   return (
     <div className="min-h-screen selection:bg-cyan-500/20 selection:text-cyan-900">
       <Toaster position="top-center" reverseOrder={false} />
-      {currentPage !== 'ideation-chat' && currentPage !== 'ideation' && currentPage !== 'ideation-blueprint' && currentPage !== 'intro' && (
+      {currentPage !== 'ideation-chat' && currentPage !== 'ideation' && currentPage !== 'ideation-blueprint' && currentPage !== 'intro' && currentPage !== 'phase-2' && (
         <Navbar 
           onNavigate={handleNavigate} 
           currentPage={currentPage} 
@@ -1761,6 +1766,10 @@ export default function App() {
           <Route path="/ideation" element={<IdeationEntry onNavigate={handleNavigate} />} />
           <Route path="/ideation/chat" element={<IdeationChat onNavigate={handleNavigate} />} />
           <Route path="/ideation/blueprint" element={<IdeationBlueprint onNavigate={handleNavigate} onUpdateUser={setUser} />} />
+          <Route path="/phase/2" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/features" element={<FeaturesScreen onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/journey" element={<JourneyScreen onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/screens" element={<ScreensPreview onNavigate={handleNavigate} />} />
           <Route path="/phase/:id" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
           
           <Route path="/profile/:id" element={<PublicProfileWrapper currentUser={user} />} />
