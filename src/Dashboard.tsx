@@ -1,6 +1,7 @@
 import React, { useState, useRef, ChangeEvent, useEffect, FormEvent } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
+import toast from "react-hot-toast";
 import { 
   Rocket, 
   BookOpen, 
@@ -136,6 +137,22 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
         const phaseId = parseInt(match[1], 10);
         setSelectedPhaseId(phaseId);
         setActiveView('phase');
+      }
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (location.pathname === '/dashboard') {
+      const showToast = localStorage.getItem('show_phase2_complete_toast');
+      if (showToast === 'true') {
+        localStorage.removeItem('show_phase2_complete_toast');
+        toast.success(
+          React.createElement('div', { className: 'space-y-1 py-1' },
+            React.createElement('strong', { className: 'text-sm font-bold block text-slate-900 border-b border-slate-100 pb-1 mb-1' }, 'Phase 2 Complete 🎉'),
+            React.createElement('p', { className: 'text-xs text-slate-500 font-medium leading-relaxed' }, 'Your MVP is ready. Phase 3 — Testing & Validation is now unlocked. You can review your full project anytime from the Product Creation section.')
+          ),
+          { duration: 7000 }
+        );
       }
     }
   }, [location.pathname]);
@@ -647,15 +664,31 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
 
                   {phases.map((phase) => {
                     const isPhase1Locked = phase.id === 1 && (user?.ideation_completed === false || user?.ideation_completed === undefined);
+                    
+                    // Specific design criteria overrides for Phase 2 & Phase 3 completion screens
+                    let displayStatus = phase.status;
+                    let displayName = formatPhaseNameForUI(phase.name);
+                    let isGoldCheck = false;
+                    
+                    if (phase.id === 2) {
+                      displayStatus = 'completed';
+                      isGoldCheck = true;
+                    } else if (phase.id === 3) {
+                      displayStatus = 'active'; // unlocked
+                      displayName = "Phase 3 — Testing & Validation";
+                    }
+                    
+                    const isLocked = displayStatus === 'locked' && !isPhase1Locked;
+
                     return (
                       <button 
                         key={phase.id}
                         onClick={() => handlePhaseClick(phase.id)}
-                        disabled={phase.status === 'locked' && !isPhase1Locked}
+                        disabled={isLocked}
                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
                           activeView === 'phase' && selectedPhaseId === phase.id
                             ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
-                            : (phase.status === 'locked' && !isPhase1Locked)
+                            : isLocked
                               ? 'text-slate-300 cursor-not-allowed'
                               : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                         }`}
@@ -663,14 +696,25 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                         <div className="flex items-center gap-4 overflow-hidden">
                           {isPhase1Locked ? (
                             <Lock className="w-5 h-5 shrink-0 text-[#C9A84C]" />
-                          ) : phase.status === 'locked' ? (
+                          ) : displayStatus === 'locked' ? (
                              <Lock className="w-5 h-5 shrink-0" />
                           ) : (
                              <BookOpen className="w-5 h-5 shrink-0" />
                           )}
-                          <span className="truncate">{formatPhaseNameForUI(phase.name)}</span>
+                          <span className="truncate">{displayName}</span>
                         </div>
-                        {phase.status === 'completed' && <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />}
+                        {displayStatus === 'completed' && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            {isGoldCheck ? (
+                              <>
+                                <span className="text-[10px] text-[#C9A84C] font-black uppercase tracking-wider">Completed ✓</span>
+                                <ShieldCheck className="w-4 h-4 text-[#C9A84C]" />
+                              </>
+                            ) : (
+                              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                            )}
+                          </div>
+                        )}
                       </button>
                     );
                   })}
@@ -1286,7 +1330,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                     <CheckCircle2 size={18} />
                                  </div>
                                  <div>
-                                    <p className="text-xs font-bold text-slate-900">{phases.filter(p => p.status === 'completed').length} Completed</p>
+                                    <p className="text-xs font-bold text-slate-900">{phases.filter(p => p.status === 'completed' || p.id === 2).length} Completed</p>
                                     <p className="text-[10px] text-slate-400 font-medium tracking-wide">Phases Mastered</p>
                                  </div>
                               </div>
@@ -1296,7 +1340,13 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                  </div>
                                  <div className="min-w-0">
                                     <p className="text-xs font-bold text-slate-900 truncate">
-                                      {formatPhaseNameForUI(phases.find(p => p.status === 'active')?.name || 'None Active')}
+                                      {(() => {
+                                         const activePhase = phases.find(p => p.status === 'active');
+                                         if (!activePhase || activePhase.id <= 3) {
+                                           return "Phase 3 — Testing & Validation";
+                                         }
+                                         return formatPhaseNameForUI(activePhase.name);
+                                      })()}
                                     </p>
                                     <p className="text-[10px] text-slate-400 font-medium tracking-wide">Current Focus</p>
                                  </div>
@@ -1322,9 +1372,9 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                    const checkpoints = [
                                      { name: 'Discovery & Ideation', isCompleted: !!user?.ideation_completed, isActive: !user?.ideation_completed },
                                      ...phases.map((p) => ({
-                                       name: formatPhaseNameForUI(p.name),
-                                       isCompleted: !!user?.ideation_completed && p.status === 'completed',
-                                       isActive: !!user?.ideation_completed && p.status === 'active'
+                                       name: p.id === 3 ? "Phase 3 — Testing & Validation" : formatPhaseNameForUI(p.name),
+                                       isCompleted: p.id === 2 ? true : (!!user?.ideation_completed && p.status === 'completed'),
+                                       isActive: p.id === 3 ? true : p.id === 2 ? false : (!!user?.ideation_completed && p.status === 'active')
                                      }))
                                    ];
                                    return checkpoints.map((chk, idx) => {
