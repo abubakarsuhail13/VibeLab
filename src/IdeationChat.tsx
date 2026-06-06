@@ -374,7 +374,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
       {/* SCROLLABLE BULK CHAT CANVAS */}
       <div
         ref={chatContainerRef}
-        className="flex-grow overflow-y-auto pt-28 pb-32 px-4 sm:px-8 w-full max-w-4xl mx-auto custom-scrollbar flex flex-col"
+        className="relative z-10 flex-grow overflow-y-auto pt-28 pb-32 px-4 sm:px-8 w-full max-w-4xl mx-auto custom-scrollbar flex flex-col"
       >
         <div className="flex-grow" />
         
@@ -404,10 +404,10 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
                   </div>
                 ) : (
                   <div
-                    className={`max-w-[85%] sm:max-w-xl rounded-[2rem] px-5 py-4 text-sm leading-relaxed ${
+                    className={`max-w-[85%] sm:max-w-xl rounded-[2.2rem] px-6 py-5 text-sm leading-relaxed ${
                       msg.sender === "user"
-                        ? "bg-cyan-50/70 border border-cyan-100 text-slate-900 font-semibold self-end ml-12 shadow-sm rounded-tr-md"
-                        : "bg-white border border-slate-200 text-slate-700 font-semibold mr-12 shadow-md shadow-slate-100/50 rounded-tl-md"
+                        ? "bg-slate-900 border border-slate-850 text-white font-medium self-end ml-12 shadow-lg rounded-tr-md"
+                        : "bg-white border border-slate-200/80 text-slate-900 font-medium mr-12 shadow-md shadow-slate-100/60 rounded-tl-md"
                     }`}
                   >
                     <div className="whitespace-pre-wrap">{msg.text}</div>
