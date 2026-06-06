@@ -278,10 +278,10 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
             
             {/* Content block */}
             <div className="flex-1 space-y-2">
-              <h3 className="text-sm font-bold text-slate-900 tracking-wide font-dmsans">
+              <h3 className="text-sm font-bold text-white tracking-wide font-dmsans">
                 Ideation Complete 🎉
               </h3>
-              <p className="text-xs text-slate-600 leading-relaxed font-semibold font-dmsans">
+              <p className="text-xs text-slate-300 leading-relaxed font-semibold font-dmsans">
                 Your blueprint is ready. You can review it anytime from the Ideation section. Phase 2 is now unlocked &mdash; you're ready to start building.
               </p>
               
@@ -293,7 +293,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
                     toast.dismiss(t.id);
                     onNavigate("ideation-blueprint");
                   }}
-                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all tracking-wider shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  className="px-3.5 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-slate-950 font-bold text-xs rounded-xl transition-all tracking-wider shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
                   View Blueprint →
                 </button>

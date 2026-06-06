@@ -170,11 +170,27 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
       const match = path.match(/\/phase\/(\d+)/);
       if (match) {
         const phaseId = parseInt(match[1], 10);
-        setSelectedPhaseId(phaseId);
-        setActiveView('phase');
+        if (phaseId === 1) {
+          if (user?.ideation_completed) {
+            if (onNavigate) {
+              onNavigate('ideation-blueprint');
+            } else {
+              navigate('/ideation/blueprint');
+            }
+          } else {
+            if (onNavigate) {
+              onNavigate('ideation');
+            } else {
+              navigate('/ideation');
+            }
+          }
+        } else {
+          setSelectedPhaseId(phaseId);
+          setActiveView('phase');
+        }
       }
     }
-  }, [location.pathname]);
+  }, [location.pathname, user?.ideation_completed, navigate, onNavigate]);
 
   useEffect(() => {
     if (location.pathname === '/dashboard') {
@@ -2097,7 +2113,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {selectedPhaseId === 1 && (user?.ideation_completed === false || user?.ideation_completed === undefined) ? (
+                {(selectedPhaseId !== 1 && selectedPhaseId !== null) && (user?.ideation_completed === false || user?.ideation_completed === undefined) ? (
                   <div className="relative bg-[#02050e] border border-[#C9A84C]/20 rounded-[2.5rem] p-12 text-center text-white shadow-2xl overflow-hidden min-h-[500px] flex flex-col justify-center items-center font-dmsans">
                     {/* Decorative premium lighting glows */}
                     <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-bl from-[#C9A84C]/5 to-transparent blur-[120px] pointer-events-none" />

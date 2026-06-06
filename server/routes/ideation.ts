@@ -128,7 +128,14 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
     });
 
     const resultText = response.text || '{}';
-    const parsed = JSON.parse(resultText.replace(/```json|```/g, '').trim());
+    let cleanText = resultText.trim();
+    const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanText = jsonMatch[0];
+    } else {
+      cleanText = cleanText.replace(/```json|```/g, '').trim();
+    }
+    const parsed = JSON.parse(cleanText);
 
     let next_story_number = parsed.next_story_number;
     let next_question = parsed.next_question;
@@ -227,8 +234,14 @@ router.post('/generate-blueprint', authenticateToken, async (req: any, res) => {
     });
 
     const raw = response.text || '';
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const blueprint = JSON.parse(clean);
+    let cleanText = raw.trim();
+    const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      cleanText = jsonMatch[0];
+    } else {
+      cleanText = cleanText.replace(/```json|```/g, '').trim();
+    }
+    const blueprint = JSON.parse(cleanText);
 
     // Save blueprint to project_blueprints table
     await p.execute(
