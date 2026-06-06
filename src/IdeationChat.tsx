@@ -278,10 +278,10 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
             
             {/* Content block */}
             <div className="flex-1 space-y-2">
-              <h3 className="text-sm font-bold text-white tracking-wide font-dmsans">
+              <h3 className="text-sm font-bold text-slate-900 tracking-wide font-dmsans">
                 Ideation Complete 🎉
               </h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-normal font-dmsans">
+              <p className="text-xs text-slate-600 leading-relaxed font-semibold font-dmsans">
                 Your blueprint is ready. You can review it anytime from the Ideation section. Phase 2 is now unlocked &mdash; you're ready to start building.
               </p>
               
@@ -293,7 +293,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
                     toast.dismiss(t.id);
                     onNavigate("ideation-blueprint");
                   }}
-                  className="px-3 py-1.5 bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-bold text-xs rounded-xl transition-all tracking-wider shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all tracking-wider shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
                   View Blueprint →
                 </button>
@@ -304,7 +304,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
             <button 
               type="button"
               onClick={() => toast.dismiss(t.id)}
-              className="flex-shrink-0 text-slate-500 hover:text-slate-300 transition-colors p-1"
+              className="flex-shrink-0 text-slate-400 hover:text-slate-600 transition-colors p-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -332,38 +332,38 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
   const currentStoryNum = QUESTIONS[currIndex]?.number || 1;
 
   return (
-    <div className="min-h-screen bg-[#02050e] text-[#E2E8F0] flex flex-col justify-between relative overflow-hidden font-dmsans selection:bg-[#C9A84C]/20 selection:text-[#C9A84C]">
-      <EducationalAiBackground isDark={true} />
-      {/* Absolute dark cyber meshes */}
-      <div className="absolute top-0 right-0 w-[40%] h-[40%] rounded-full bg-gradient-to-bl from-[#C9A84C]/5 to-transparent blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[40%] h-[40%] rounded-full bg-gradient-to-tr from-[#C9A84C]/5 to-transparent blur-[140px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between relative overflow-hidden font-dmsans selection:bg-cyan-500/20 selection:text-cyan-600">
+      <EducationalAiBackground isDark={false} />
+      {/* Soft blue atmosphere backgrounds */}
+      <div className="absolute top-0 right-0 w-[40%] h-[40%] rounded-full bg-gradient-to-bl from-cyan-200/10 to-transparent blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[40%] h-[40%] rounded-full bg-gradient-to-tr from-cyan-200/10 to-transparent blur-[140px] pointer-events-none" />
 
       {/* TOP FIXED NAV BAR */}
-      <header className="fixed top-0 left-0 right-0 h-20 bg-[#02050e]/80 border-b border-white/5 backdrop-blur-xl z-30 px-6 sm:px-12 flex flex-col justify-center">
+      <header className="fixed top-0 left-0 right-0 h-20 bg-white/80 border-b border-slate-250/60 backdrop-blur-xl z-30 px-6 sm:px-12 flex flex-col justify-center">
         <div className="flex justify-between items-center w-full max-w-5xl mx-auto">
           {/* Logo element */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-[#C9A84C] to-[#E6C66B] rounded-xl flex items-center justify-center shadow-lg shadow-[#C9A84C]/10">
-              <BrainCircuit className="text-black w-5.5 h-5.5" />
+            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-md">
+              <BrainCircuit className="text-cyan-400 w-5.5 h-5.5" />
             </div>
-            <span className="font-bebas text-2xl tracking-widest text-white">VibeLab</span>
+            <span className="font-bebas text-2xl tracking-widest text-slate-900">VibeLab</span>
           </div>
 
           {/* Question metrics label */}
           <div className="text-right flex flex-col justify-end">
-            <span className="font-jetbrains text-xs font-bold text-[#C9A84C] tracking-wide uppercase">
+            <span className="font-jetbrains text-xs font-extrabold text-cyan-600 tracking-wide uppercase">
               {currentStoryCode} · {currentStoryNum} of 13
             </span>
-            <span className="text-[10px] text-slate-500 font-medium font-mono uppercase tracking-widest mt-0.5">
+            <span className="text-[10px] text-slate-400 font-bold font-mono uppercase tracking-widest mt-0.5">
               Discovery Engine
             </span>
           </div>
         </div>
 
         {/* Global progress indicator line */}
-        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/5">
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-100">
           <motion.div
-            className="h-full bg-gradient-to-r from-[#C9A84C] to-[#F2D072]"
+            className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400"
             initial={{ width: "0%" }}
             animate={{ width: `${completedPercent}%` }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -392,11 +392,11 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
               >
                 {msg.sender === "system" && msg.canRetry ? (
                   // Custom retry system bubble style
-                  <div className="bg-red-950/20 border border-red-900/30 rounded-2xl p-4 flex flex-col items-center gap-3 w-full max-w-md text-center">
-                    <p className="font-jetbrains text-sm text-red-400 font-medium">⚠️ {msg.text}</p>
+                  <div className="bg-red-50 border border-red-100 rounded-[2.5rem] p-5 flex flex-col items-center gap-3 w-full max-w-md text-center shadow-sm">
+                    <p className="font-jetbrains text-sm text-red-600 font-bold">⚠️ {msg.text}</p>
                     <button
                       onClick={handleRetry}
-                      className="inline-flex items-center gap-2 bg-[#C9A84C] hover:bg-[#D9B95C] text-black text-xs font-bold font-jetbrains px-4 py-2 rounded-xl transition-all active:scale-[0.97]"
+                      className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold font-jetbrains px-4 py-2.5 rounded-xl transition-all active:scale-[0.97] shadow-sm"
                     >
                       <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />
                       <span>TAP TO RETRY</span>
@@ -404,10 +404,10 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
                   </div>
                 ) : (
                   <div
-                    className={`max-w-[85%] sm:max-w-xl rounded-2xl px-5 py-4 text-sm leading-relaxed ${
+                    className={`max-w-[85%] sm:max-w-xl rounded-[2rem] px-5 py-4 text-sm leading-relaxed ${
                       msg.sender === "user"
-                        ? "bg-[#C9A84C]/15 border border-[#C9A84C]/30 text-white font-dmsans self-end ml-12"
-                        : "bg-[#091126] border border-white/5 text-slate-300 font-dmsans mr-12"
+                        ? "bg-cyan-50/70 border border-cyan-100 text-slate-900 font-semibold self-end ml-12 shadow-sm rounded-tr-md"
+                        : "bg-white border border-slate-200 text-slate-700 font-semibold mr-12 shadow-md shadow-slate-100/50 rounded-tl-md"
                     }`}
                   >
                     <div className="whitespace-pre-wrap">{msg.text}</div>
@@ -425,10 +425,10 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
                 exit={{ opacity: 0 }}
                 className="flex justify-start w-full"
               >
-                <div className="bg-[#091126] border border-white/5 rounded-2xl px-6 py-4 mr-12 flex items-center gap-1.5 shadow-sm">
-                  <span className="w-2 h-2 bg-[#C9A84C] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 bg-[#C9A84C] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-2 h-2 bg-[#C9A84C] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="bg-white border border-slate-200 rounded-[2rem] px-6 py-4 mr-12 flex items-center gap-1.5 shadow-md shadow-slate-100/40">
+                  <span className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                 </div>
               </motion.div>
             )}
@@ -439,15 +439,15 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
                 key="blueprint-generation"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-10 rounded-[2.5rem] border border-[#C9A84C]/30 bg-[#C9A84C]/5 flex flex-col items-center gap-6 text-center w-full shadow-2xl space-y-2"
+                className="p-10 rounded-[2.5rem] border border-cyan-100 bg-white flex flex-col items-center gap-6 text-center w-full shadow-lg space-y-2"
               >
                 <div className="relative">
-                  <div className="w-16 h-16 rounded-full border-4 border-t-[#C9A84C] border-r-transparent border-b-transparent border-l-transparent animate-spin" />
-                  <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-[#C9A84C] animate-pulse" />
+                  <div className="w-16 h-16 rounded-full border-4 border-cyan-100 border-t-cyan-500 animate-spin" />
+                  <Sparkles className="absolute inset-0 m-auto w-6 h-6 text-cyan-500 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="font-bebas text-3xl text-white tracking-widest uppercase">Building Blueprint</h3>
-                  <p className="font-dmsans text-sm text-slate-400 max-w-md mx-auto mt-2 leading-relaxed">
+                  <h3 className="font-bebas text-3xl text-slate-900 tracking-widest uppercase">Building Blueprint</h3>
+                  <p className="font-dmsans text-sm text-slate-500 max-w-md mx-auto mt-2 leading-relaxed font-semibold">
                     Analyzing answers and scaling custom MVP framework architecture logs. Handing off to local compiler tracks...
                   </p>
                 </div>
@@ -460,10 +460,10 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
       </div>
 
       {/* INPUT ANCHOR FIELD BOTTOM */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#02050e] via-[#02050e]/95 to-transparent pt-6 pb-8 px-4 z-20">
+      <footer className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent pt-6 pb-8 px-4 z-20">
         <form
           onSubmit={handleSend}
-          className="max-w-3xl mx-auto flex gap-3 bg-[#0a1126]/90 border border-white/5 rounded-3xl p-2.5 shadow-2xl backdrop-blur-md items-end"
+          className="max-w-3xl mx-auto flex gap-3 bg-white/90 border border-slate-200 rounded-3xl p-2.5 shadow-xl shadow-slate-200/50 backdrop-blur-md items-end"
         >
           <textarea
             ref={textareaRef}
@@ -475,12 +475,12 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
             placeholder={
               isGeneratingBlueprint ? "Assembling framework config..." : "Type your answer..."
             }
-            className="flex-grow bg-transparent text-sm text-white px-4 py-3 placeholder-slate-500 focus:outline-none disabled:opacity-50 resize-none min-h-[44px] chat-input leading-relaxed"
+            className="flex-grow bg-transparent text-sm text-slate-800 px-4 py-3 placeholder-slate-400 focus:outline-none disabled:opacity-50 resize-none min-h-[44px] chat-input leading-relaxed font-medium"
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || loading || typing || isGeneratingBlueprint}
-            className="bg-[#C9A84C] hover:bg-[#D9B95C] text-black h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-300 active:scale-[0.93] disabled:opacity-40 disabled:hover:bg-[#C9A84C] flex-shrink-0"
+            className="bg-slate-900 hover:bg-slate-800 text-white h-11 w-11 rounded-2xl flex items-center justify-center transition-all duration-300 active:scale-[0.93] disabled:opacity-40 disabled:hover:bg-slate-900 flex-shrink-0 shadow-md"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

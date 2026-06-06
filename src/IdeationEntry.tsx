@@ -54,14 +54,14 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#040814] text-[#E2E8F0] flex flex-col justify-center items-center px-6 relative overflow-hidden">
-      <EducationalAiBackground isDark={true} />
-      {/* Golden/Lux atmosphere backgrounds */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-[#C9A84C]/5 to-transparent blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tl from-[#C9A84C]/5 to-transparent blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-center items-center px-6 relative overflow-hidden">
+      <EducationalAiBackground isDark={false} />
+      {/* Soft blue atmosphere backgrounds */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-cyan-200/10 to-transparent blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tl from-cyan-200/10 to-transparent blur-[120px] pointer-events-none" />
 
       {/* Decorative center micro starfield */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#C9A84C_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#06b6d4_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
       <div className="max-w-4xl w-full text-center z-10 space-y-12">
         {/* Sparkle Header Icon */}
@@ -71,11 +71,11 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="flex justify-center"
         >
-          <div className="relative p-4 rounded-full border border-[#C9A84C]/20 bg-[#C9A84C]/5">
-            <Sparkles className="w-8 h-8 text-[#C9A84C]" />
+          <div className="relative p-4 rounded-full border border-cyan-200 bg-cyan-50/50 shadow-sm">
+            <Sparkles className="w-8 h-8 text-cyan-600" />
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C9A84C] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-[#C9A84C]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
             </span>
           </div>
         </motion.div>
@@ -86,35 +86,35 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-bebas text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] via-[#F3EFE0] to-[#C9A84C] leading-none"
+            className="font-bebas text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider text-slate-900 leading-none"
           >
-            WHAT WILL YOU BUILD?
+            WHAT WILL <span className="gradient-text">YOU BUILD?</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="font-dmsans text-lg sm:text-xl lg:text-2xl text-slate-400 font-light max-w-2xl mx-auto"
+            className="font-dmsans text-lg sm:text-xl lg:text-2xl text-slate-500 font-semibold max-w-2xl mx-auto"
           >
             Answer 13 questions. Get your personalised AI project blueprint.
           </motion.p>
         </div>
 
-        {/* 3 Gold-bordered Stat Pills */}
+        {/* Stat Pills */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
           className="flex flex-wrap justify-center items-center gap-4 py-4"
         >
-          <div className="border border-[#C9A84C]/40 bg-[#C9A84C]/5 text-[#C9A84C] font-jetbrains text-xs uppercase tracking-[0.15em] px-5 py-2 rounded-full shadow-lg shadow-[#000]/50 backdrop-blur-md">
+          <div className="border border-slate-200 bg-white text-cyan-600 font-semibold font-jetbrains text-xs uppercase tracking-[0.15em] px-5 py-2 rounded-full shadow-sm">
             ⚡ 5 minutes
           </div>
-          <div className="border border-[#C9A84C]/40 bg-[#C9A84C]/5 text-[#C9A84C] font-jetbrains text-xs uppercase tracking-[0.15em] px-5 py-2 rounded-full shadow-lg shadow-[#000]/50 backdrop-blur-md">
+          <div className="border border-slate-200 bg-white text-cyan-600 font-semibold font-jetbrains text-xs uppercase tracking-[0.15em] px-5 py-2 rounded-full shadow-sm">
             📝 13 questions
           </div>
-          <div className="border border-[#C9A84C]/40 bg-[#C9A84C]/5 text-[#C9A84C] font-jetbrains text-xs uppercase tracking-[0.15em] px-5 py-2 rounded-full shadow-lg shadow-[#000]/50 backdrop-blur-md">
+          <div className="border border-slate-200 bg-white text-cyan-600 font-semibold font-jetbrains text-xs uppercase tracking-[0.15em] px-5 py-2 rounded-full shadow-sm">
             ✨ 1 blueprint
           </div>
         </motion.div>
@@ -127,7 +127,7 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
           className="flex flex-col items-center space-y-4"
         >
           {errorMsg && (
-            <p className="text-red-400 font-jetbrains text-xs tracking-tight bg-red-950/40 px-4 py-2 rounded-lg border border-red-900/40">
+            <p className="text-red-600 font-jetbrains text-xs tracking-tight bg-red-50 px-4 py-2 rounded-lg border border-red-100">
               ⚠️ {errorMsg}
             </p>
           )}
@@ -135,7 +135,7 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
           <button
             onClick={handleStart}
             disabled={loading}
-            className="group relative inline-flex items-center justify-center gap-3 bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-dmsans font-extrabold text-base md:text-lg px-8 py-4.5 rounded-2xl transition-all duration-300 transform active:scale-[0.98] shadow-2xl shadow-[#C9A84C]/20 disabled:opacity-50 min-w-[220px]"
+            className="group relative inline-flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-dmsans font-extrabold text-base md:text-lg px-8 py-4.5 rounded-2xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-slate-950/10 hover:shadow-cyan-500/10 disabled:opacity-50 min-w-[220px]"
           >
             {loading ? (
               <>
@@ -150,18 +150,18 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
             )}
           </button>
 
-          <p className="font-dmsans text-xs text-slate-500 font-medium select-none tracking-tight">
+          <p className="font-dmsans text-xs text-slate-400 font-medium select-none tracking-tight">
             Used by student builders worldwide
           </p>
         </motion.div>
       </div>
 
       {/* Aesthetic Bottom Accents */}
-      <div className="absolute bottom-8 left-8 hidden sm:flex items-center gap-2 text-slate-500 font-jetbrains text-[10px] tracking-widest uppercase">
-        <span className="w-2 h-2 rounded-full bg-[#C9A84C] animate-pulse" />
+      <div className="absolute bottom-8 left-8 hidden sm:flex items-center gap-2 text-slate-400 font-jetbrains text-[10px] tracking-widest uppercase">
+        <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
         <span>VibeLab Ideation Suite</span>
       </div>
-      <div className="absolute bottom-8 right-8 hidden sm:block text-slate-500 font-jetbrains text-[10px] tracking-widest uppercase">
+      <div className="absolute bottom-8 right-8 hidden sm:block text-slate-400 font-jetbrains text-[10px] tracking-widest uppercase">
         <span>PHASE 01</span>
       </div>
     </div>

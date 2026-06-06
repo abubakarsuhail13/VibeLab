@@ -134,19 +134,19 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
 
   return (
     <div 
-      className="min-h-screen bg-[#0A0A0F] text-[#F3F4F6] flex flex-col justify-between selection:bg-[#C9A84C]/30 selection:text-[#C9A84C] font-dmsans relative overflow-hidden"
+      className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between selection:bg-cyan-500/20 selection:text-cyan-900 font-dmsans relative overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <EducationalAiBackground isDark={true} />
+      <EducationalAiBackground isDark={false} />
       {/* Background visual overrides per slide */}
       {currentSlide === 1 && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Drifting Gold Particles */}
+          {/* Drifting Cyan Particles */}
           {[...Array(25)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-1 h-1 bg-[#C9A84C]/40 rounded-full animate-pulse"
+              className="absolute w-1.5 h-1.5 bg-cyan-500/30 rounded-full animate-pulse"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
@@ -164,21 +164,21 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
         <div 
           className="absolute inset-0 pointer-events-none opacity-20"
           style={{
-            background: "radial-gradient(circle at 50% 50%, #C9A84C 0%, transparent 60%)"
+            background: "radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.45) 0%, transparent 60%)"
           }}
         />
       )}
 
       {/* Top Header Row */}
       <div className="flex items-center justify-between px-6 py-6 md:px-12 z-20">
-        <div className="text-xs md:text-sm font-jetbrains text-slate-500 font-bold bg-slate-900/50 px-3.5 py-1.5 rounded-full border border-slate-800/80">
-          <span className="text-[#C9A84C]">{currentSlide}</span> / 10
+        <div className="text-xs md:text-sm font-jetbrains text-slate-500 font-bold bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
+          <span className="text-cyan-600">{currentSlide}</span> / 10
         </div>
         <button
           onClick={handleComplete}
-          className="text-xs md:text-sm text-slate-400 hover:text-white font-jetbrains uppercase tracking-widest font-bold transition-all flex items-center gap-1 bg-slate-900/45 px-4 py-2 rounded-xl hover:bg-slate-800 border border-slate-800/60"
+          className="text-xs md:text-sm text-slate-500 hover:text-slate-900 font-jetbrains uppercase tracking-widest font-bold transition-all flex items-center gap-1 bg-white px-4 py-2 rounded-xl hover:bg-slate-50 border border-slate-200 shadow-sm"
         >
-          Skip Intro <X className="w-3.5 h-3.5" />
+          Skip Intro <X className="w-3.5 h-3.5 text-slate-400" />
         </button>
       </div>
 
@@ -207,22 +207,22 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                   🚀
                 </motion.div>
                 <div className="space-y-4">
-                  <h1 className="text-5xl md:text-8xl font-bebas tracking-wide leading-none text-white">
-                    WHERE IDEAS <span className="text-[#C9A84C]">BECOME REALITY</span>
+                  <h1 className="text-5xl md:text-8xl font-bebas tracking-wide leading-none text-slate-900">
+                    WHERE IDEAS <span className="text-cyan-600">BECOME REALITY</span>
                   </h1>
                   <center>
-                    <div className="w-[60px] h-[2px] bg-[#C9A84C]" />
+                    <div className="w-[60px] h-[3px] bg-cyan-500 rounded-full" />
                   </center>
                 </div>
-                <div className="space-y-4 text-emerald-100/90 text-base md:text-lg max-w-xl mx-auto">
-                  <p className="font-medium text-slate-400">Have you ever thought...</p>
-                  <div className="space-y-2.5 text-left bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl">
-                    <p className="flex items-center gap-3">💡 <span className="font-semibold text-slate-200">There should be an easier way to do this.</span></p>
-                    <p className="flex items-center gap-3">💡 <span className="font-semibold text-slate-200">Why hasn't anyone fixed this problem?</span></p>
-                    <p className="flex items-center gap-3">💡 <span className="font-semibold text-slate-200">I have an idea that could help people.</span></p>
+                <div className="space-y-4 text-slate-600 text-base md:text-lg max-w-xl mx-auto">
+                  <p className="font-medium text-slate-500">Have you ever thought...</p>
+                  <div className="space-y-2.5 text-left bg-white border border-slate-200/80 p-5 rounded-[2rem] shadow-xl shadow-slate-200/30">
+                    <p className="flex items-center gap-3">💡 <span className="font-semibold text-slate-800">There should be an easier way to do this.</span></p>
+                    <p className="flex items-center gap-3">💡 <span className="font-semibold text-slate-800">Why hasn't anyone fixed this problem?</span></p>
+                    <p className="flex items-center gap-3">💡 <span className="font-semibold text-slate-800">I have an idea that could help people.</span></p>
                   </div>
                 </div>
-                <p className="text-[#C9A84C] font-bold text-sm md:text-base tracking-wide uppercase font-jetbrains">
+                <p className="text-cyan-600 font-extrabold text-sm md:text-base tracking-wide uppercase font-jetbrains">
                   At VibeLab, those ideas don't stay in your imagination. They become real projects.
                 </p>
               </div>
@@ -244,14 +244,14 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                     </motion.span>
                   ))}
                 </div>
-                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white">
-                  YOUR IDEAS CAN <span className="text-[#C9A84C]">CHANGE THINGS</span>
+                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-slate-900">
+                  YOUR IDEAS CAN <span className="text-cyan-600">CHANGE THINGS</span>
                 </h2>
-                <div className="text-slate-300 text-base md:text-xl space-y-4 max-w-xl mx-auto leading-relaxed">
+                <div className="text-slate-600 text-base md:text-xl space-y-4 max-w-xl mx-auto leading-relaxed">
                   <p>
                     Every app, every tool, every product you use today started as one person's idea.
                   </p>
-                  <p className="text-slate-400">
+                  <p className="text-slate-500">
                     That person was no different from you. They just decided to build it.
                   </p>
                 </div>
@@ -259,9 +259,9 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
-                  className="border border-[#C9A84C]/30 bg-[#C9A84C]/5 px-6 py-5 rounded-2xl max-w-xl mx-auto"
+                  className="border border-cyan-100 bg-cyan-50/40 px-6 py-5 rounded-[2rem] max-w-xl mx-auto shadow-sm"
                 >
-                  <p className="text-[#C9A84C] font-bold text-sm md:text-base">
+                  <p className="text-cyan-700 font-bold text-sm md:text-base italic">
                     "The world's best solutions came from people who refused to accept that problems couldn't be solved."
                   </p>
                 </motion.div>
@@ -279,13 +279,13 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                 >
                   🤖
                 </motion.div>
-                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white">
-                  MEET YOUR CO-BUILDER: <span className="text-[#C9A84C]">AI</span>
+                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-slate-900">
+                  MEET YOUR CO-BUILDER: <span className="text-cyan-600">AI</span>
                 </h2>
-                <p className="text-slate-300 text-base md:text-lg max-w-xl mx-auto">
+                <p className="text-slate-600 text-base md:text-lg max-w-xl mx-auto font-medium">
                   Artificial Intelligence is a tool that helps you think, design, write, and build — faster than ever before.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full pt-4">
                   {[
                     { icon: "🧠", text: "AI understands your ideas" },
                     { icon: "⚙️", text: "AI helps you build them" },
@@ -296,10 +296,10 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.15 }}
-                      className="border border-[#C9A84C]/20 bg-slate-900/60 hover:border-[#C9A84C]/40 p-6 rounded-2xl flex flex-col items-center gap-3 transition-colors"
+                      className="border border-slate-200/80 bg-white hover:border-cyan-300 p-6 rounded-[2rem] flex flex-col items-center gap-3 shadow-md hover:shadow-xl transition-all"
                     >
                       <span className="text-4xl">{card.icon}</span>
-                      <p className="font-bold text-slate-100 text-sm md:text-base">{card.text}</p>
+                      <p className="font-bold text-slate-800 text-sm md:text-base">{card.text}</p>
                     </motion.div>
                   ))}
                 </div>
@@ -313,11 +313,11 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
             {currentSlide === 4 && (
               <div className="space-y-8 max-w-3xl">
                 <div className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 bg-[#C9A84C] rounded-full animate-ping" />
-                  <span className="font-bebas text-3xl md:text-4xl text-white tracking-widest">VIBELAB</span>
+                  <span className="w-3 h-3 bg-cyan-500 rounded-full animate-ping" />
+                  <span className="font-bebas text-3xl md:text-4xl text-slate-900 tracking-widest">VIBELAB</span>
                 </div>
-                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white leading-none">
-                  VIBELAB IS YOUR <span className="text-[#C9A84C]">BUILDER PLATFORM</span>
+                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-slate-900 leading-none">
+                  VIBELAB IS YOUR <span className="text-cyan-600">BUILDER PLATFORM</span>
                 </h2>
                 <div className="space-y-3 pt-2">
                   {[
@@ -330,23 +330,23 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.2 }}
-                      className="text-slate-300 font-semibold text-base md:text-lg"
+                      className="text-slate-700 font-bold text-base md:text-lg"
                     >
                       {line}
                     </motion.p>
                   ))}
                 </div>
                 <center>
-                  <div className="w-12 h-[2px] bg-[#C9A84C]/40" />
+                  <div className="w-12 h-[3px] bg-cyan-200 rounded-full" />
                 </center>
-                <p className="text-[#C9A84C] font-bold text-base md:text-xl">
+                <p className="text-cyan-600 font-extrabold text-base md:text-xl">
                   All you need is curiosity, creativity, and a willingness to learn.
                 </p>
                 <div className="flex flex-wrap justify-center gap-3 pt-2">
                   {["🎯 Problem Solver", "💡 Innovator", "🏗️ Builder"].map((pill, idx) => (
                     <span 
                       key={idx} 
-                      className="px-4 py-2 bg-slate-900 border border-slate-800 text-slate-300 font-bold font-jetbrains text-xs rounded-full shadow-sm hover:border-[#C9A84C]/30 transition-colors"
+                      className="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold font-jetbrains text-xs rounded-full shadow-sm hover:border-cyan-200 transition-colors"
                     >
                       {pill}
                     </span>
@@ -358,8 +358,8 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
             {/* Slide 5 - 5 Phases */}
             {currentSlide === 5 && (
               <div className="space-y-8 max-w-5xl w-full">
-                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white">
-                  YOUR PROJECT LIFECYCLE HAS <span className="text-[#C9A84C]">5 PHASES</span>
+                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-slate-900">
+                  YOUR PROJECT LIFECYCLE HAS <span className="text-cyan-600">5 PHASES</span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 pt-4 w-full">
                   {[
@@ -374,20 +374,20 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                       initial={{ opacity: 0, x: -30 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.15 }}
-                      className="bg-slate-900/60 border border-slate-800 hover:border-[#C9A84C]/40 rounded-2xl p-5 flex flex-col justify-between text-left transition-all hover:scale-[1.02] group"
+                      className="bg-white border border-slate-200 hover:border-cyan-300 rounded-[2rem] p-5 flex flex-col justify-between text-left transition-all hover:scale-[1.02] hover:shadow-xl group"
                     >
                       <div className="space-y-2">
-                        <span className="text-[10px] font-bold uppercase font-jetbrains text-[#C9A84C] tracking-widest">{step.phase}</span>
+                        <span className="text-[10px] font-bold uppercase font-jetbrains text-cyan-600 tracking-widest">{step.phase}</span>
                         <div className="text-3xl py-2 group-hover:scale-110 transition-transform">{step.icon}</div>
-                        <h4 className="font-extrabold text-white text-base md:text-md">{step.title}</h4>
+                        <h4 className="font-extrabold text-slate-950 text-base md:text-md">{step.title}</h4>
                       </div>
-                      <p className="text-slate-400 text-xs mt-3 leading-relaxed font-semibold">{step.desc}</p>
+                      <p className="text-slate-500 text-xs mt-3 leading-relaxed font-semibold">{step.desc}</p>
                     </motion.div>
                   ))}
                 </div>
-                <div className="space-y-1 text-slate-400 font-medium text-sm md:text-base">
+                <div className="space-y-1 text-slate-500 font-medium text-sm md:text-base">
                   <p>You conquer these checkpoints by following VibeLab's 7-Phase Python-to-Agent Mastery Path.</p>
-                  <p className="text-[#C9A84C]/90 font-bold uppercase tracking-wide text-xs">Unlock certificates, solid badges, and full deployment validation in every milestone!</p>
+                  <p className="text-cyan-600 font-extrabold uppercase tracking-wide text-xs">Unlock certificates, solid badges, and full deployment validation in every milestone!</p>
                 </div>
               </div>
             )}
@@ -395,10 +395,10 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
             {/* Slide 6 - What can you build */}
             {currentSlide === 6 && (
               <div className="space-y-8 max-w-4xl w-full">
-                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white">
-                  WHAT WILL <span className="text-[#C9A84C]">YOU CREATE?</span>
+                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-slate-900">
+                  WHAT WILL <span className="text-cyan-600">YOU CREATE?</span>
                 </h2>
-                <p className="text-slate-300 text-base md:text-lg">
+                <p className="text-slate-600 text-base md:text-lg">
                   Students just like you have built:
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full pt-2">
@@ -417,13 +417,13 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: idx * 0.08, type: "spring", stiffness: 200 }}
-                      className="p-5 bg-slate-900/60 border border-slate-800 rounded-2xl flex items-center justify-center text-center font-bold text-xs md:text-sm text-slate-200"
+                      className="p-5 bg-white border border-slate-200 rounded-[2rem] flex items-center justify-center text-center font-bold text-xs md:text-sm text-slate-700 hover:border-cyan-200 hover:shadow-md hover:bg-slate-50 transition-all"
                     >
                       {card}
                     </motion.div>
                   ))}
                 </div>
-                <p className="text-[#C9A84C] font-extrabold text-sm uppercase tracking-widest font-jetbrains pt-2">
+                <p className="text-cyan-600 font-extrabold text-sm uppercase tracking-widest font-jetbrains pt-2">
                   The choice is entirely yours.
                 </p>
               </div>
@@ -432,10 +432,10 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
             {/* Slide 7 - How AI will help you */}
             {currentSlide === 7 && (
               <div className="space-y-8 max-w-3xl w-full">
-                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white">
-                  AI IS <span className="text-[#C9A84C]">YOUR TEAM</span>
+                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-slate-900">
+                  AI IS <span className="text-cyan-600">YOUR TEAM</span>
                 </h2>
-                <p className="text-slate-300 text-base md:text-lg">
+                <p className="text-slate-600 text-base md:text-lg font-medium">
                   At every stage, AI helps you move faster and think bigger.
                 </p>
                 <div className="space-y-4 pt-2">
@@ -449,12 +449,12 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                       initial={{ opacity: 0, x: 50 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.15 }}
-                      className="flex flex-col md:flex-row md:items-center text-left gap-4 bg-slate-900/50 p-6 rounded-2xl border-l-4 border-l-[#C9A84C] border-y border-r border-slate-800"
+                      className="flex flex-col md:flex-row md:items-center text-left gap-4 bg-white p-6 rounded-[2rem] border-l-4 border-l-cyan-500 border-y border-r border-slate-200 shadow-sm"
                     >
-                      <h4 className="font-black text-[#C9A84C] text-sm font-jetbrains uppercase tracking-wider shrink-0 min-w-[120px]">
+                      <h4 className="font-extrabold text-cyan-600 text-sm font-jetbrains uppercase tracking-wider shrink-0 min-w-[120px]">
                         {row.title}
                       </h4>
-                      <p className="text-slate-200 text-sm md:text-base font-semibold leading-relaxed">
+                      <p className="text-slate-700 text-sm md:text-base font-semibold leading-relaxed">
                         {row.desc}
                       </p>
                     </motion.div>
@@ -466,10 +466,10 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
             {/* Slide 8 - The Builder's Code */}
             {currentSlide === 8 && (
               <div className="space-y-8 max-w-4xl w-full">
-                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white">
-                  THE <span className="text-[#C9A84C]">BUILDER'S CODE</span>
+                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-slate-900">
+                  THE <span className="text-cyan-600">BUILDER'S CODE</span>
                 </h2>
-                <p className="text-slate-300 text-base md:text-lg">
+                <p className="text-slate-600 text-base md:text-lg">
                   Students who succeed at VibeLab follow these rules:
                 </p>
                 <div className="space-y-3 pt-2 max-w-2xl mx-auto w-full">
@@ -485,16 +485,16 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="flex items-center gap-4 bg-slate-900/40 p-4 border border-slate-800 rounded-xl text-left"
+                      className="flex items-center gap-4 bg-white p-4 border border-slate-100 rounded-[2rem] text-left shadow-sm"
                     >
-                      <span className="text-[#C9A84C] font-jetbrains font-bold text-base bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">
+                      <span className="text-cyan-600 font-jetbrains font-bold text-base bg-cyan-50 px-3 py-1 rounded-xl border border-cyan-100">
                         0{idx + 1}
                       </span>
-                      <p className="text-slate-200 font-bold text-sm md:text-base">{rule}</p>
+                      <p className="text-slate-700 font-bold text-sm md:text-base">{rule}</p>
                     </motion.div>
                   ))}
                 </div>
-                <p className="text-slate-400 font-bold text-xs uppercase tracking-wider font-jetbrains pt-2">
+                <p className="text-slate-500 font-bold text-xs uppercase tracking-wider font-jetbrains pt-2">
                   The students who learn the most experiment, explore, and never stop.
                 </p>
               </div>
@@ -503,8 +503,8 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
             {/* Slide 9 - Your First Challenge */}
             {currentSlide === 9 && (
               <div className="space-y-8 max-w-3xl">
-                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-white">
-                  YOUR <span className="text-[#C9A84C]">FIRST CHALLENGE</span>
+                <h2 className="text-4xl md:text-7xl font-bebas tracking-wide text-slate-900">
+                  YOUR <span className="text-cyan-600">FIRST CHALLENGE</span>
                 </h2>
                 <div className="flex justify-center gap-8 pt-2 select-none">
                   {[
@@ -517,28 +517,28 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: idx * 0.2, type: "spring" }}
-                      className="flex flex-col items-center gap-2 bg-slate-900/40 border border-slate-800 h-24 w-24 rounded-2xl justify-center shadow-lg"
+                      className="flex flex-col items-center gap-2 bg-white border border-slate-200 h-24 w-24 rounded-[2rem] justify-center shadow-md shadow-slate-100"
                     >
                       <span className="text-4xl">{item.emoji}</span>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase font-jetbrains tracking-wider">{item.label}</span>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase font-jetbrains tracking-wider">{item.label}</span>
                     </motion.div>
                   ))}
                 </div>
-                <div className="text-slate-300 text-base md:text-lg max-w-xl mx-auto space-y-1">
+                <div className="text-slate-600 text-base md:text-lg max-w-xl mx-auto space-y-1">
                   <p>Look around you.</p>
-                  <p className="font-semibold text-slate-400">Ask yourself one question:</p>
+                  <p className="font-semibold text-slate-500">Ask yourself one question:</p>
                 </div>
                 <motion.div 
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
-                  className="border border-[#C9A84C]/30 bg-[#C9A84C]/5 px-8 py-6 rounded-2xl max-w-xl mx-auto"
+                  className="border border-cyan-100 bg-cyan-50/30 px-8 py-6 rounded-[2rem] max-w-xl mx-auto shadow-sm"
                 >
-                  <h3 className="text-[#C9A84C] font-bebas text-3xl md:text-5xl tracking-wide uppercase leading-tight">
+                  <h3 className="text-cyan-600 font-bebas text-3xl md:text-5xl tracking-wide uppercase leading-tight">
                     "WHAT IS ONE PROBLEM I WOULD LOVE TO SOLVE?"
                   </h3>
                 </motion.div>
-                <p className="text-slate-400 leading-relaxed max-w-lg mx-auto text-xs md:text-sm">
+                <p className="text-slate-400 leading-relaxed max-w-lg mx-auto text-xs md:text-sm font-medium">
                   That question is the beginning of your next great project. You will answer it in the very next step.
                 </p>
               </div>
@@ -551,29 +551,29 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring" }}
-                  className="inline-block px-3 py-1 bg-[#C9A84C]/20 border border-[#C9A84C]/40 text-[#C9A84C] text-[10px] md:text-xs font-bold uppercase font-jetbrains tracking-widest rounded-full"
+                  className="inline-block px-3 py-1 bg-cyan-50 border border-cyan-100 text-cyan-600 text-[10px] md:text-xs font-bold uppercase font-jetbrains tracking-widest rounded-full"
                 >
                   PHASE 1
                 </motion.span>
                 <div className="space-y-2">
-                  <h2 className="text-5xl md:text-8xl font-bebas text-white tracking-widest leading-none">
+                  <h2 className="text-5xl md:text-8xl font-bebas text-slate-900 tracking-widest leading-none">
                     IDEATION
                   </h2>
                   <center>
-                    <div className="w-16 h-[2px] bg-[#C9A84C]" />
+                    <div className="w-16 h-[3px] bg-cyan-500 rounded-full" />
                   </center>
                 </div>
-                <p className="text-[#C9A84C] font-bold text-lg md:text-xl font-display uppercase tracking-widest">
+                <p className="text-cyan-600 font-bold text-lg md:text-xl font-display uppercase tracking-widest">
                   Find a problem worth solving.
                 </p>
-                <p className="text-slate-300 text-sm md:text-base leading-relaxed max-w-lg mx-auto">
+                <p className="text-slate-600 text-sm md:text-base leading-relaxed max-w-lg mx-auto font-medium">
                   Your AI mentor will guide you through a short conversation to discover your idea, understand your users, and define exactly what you want to build.
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 pt-2">
                   {["🎯 Problem Statement", "👤 Target User", "🏗️ Product Blueprint"].map((pill, idx) => (
                     <span 
                       key={idx} 
-                      className="px-3.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-[#C9A84C]/30 text-[#C9A84C] font-bold font-jetbrains text-[10px] rounded-full transition-colors"
+                      className="px-3.5 py-1.5 bg-white border border-slate-200 hover:border-cyan-300 text-cyan-600 font-bold font-jetbrains text-[10px] rounded-full shadow-sm"
                     >
                       {pill}
                     </span>
@@ -584,12 +584,12 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
                   <button
                     onClick={handleComplete}
                     disabled={isCompleting}
-                    className="w-full bg-[#C9A84C] text-slate-950 px-8 py-5 rounded-2xl font-bold font-jetbrains text-sm uppercase tracking-widest hover:bg-[#D4B662] active:scale-[0.99] transition-all shadow-xl shadow-[#C9A84C]/15"
+                    className="w-full bg-slate-900 text-white px-8 py-5 rounded-2xl font-bold font-jetbrains text-sm uppercase tracking-widest hover:bg-slate-800 active:scale-[0.99] transition-all shadow-xl shadow-slate-950/10"
                   >
                     {isCompleting ? "Starting Journey..." : "BEGIN MY JOURNEY →"}
                   </button>
                 </div>
-                <p className="text-slate-500 text-[10px] uppercase tracking-widest font-jetbrains">
+                <p className="text-slate-400 text-[10px] uppercase tracking-widest font-jetbrains">
                   Your progress is saved automatically.
                 </p>
               </div>
@@ -599,14 +599,14 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
       </div>
 
       {/* Footer Navigation Bar */}
-      <div className="flex items-center justify-between px-6 py-6 md:px-12 z-20 border-t border-slate-900/40 bg-slate-950/20">
+      <div className="flex items-center justify-between px-6 py-6 md:px-12 z-20 border-t border-slate-200 bg-white/70 backdrop-blur-md">
         <div>
           {currentSlide > 1 ? (
             <button
               onClick={handleBack}
-              className="px-6 py-3.5 bg-slate-900/50 hover:bg-slate-800 text-slate-300 hover:text-white font-jetbrains text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 border border-slate-800/80"
+              className="px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-jetbrains text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 border border-slate-200 shadow-sm"
             >
-              <ArrowLeft className="w-4 h-4" /> Back
+              <ArrowLeft className="w-4 h-4 text-slate-500" /> Back
             </button>
           ) : (
             <div className="w-24" /> // spacing placeholder
@@ -624,8 +624,8 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
               }}
               className={`h-2 rounded-full transition-all duration-300 ${
                 currentSlide === idx + 1 
-                  ? "w-6 bg-[#C9A84C]" 
-                  : "w-2 bg-slate-800 border border-slate-700/60 hover:bg-slate-700"
+                  ? "w-6 bg-cyan-500" 
+                  : "w-2 bg-slate-200 border border-slate-300/40 hover:bg-slate-300"
               }`}
             />
           ))}
@@ -634,7 +634,7 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
         <div>
           <button
             onClick={handleNext}
-            className="px-6 py-3.5 bg-[#C9A84C] text-slate-950 font-jetbrains text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-[#D4B662] transition-all flex items-center gap-2 shadow-lg shadow-[#C9A84C]/5"
+            className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-jetbrains text-xs font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-slate-950/10"
           >
             {currentSlide === 10 ? "BEGIN" : currentSlide === 1 ? "Let's Go" : "Next"}{" "}
             <ArrowRight className="w-4 h-4" />

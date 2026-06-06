@@ -109,10 +109,10 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#02050e] text-[#E2E8F0] flex flex-col justify-center items-center font-dmsans">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-center items-center font-dmsans">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 animate-spin text-[#C9A84C] mx-auto" />
-          <p className="font-jetbrains text-xs tracking-widest uppercase text-slate-500">
+          <Loader2 className="w-10 h-10 animate-spin text-cyan-500 mx-auto" />
+          <p className="font-jetbrains text-xs tracking-widest uppercase text-slate-400 font-bold">
             Fetching Your Project Blueprint...
           </p>
         </div>
@@ -122,12 +122,12 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
 
   if (errorMsg || !blueprint) {
     return (
-      <div className="min-h-screen bg-[#02050e] text-[#E2E8F0] flex flex-col justify-center items-center p-6 text-center font-dmsans">
-        <div className="max-w-md border border-red-950 bg-red-950/10 p-8 rounded-3xl space-y-6">
-          <p className="text-red-400 font-jetbrains text-sm">⚠️ {errorMsg || "Blueprint details could not be found."}</p>
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-center items-center p-6 text-center font-dmsans">
+        <div className="max-w-md border border-red-105 bg-red-50 p-8 rounded-3xl space-y-6 shadow-sm">
+          <p className="text-red-600 font-jetbrains text-sm font-bold">⚠️ {errorMsg || "Blueprint details could not be found."}</p>
           <button
             onClick={() => onNavigate("ideation")}
-            className="bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-extrabold text-sm px-6 py-3 rounded-xl transition-all"
+            className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm px-6 py-3 rounded-xl transition-all"
           >
             Start Discovery Session
           </button>
@@ -174,13 +174,13 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
   const getComplexityStyles = (comp: string) => {
     switch (comp?.toLowerCase()) {
       case "beginner":
-        return "bg-emerald-950/40 border border-emerald-500/30 text-emerald-400";
+        return "bg-emerald-50 border border-emerald-100 text-emerald-600";
       case "intermediate":
-        return "bg-amber-950/40 border border-amber-500/30 text-amber-400";
+        return "bg-amber-50 border border-amber-100 text-amber-600";
       case "advanced":
-        return "bg-red-950/40 border border-red-500/30 text-red-400";
+        return "bg-red-50 border border-red-100 text-red-600";
       default:
-        return "bg-slate-900 border border-slate-700 text-slate-300";
+        return "bg-white border border-slate-200 text-slate-500";
     }
   };
 
@@ -199,11 +199,11 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
   });
 
   return (
-    <div className="min-h-screen bg-[#02050e] text-[#E2E8F0] py-20 px-6 sm:px-12 relative overflow-hidden font-dmsans">
-      <EducationalAiBackground isDark={true} />
+    <div className="min-h-screen bg-slate-50 text-slate-800 py-20 px-6 sm:px-12 relative overflow-hidden font-dmsans">
+      <EducationalAiBackground isDark={false} />
       {/* Decorative premium lighting glows */}
-      <div className="absolute top-[-5%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-bl from-[#C9A84C]/5 to-transparent blur-[140px] pointer-events-none" />
-      <div className="absolute top-[40%] left-[-15%] w-[45%] h-[45%] rounded-full bg-gradient-to-tr from-[#C9A84C]/5 to-transparent blur-[140px] pointer-events-none" />
+      <div className="absolute top-[-5%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-bl from-cyan-200/10 to-transparent blur-[140px] pointer-events-none" />
+      <div className="absolute top-[40%] left-[-15%] w-[45%] h-[45%] rounded-full bg-gradient-to-tr from-cyan-200/10 to-transparent blur-[140px] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto space-y-12 relative z-10">
         
@@ -214,18 +214,18 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
           animate="visible"
           className="text-center space-y-4"
         >
-          <div className="inline-flex p-4 rounded-full border border-[#C9A84C]/20 bg-[#C9A84C]/5 shadow-xl shadow-[#C9A84C]/5">
-            <Trophy className="w-8 h-8 text-[#C9A84C]" />
+          <div className="inline-flex p-4 rounded-full border border-cyan-200 bg-white shadow-md shadow-slate-100">
+            <Trophy className="w-8 h-8 text-cyan-600" />
           </div>
-          <p className="font-jetbrains text-[10px] sm:text-xs font-black tracking-[0.25em] text-[#C9A84C] uppercase">
+          <p className="font-jetbrains text-[10px] sm:text-xs font-black tracking-[0.25em] text-cyan-600 uppercase">
             Discovery Phase Complete
           </p>
-          <h2 className="font-bebas text-3xl sm:text-5xl md:text-6xl text-white tracking-widest leading-none">
+          <h2 className="font-bebas text-3xl sm:text-5xl md:text-6xl text-slate-900 tracking-widest leading-none">
             YOUR AI PRODUCT BLUEPRINT IS READY
           </h2>
         </motion.div>
 
-        {/* COMPREHENSIVE CARD GRIDCONTAINER */}
+        {/* COMPREHENSIVE CARD GRID CONTAINER */}
         <div className="space-y-8">
           
           {/* PRODUCT NAME BLOCK */}
@@ -233,13 +233,13 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
             variants={itemVariant(1)}
             initial="hidden"
             animate="visible"
-            className="border border-[#C9A84C]/30 bg-[#091126]/40 rounded-3xl p-8 sm:p-12 text-center space-y-3 relative overflow-hidden shadow-2xl"
+            className="border border-cyan-100 bg-gradient-to-br from-cyan-50/40 to-white rounded-[2rem] p-8 sm:p-12 text-center space-y-3 relative overflow-hidden shadow-md shadow-cyan-100/30"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C9A84C]/50 to-transparent" />
-            <p className="font-jetbrains text-[10px] font-black tracking-widest text-[#C9A84C] uppercase">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+            <p className="font-jetbrains text-[10px] font-black tracking-widest text-cyan-600 uppercase">
               Assigned Brand Name
             </p>
-            <h1 className="font-bebas text-5xl sm:text-7xl lg:text-8xl text-transparent bg-clip-text bg-gradient-to-b from-white to-[#E6C66B] tracking-wide uppercase leading-none">
+            <h1 className="font-bebas text-5xl sm:text-7xl lg:text-8xl text-slate-900 tracking-wide uppercase leading-none">
               {blueprint.product_name}
             </h1>
           </motion.div>
@@ -251,28 +251,28 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
             animate="visible"
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
-            <div className="border border-white/5 bg-[#070b18] rounded-2xl p-6 relative group hover:border-[#C9A84C]/20 transition-all">
-              <div className="flex items-center gap-2 mb-4 text-[#C9A84C]">
+            <div className="border border-slate-200 bg-white rounded-[2rem] p-6 relative group hover:border-cyan-300 transition-all shadow-sm shadow-slate-100/60 hover:shadow-md">
+              <div className="flex items-center gap-2 mb-4 text-cyan-600">
                 <Target className="w-4 h-4" />
                 <h3 className="font-jetbrains text-xs font-bold uppercase tracking-wider">The Problem</h3>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed">{blueprint.problem_statement}</p>
+              <p className="text-slate-600 text-sm leading-relaxed font-semibold">{blueprint.problem_statement}</p>
             </div>
 
-            <div className="border border-white/5 bg-[#070b18] rounded-2xl p-6 relative group hover:border-[#C9A84C]/20 transition-all">
-              <div className="flex items-center gap-2 mb-4 text-[#C9A84C]">
+            <div className="border border-slate-200 bg-white rounded-[2rem] p-6 relative group hover:border-cyan-300 transition-all shadow-sm shadow-slate-100/60 hover:shadow-md">
+              <div className="flex items-center gap-2 mb-4 text-cyan-600">
                 <Compass className="w-4 h-4" />
                 <h3 className="font-jetbrains text-xs font-bold uppercase tracking-wider">Target User</h3>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed">{blueprint.target_user_persona}</p>
+              <p className="text-slate-600 text-sm leading-relaxed font-semibold">{blueprint.target_user_persona}</p>
             </div>
 
-            <div className="border border-white/5 bg-[#070b18] rounded-2xl p-6 relative group hover:border-[#C9A84C]/20 transition-all">
-              <div className="flex items-center gap-2 mb-4 text-[#C9A84C]">
+            <div className="border border-slate-200 bg-white rounded-[2rem] p-6 relative group hover:border-cyan-300 transition-all shadow-sm shadow-slate-100/60 hover:shadow-md">
+              <div className="flex items-center gap-2 mb-4 text-cyan-600">
                 <Cpu className="w-4 h-4" />
                 <h3 className="font-jetbrains text-xs font-bold uppercase tracking-wider">The Solution</h3>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed">{blueprint.solution_concept}</p>
+              <p className="text-slate-600 text-sm leading-relaxed font-semibold">{blueprint.solution_concept}</p>
             </div>
           </motion.div>
 
@@ -282,16 +282,16 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
               variants={itemVariant(3)}
               initial="hidden"
               animate="visible"
-              className="border border-white/5 bg-[#070b18] rounded-3xl p-6 sm:p-8 space-y-4"
+              className="border border-slate-200 bg-white rounded-[2rem] p-6 sm:p-8 space-y-4 shadow-sm"
             >
-              <h3 className="font-jetbrains text-xs font-bold text-[#C9A84C] uppercase tracking-wider">
+              <h3 className="font-jetbrains text-xs font-bold text-cyan-600 uppercase tracking-wider">
                 How AI Can Help
               </h3>
               <div className="flex flex-wrap gap-3">
                 {opportunities.map((item, idx) => (
                   <span
                     key={idx}
-                    className="border border-[#C9A84C]/30 bg-[#C9A84C]/5 text-[#C9A84C] font-jetbrains text-xs px-4 py-2 rounded-xl"
+                    className="border border-cyan-100 bg-cyan-50/50 text-cyan-700 font-semibold font-jetbrains text-xs px-4 py-2 rounded-xl"
                   >
                     ✨ {item}
                   </span>
@@ -305,24 +305,24 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
             variants={itemVariant(4)}
             initial="hidden"
             animate="visible"
-            className="border border-[#C9A84C]/20 bg-[#091126]/30 rounded-3xl p-6 sm:p-8 space-y-6"
+            className="border border-cyan-150 bg-cyan-50/20 rounded-[2rem] p-6 sm:p-8 space-y-6 shadow-sm"
           >
             <div className="space-y-2">
-              <h3 className="font-jetbrains text-xs font-bold text-[#C9A84C] uppercase tracking-wider">
+              <h3 className="font-jetbrains text-xs font-bold text-cyan-600 uppercase tracking-wider">
                 Your 1-Week MVP
               </h3>
-              <p className="text-slate-300 text-base leading-relaxed">{blueprint.mvp_definition}</p>
+              <p className="text-slate-800 text-base leading-relaxed font-semibold">{blueprint.mvp_definition}</p>
             </div>
 
             {/* MVP Spec Badges */}
             <div className="flex flex-wrap gap-3 pt-2">
-              <div className="bg-slate-900 border border-white/5 font-jetbrains text-[11px] font-bold text-slate-400 px-4.5 py-2.5 rounded-xl uppercase tracking-wider">
+              <div className="bg-white border border-slate-200 font-jetbrains text-[11px] font-bold text-slate-500 px-4.5 py-2.5 rounded-xl uppercase tracking-wider">
                 ⏳ {blueprint.estimated_build_time}
               </div>
               <div className={`font-jetbrains text-[11px] font-bold px-4.5 py-2.5 rounded-xl uppercase tracking-wider ${getComplexityStyles(blueprint.complexity)}`}>
                 🧠 {blueprint.complexity}
               </div>
-              <div className="bg-slate-900 border border-white/5 font-jetbrains text-[11px] font-bold text-slate-400 px-4.5 py-2.5 rounded-xl uppercase tracking-wider">
+              <div className="bg-white border border-slate-200 font-jetbrains text-[11px] font-bold text-slate-500 px-4.5 py-2.5 rounded-xl uppercase tracking-wider">
                 🛠️ {blueprint.recommended_track}
               </div>
             </div>
@@ -334,18 +334,18 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
               variants={itemVariant(5)}
               initial="hidden"
               animate="visible"
-              className="border border-white/5 bg-[#070b18] rounded-3xl p-6 sm:p-8 space-y-6"
+              className="border border-slate-200 bg-white rounded-[2rem] p-6 sm:p-8 space-y-6 shadow-sm"
             >
-              <h3 className="font-jetbrains text-xs font-bold text-[#C9A84C] uppercase tracking-wider">
+              <h3 className="font-jetbrains text-xs font-bold text-cyan-600 uppercase tracking-wider">
                 Learn This First
               </h3>
               <div className="space-y-4">
                 {learningPath.map((path, idx) => (
                   <div key={idx} className="flex gap-4 items-start">
-                    <div className="w-7 h-7 bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] font-jetbrains font-bold rounded-lg flex items-center justify-center shrink-0 text-sm">
+                    <div className="w-7 h-7 bg-cyan-50 border border-cyan-100 text-cyan-600 font-jetbrains font-bold rounded-lg flex items-center justify-center shrink-0 text-sm">
                       {idx + 1}
                     </div>
-                    <p className="text-slate-300 text-sm pt-0.5 leading-relaxed">{path}</p>
+                    <p className="text-slate-650 text-sm pt-0.5 leading-relaxed font-semibold">{path}</p>
                   </div>
                 ))}
               </div>
@@ -358,16 +358,16 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
               variants={itemVariant(6)}
               initial="hidden"
               animate="visible"
-              className="border border-white/5 bg-[#070b18] rounded-3xl p-6 sm:p-8 space-y-4"
+              className="border border-slate-200 bg-white rounded-[2rem] p-6 sm:p-8 space-y-4 shadow-sm"
             >
-              <h3 className="font-jetbrains text-xs font-bold text-[#C9A84C] uppercase tracking-wider">
+              <h3 className="font-jetbrains text-xs font-bold text-cyan-600 uppercase tracking-wider">
                 Core Features
               </h3>
               <div className="flex flex-wrap gap-3">
                 {features.map((feat, idx) => (
                   <span
                     key={idx}
-                    className="bg-slate-900/80 border border-white/5 text-slate-300 font-dmsans text-sm px-4.5 py-2 rounded-xl"
+                    className="bg-slate-50 border border-slate-100 text-slate-700 font-semibold font-dmsans text-sm px-4.5 py-2 rounded-xl shadow-sm"
                   >
                     📦 {feat}
                   </span>
@@ -382,12 +382,12 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
               variants={itemVariant(7)}
               initial="hidden"
               animate="visible"
-              className="border-l-4 border-[#C9A84C] bg-[#C9A84C]/5 rounded-r-2xl p-6 space-y-2"
+              className="border-l-4 border-cyan-500 bg-cyan-50/20 rounded-r-2xl p-6 space-y-2 shadow-sm"
             >
-              <h4 className="font-jetbrains text-xs font-bold text-[#C9A84C] uppercase tracking-wider">
+              <h4 className="font-jetbrains text-xs font-bold text-cyan-600 uppercase tracking-wider">
                 We scoped this down for you:
               </h4>
-              <p className="text-slate-300 text-sm leading-relaxed">{blueprint.mvp_note}</p>
+              <p className="text-slate-700 text-sm leading-relaxed font-semibold">{blueprint.mvp_note}</p>
             </motion.div>
           )}
 
@@ -400,15 +400,15 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
           >
             <button
               onClick={() => onNavigate("dashboard")}
-              className="flex-grow bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-extrabold text-base px-8 py-4.5 rounded-2xl transition-all shadow-xl shadow-[#C9A84C]/10 active:scale-[0.98] select-none text-center"
+              className="flex-grow bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-base px-8 py-4.5 rounded-2xl transition-all shadow-xl shadow-slate-950/10 active:scale-[0.98] select-none text-center cursor-pointer"
             >
               Unlock Phase 2 — Start Building →
             </button>
             <button
               onClick={handleShare}
-              className="inline-flex items-center justify-center gap-2 border border-[#C9A84C]/40 bg-[#C9A84C]/5 hover:bg-[#C9A84C]/10 text-white font-bold text-sm px-6 py-4.5 rounded-2xl transition-all active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-705 font-bold text-sm px-6 py-4.5 rounded-2xl transition-all active:scale-[0.98] shadow-sm cursor-pointer"
             >
-              <Share2 className="w-4 h-4 text-[#C9A84C]" />
+              <Share2 className="w-4 h-4 text-cyan-600" />
               <span>{copied ? "Copied!" : "Share My Blueprint"}</span>
             </button>
           </motion.div>
