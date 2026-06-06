@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Trophy, HelpCircle, Loader2, Share2, Compass, Cpu, Target, CheckCircle, Award } from "lucide-react";
+import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
 interface BlueprintData {
   id: number;
@@ -199,6 +200,7 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
 
   return (
     <div className="min-h-screen bg-[#02050e] text-[#E2E8F0] py-20 px-6 sm:px-12 relative overflow-hidden font-dmsans">
+      <EducationalAiBackground isDark={true} />
       {/* Decorative premium lighting glows */}
       <div className="absolute top-[-5%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-bl from-[#C9A84C]/5 to-transparent blur-[140px] pointer-events-none" />
       <div className="absolute top-[40%] left-[-15%] w-[45%] h-[45%] rounded-full bg-gradient-to-tr from-[#C9A84C]/5 to-transparent blur-[140px] pointer-events-none" />

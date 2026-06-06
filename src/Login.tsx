@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { motion } from "motion/react";
 import { ShieldCheck, Mail, Lock, ArrowRight, AlertCircle, Loader2, Github } from "lucide-react";
+import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
@@ -68,11 +69,12 @@ export default function Login({ onNavigate, onLoginSuccess }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-20 px-6 bg-slate-50 flex flex-col items-center">
+    <div className="min-h-screen pt-32 pb-20 px-6 bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden">
+      <EducationalAiBackground />
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full glass p-8 md:p-10 rounded-[3rem] border-slate-200 shadow-2xl"
+        className="max-w-md w-full glass p-8 md:p-10 rounded-[3rem] border-slate-200 shadow-2xl relative z-10"
       >
         <div className="w-16 h-16 bg-slate-900 rounded-3xl flex items-center justify-center mb-8 mx-auto shadow-xl shadow-slate-900/10">
           <ShieldCheck className="text-white w-8 h-8" />

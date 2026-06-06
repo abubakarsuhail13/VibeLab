@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { EducationalAiBackground } from "../../components/EducationalAiBackground";
 import { 
   ArrowLeft, 
   ArrowRight,
@@ -137,6 +138,7 @@ export default function IntroPage({ onNavigate, onUpdateUser }: IntroPageProps) 
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      <EducationalAiBackground isDark={true} />
       {/* Background visual overrides per slide */}
       {currentSlide === 1 && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">

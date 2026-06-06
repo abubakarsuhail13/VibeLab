@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Loader2, Sparkles, ChevronRight, HelpCircle } from "lucide-react";
+import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
 interface IdeationEntryProps {
   onNavigate: (page: string) => void;
@@ -54,6 +55,7 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
 
   return (
     <div className="min-h-screen bg-[#040814] text-[#E2E8F0] flex flex-col justify-center items-center px-6 relative overflow-hidden">
+      <EducationalAiBackground isDark={true} />
       {/* Golden/Lux atmosphere backgrounds */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-br from-[#C9A84C]/5 to-transparent blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tl from-[#C9A84C]/5 to-transparent blur-[120px] pointer-events-none" />

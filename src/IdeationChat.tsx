@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Send, ArrowRight, Loader2, RefreshCw, Sparkles, BrainCircuit, X, Check } from "lucide-react";
 import toast from "react-hot-toast";
+import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
 interface Message {
   id: string;
@@ -332,6 +333,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
 
   return (
     <div className="min-h-screen bg-[#02050e] text-[#E2E8F0] flex flex-col justify-between relative overflow-hidden font-dmsans selection:bg-[#C9A84C]/20 selection:text-[#C9A84C]">
+      <EducationalAiBackground isDark={true} />
       {/* Absolute dark cyber meshes */}
       <div className="absolute top-0 right-0 w-[40%] h-[40%] rounded-full bg-gradient-to-bl from-[#C9A84C]/5 to-transparent blur-[140px] pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[40%] h-[40%] rounded-full bg-gradient-to-tr from-[#C9A84C]/5 to-transparent blur-[140px] pointer-events-none" />

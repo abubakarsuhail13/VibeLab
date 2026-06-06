@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, Mail, Lock, User, GraduationCap, School, ArrowRight, AlertCircle, Loader2, CheckCircle2, Globe, ShieldCheck, BookOpen } from "lucide-react";
+import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
 interface SignupProps {
   onNavigate: (page: string) => void;
@@ -89,6 +90,7 @@ export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
 
   return (
     <div className="min-h-screen pt-32 pb-20 px-6 bg-slate-50 flex flex-col items-center justify-center relative overflow-hidden">
+      <EducationalAiBackground />
       {/* Premium Toast Notification overlay */}
       <AnimatePresence>
         {showToast && (
@@ -118,7 +120,7 @@ export default function Signup({ onNavigate, onLoginSuccess }: SignupProps) {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full glass p-8 md:p-10 rounded-[3rem] border border-slate-200 shadow-2xl"
+        className="max-w-md w-full glass p-8 md:p-10 rounded-[3rem] border border-slate-200 shadow-2xl relative z-10"
       >
         {isRegistered ? (
           <motion.div 
