@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Trophy, HelpCircle, Loader2, Share2, Compass, Cpu, Target, CheckCircle, Award } from "lucide-react";
+import { Trophy, HelpCircle, Loader2, Share2, Compass, Cpu, Target, CheckCircle, Award, ArrowLeft } from "lucide-react";
 import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
 interface BlueprintData {
@@ -201,6 +201,23 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 py-20 px-6 sm:px-12 relative overflow-hidden font-dmsans">
       <EducationalAiBackground isDark={false} />
+      
+      {/* Top Header Row with Back Button */}
+      <div className="absolute top-0 left-0 right-0 h-20 px-6 sm:px-12 flex items-center justify-between z-30 max-w-4xl mx-auto w-full">
+        <button
+          onClick={() => onNavigate("dashboard")}
+          className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black font-jetbrains text-slate-500 hover:text-slate-800 bg-white border border-slate-200 hover:border-slate-300 rounded-xl shadow-sm transition-all uppercase tracking-wider cursor-pointer group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 text-cyan-600 group-hover:-translate-x-0.5 transition-transform" />
+          Exit to Dashboard
+        </button>
+        <div className="text-right flex items-center gap-2">
+          <span className="font-jetbrains text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Phase 1 Blueprint
+          </span>
+        </div>
+      </div>
+
       {/* Decorative premium lighting glows */}
       <div className="absolute top-[-5%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-bl from-cyan-200/10 to-transparent blur-[140px] pointer-events-none" />
       <div className="absolute top-[40%] left-[-15%] w-[45%] h-[45%] rounded-full bg-gradient-to-tr from-cyan-200/10 to-transparent blur-[140px] pointer-events-none" />

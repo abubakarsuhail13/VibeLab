@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Send, ArrowRight, Loader2, RefreshCw, Sparkles, BrainCircuit, X, Check } from "lucide-react";
+import { Send, ArrowRight, Loader2, RefreshCw, Sparkles, BrainCircuit, X, Check, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
@@ -341,12 +341,23 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
       {/* TOP FIXED NAV BAR */}
       <header className="fixed top-0 left-0 right-0 h-20 bg-white/80 border-b border-slate-250/60 backdrop-blur-xl z-30 px-6 sm:px-12 flex flex-col justify-center">
         <div className="flex justify-between items-center w-full max-w-5xl mx-auto">
-          {/* Logo element */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-md">
-              <BrainCircuit className="text-cyan-400 w-5.5 h-5.5" />
+          {/* Logo & Back button section */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-md">
+                <BrainCircuit className="text-cyan-400 w-5.5 h-5.5" />
+              </div>
+              <span className="font-bebas text-2xl tracking-widest text-slate-900 hidden xs:block">VibeLab</span>
             </div>
-            <span className="font-bebas text-2xl tracking-widest text-slate-900">VibeLab</span>
+
+            {/* Back to Dashboard Button */}
+            <button
+              onClick={() => onNavigate("dashboard")}
+              className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black font-jetbrains text-slate-500 hover:text-slate-800 bg-white border border-slate-200 hover:border-slate-300 rounded-xl shadow-sm transition-all uppercase tracking-wider cursor-pointer group"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-cyan-600 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Exit to Dashboard</span>
+            </button>
           </div>
 
           {/* Question metrics label */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Check, Lock, Compass, Eye, Sparkles, ChevronRight } from 'lucide-react';
+import { Check, Lock, Compass, Eye, Sparkles, ChevronRight, ArrowLeft } from 'lucide-react';
 
 interface SessionInfo {
   current_step: string;
@@ -88,17 +88,30 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
 
   return (
     <div className="w-full mb-10 p-4 sm:p-5 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md select-none">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#C9A84C]" />
-          <span className="text-xs font-black font-jetbrains text-[#C9A84C] tracking-widest uppercase">
-            Phase 2 Creator Platform
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between w-full sm:w-auto">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#C9A84C]" />
+            <span className="text-xs font-black font-jetbrains text-[#C9A84C] tracking-widest uppercase">
+              Phase 2 Creator Platform
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] font-bold font-jetbrains text-slate-400">
-          <span className="text-[#C9A84C]">Step {activeStep} of 10</span>
-          <span>•</span>
-          <span className="uppercase">{STEP_LABELS[activeStep - 1]?.label}</span>
+
+        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+          <button
+            onClick={() => navigateTo('/dashboard')}
+            className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black font-jetbrains text-slate-300 hover:text-white bg-slate-950 border border-slate-800 hover:border-slate-750 rounded-xl shadow-lg transition-all uppercase tracking-wider cursor-pointer hover:shadow-[#C9A84C]/5 group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-[#C9A84C] group-hover:-translate-x-0.5 transition-transform" />
+            Exit to Dashboard
+          </button>
+          
+          <div className="flex items-center gap-1.5 text-[10px] font-bold font-jetbrains text-slate-400 border-l border-slate-800 pl-4">
+            <span className="text-[#C9A84C]">Step {activeStep} of 10</span>
+            <span>•</span>
+            <span className="uppercase">{STEP_LABELS[activeStep - 1]?.label}</span>
+          </div>
         </div>
       </div>
 
