@@ -13,6 +13,7 @@ import {
   Zap,
   Info
 } from 'lucide-react';
+import Phase2Stepper from '../../components/Phase2Stepper';
 
 interface JourneyStep {
   step_number: number;
@@ -147,20 +148,7 @@ export default function JourneyScreen({ onNavigate }: { onNavigate?: (page: stri
         </button>
 
         {/* Level Steps Bar (Step 3 of 10) */}
-        <div className="mb-10 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
-          <div className="flex justify-between items-center text-xs font-semibold text-slate-400 font-jetbrains mb-3">
-            <span className="text-[#C9A84C] uppercase tracking-widest font-black">Step 3 of 10</span>
-            <span>User Touchpoints Mapping</span>
-          </div>
-          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: '20%' }}
-              animate={{ width: '30%' }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="bg-gradient-to-r from-[#C9A84C] to-[#E3C268] h-full rounded-full"
-            />
-          </div>
-        </div>
+        <Phase2Stepper activeStep={3} onNavigate={navigateTo} />
 
         {/* Big Bebas title Block */}
         <div className="mb-12 text-center md:text-left">

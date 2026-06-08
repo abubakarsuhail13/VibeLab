@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ArrowLeft
 } from 'lucide-react';
+import Phase2Stepper from '../../components/Phase2Stepper';
 
 interface BlueprintData {
   id?: number;
@@ -81,6 +82,31 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
       const data = await res.json();
       if (data.session) {
         setSession(data.session);
+
+        // Check if user came via stepper/back click with "noredirect" query param
+        const searchParams = new URL(window.location.href).searchParams;
+        const noRedirect = searchParams.get('noredirect') === 'true';
+
+        if (data.session.current_step && data.session.current_step !== 'blueprint' && !noRedirect) {
+          const stepPaths: Record<string, string> = {
+            'blueprint': '/phase/2',
+            'features': '/phase/2/features',
+            'user_journey': '/phase/2/journey',
+            'screens': '/phase/2/screens',
+            'review': '/phase/2/review',
+            'description': '/phase/2/description',
+            'explain': '/phase/2/explain',
+            'demo': '/phase/2/demo',
+            'complete': '/phase/2/complete',
+            'approved': '/phase/2/complete'
+          };
+          const targetPath = stepPaths[data.session.current_step];
+          if (targetPath && targetPath !== '/phase/2') {
+            navigateTo(targetPath);
+            return;
+          }
+        }
+
         if (data.blueprint) {
           setBlueprint(data.blueprint);
           setProjectName(data.blueprint.project_name || '');
@@ -88,18 +114,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
           setTargetUsers(data.blueprint.target_users || '');
           setMvpScope(data.blueprint.mvp_scope || '');
           
-          if (data.blueprint.student_approved) {
-            navigateTo('/phase/2/features');
-            return;
-          }
-          
-          // Map step from db structure
-          if (data.session.current_step === 'blueprint') {
-            setUiStep(1); // Blueprint screen
-          } else {
-            // Default fallback to blueprint view if session exists
-            setUiStep(1);
-          }
+          setUiStep(1); // Blueprint screen
         } else {
           // Session exists but first blueprint generation failed or not started
           setUiStep(0);
@@ -338,20 +353,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
             </button>
 
             {/* Progress Tracker (Step 1 of 10) */}
-            <div className="mb-10 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
-              <div className="flex justify-between items-center text-xs font-semibold text-slate-400 font-jetbrains mb-3">
-                <span className="text-[#C9A84C] uppercase tracking-widest font-black">Step 1 of 10</span>
-                <span>Blueprint Review</span>
-              </div>
-              <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${getProgressPercentage(1)}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut' }}
-                  className="bg-gradient-to-r from-[#C9A84C] to-[#E3C268] h-full rounded-full"
-                />
-              </div>
-            </div>
+            <Phase2Stepper activeStep={1} onNavigate={navigateTo} />
 
             {/* Header Content */}
             <div className="mb-10 text-center sm:text-left">

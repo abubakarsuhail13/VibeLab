@@ -17,6 +17,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import Phase2Stepper from '../../components/Phase2Stepper';
 
 interface FeatureItem {
   id: number;
@@ -292,20 +293,7 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
         </button>
 
         {/* Progress Timeline Header */}
-        <div className="mb-10 p-5 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md">
-          <div className="flex justify-between items-center text-xs font-semibold text-slate-400 font-jetbrains mb-3">
-            <span className="text-[#C9A84C] uppercase tracking-widest font-black">Step 2 of 10</span>
-            <span className="uppercase tracking-wider">Features Strategy Engine</span>
-          </div>
-          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: '10%' }}
-              animate={{ width: '20%' }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="bg-gradient-to-r from-[#C9A84C] to-[#E3C268] h-full rounded-full"
-            />
-          </div>
-        </div>
+        <Phase2Stepper activeStep={2} onNavigate={navigateTo} />
 
         {/* Brand Header */}
         <div className="mb-12 text-center md:text-left">

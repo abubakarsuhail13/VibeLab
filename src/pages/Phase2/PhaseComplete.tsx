@@ -19,6 +19,7 @@ import {
   Check,
   Code
 } from 'lucide-react';
+import Phase2Stepper from '../../components/Phase2Stepper';
 
 interface BlueprintData {
   project_name: string;
@@ -178,6 +179,11 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
 
       <div className="w-full max-w-4xl mx-auto px-6 py-12 flex flex-col items-center">
         
+        {/* Stepper Progression Bar (Step 10 of 10) */}
+        <div className="w-full mb-6">
+          <Phase2Stepper activeStep={10} onNavigate={navigateTo} />
+        </div>
+
         {/* TOP PANEL - STAGGER BLOCK 1: 0ms */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}

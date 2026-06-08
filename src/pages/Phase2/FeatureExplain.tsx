@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
 import { Loader2, ArrowRight, UserCheck, Sparkles, Send, CheckCircle2 } from 'lucide-react';
+import Phase2Stepper from '../../components/Phase2Stepper';
 
 interface FeatureItem {
   id: number;
@@ -166,21 +167,8 @@ export default function FeatureExplain({ onNavigate }: { onNavigate?: (page: str
 
       <div className="w-full max-w-5xl mx-auto px-6 py-12">
         
-        {/* Step Progression Bar */}
-        <div className="mb-10 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
-          <div className="flex justify-between items-center text-xs font-semibold text-slate-400 font-jetbrains mb-3 border-none">
-            <span className="text-[#C9A84C] uppercase tracking-widest font-black">Step 8 of 10</span>
-            <span>Feature Engineering Rationale</span>
-          </div>
-          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: '70%' }}
-              animate={{ width: '80%' }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="bg-gradient-to-r from-[#C9A84C] to-[#E3C268] h-full rounded-full"
-            />
-          </div>
-        </div>
+        {/* Step Progression Bar (Step 8 of 10) */}
+        <Phase2Stepper activeStep={8} onNavigate={navigateTo} />
 
         {/* Branding & Header */}
         <div className="text-center md:text-left mb-10 space-y-3">

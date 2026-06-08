@@ -19,6 +19,7 @@ import {
   X,
   FileCode
 } from 'lucide-react';
+import Phase2Stepper from '../../components/Phase2Stepper';
 
 interface ProductScreen {
   id: number;
@@ -172,20 +173,7 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
         </button>
 
         {/* Step tracking line */}
-        <div className="mb-10 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
-          <div className="flex justify-between items-center text-xs font-semibold text-slate-400 font-jetbrains mb-3">
-            <span className="text-[#C9A84C] uppercase tracking-widest font-black">Step 4 of 10</span>
-            <span>Product Wireflow Sandbox</span>
-          </div>
-          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: '30%' }}
-              animate={{ width: '40%' }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="bg-gradient-to-r from-[#C9A84C] to-[#E3C268] h-full rounded-full"
-            />
-          </div>
-        </div>
+        <Phase2Stepper activeStep={4} onNavigate={navigateTo} />
 
         {/* Big styled Bebas Header */}
         <div className="mb-12 text-center md:text-left">

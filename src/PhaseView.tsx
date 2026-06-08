@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import MonacoEditor from '@monaco-editor/react';
 import { 
@@ -118,6 +119,7 @@ export function formatPhaseNameForUI(name: string): string {
 }
 
 export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProps) {
+  const navigate = useNavigate();
   const [phase, setPhase] = useState<Phase | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -933,6 +935,32 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               {phase.status === 'locked' && <Lock className="text-slate-400 w-5 h-5" />}
             </div>
             <p className="text-slate-500 font-medium">{phase.description}</p>
+            {phaseId === 2 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-[2rem] border border-indigo-500/20 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex items-center gap-4 relative z-10 w-full md:w-3/4">
+                  <div className="w-12 h-12 bg-indigo-600/20 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 shrink-0">
+                    <Sparkles className="w-6 h-6 animate-pulse" />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold leading-none mb-1 text-base">Build Your Custom Startup MVP</h4>
+                    <p className="text-slate-400 text-xs font-medium leading-relaxed">
+                      Transform the custom product concept and idea you co-created in Phase 1 into a fully-functional MVP with our interactive 10-step builder wizard!
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => navigate('/phase/2')}
+                  className="px-5 py-2.5 bg-[#C9A84C] text-slate-950 hover:bg-[#b0903c] rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
+                >
+                  Launch Custom Builder <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </motion.div>
+            )}
           </div>
         </div>
 

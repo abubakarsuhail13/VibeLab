@@ -1598,7 +1598,8 @@ export default function App() {
       'ideation-blueprint': '/ideation/blueprint',
       intro: '/intro',
       'profile-setup': '/onboarding',
-      'employers': '/employers'
+      'employers': '/employers',
+      'phase-2': '/phase/2'
     };
 
     const targetPath = routeMap[page];

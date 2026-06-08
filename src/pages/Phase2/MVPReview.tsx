@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { ArrowLeft, ArrowRight, Loader2, Play, Sparkles, ExternalLink, RefreshCw } from 'lucide-react';
+import Phase2Stepper from '../../components/Phase2Stepper';
 
 interface MVPData {
   id: number;
@@ -163,20 +164,7 @@ export default function MVPReview({ onNavigate }: { onNavigate?: (page: string) 
 
       <div className="w-full max-w-7xl mx-auto px-6 py-12">
         {/* Step Header */}
-        <div className="mb-10 p-5 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md">
-          <div className="flex justify-between items-center text-xs font-semibold text-slate-400 font-jetbrains mb-3">
-            <span className="text-[#C9A84C] uppercase tracking-widest font-black">Step 6 of 10</span>
-            <span>MVP Demonstration & Review</span>
-          </div>
-          <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: '40%' }}
-              animate={{ width: '60%' }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="bg-gradient-to-r from-[#C9A84C] to-[#E3C268] h-full rounded-full"
-            />
-          </div>
-        </div>
+        <Phase2Stepper activeStep={6} onNavigate={navigateTo} />
 
         {/* Introduction Panel */}
         <div className="mb-12 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
