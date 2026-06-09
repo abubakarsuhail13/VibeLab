@@ -53,7 +53,17 @@ export default function Login({ onNavigate, onLoginSuccess }: LoginProps) {
         localStorage.setItem('vibelab_token', data.token);
         localStorage.setItem('vibelab_user', JSON.stringify(data.user));
         onLoginSuccess(data.user);
-        if (data.user.profile_completed === false || !data.user.profile_completed) {
+        const isOnboardingDone = 
+          data.user.onboarding_completed === true || 
+          data.user.onboarding_completed === 1 || 
+          data.user.onboarding_completed === 'true' || 
+          data.user.onboarding_completed === '1' ||
+          data.user.profile_completed === true || 
+          data.user.profile_completed === 1 || 
+          data.user.profile_completed === 'true' || 
+          data.user.profile_completed === '1';
+
+        if (!isOnboardingDone) {
           onNavigate('profile-setup');
         } else {
           onNavigate('dashboard');

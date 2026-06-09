@@ -1690,8 +1690,21 @@ export default function App() {
       }
     } else {
       // If logged in & token valid
-      const onboardingCompleted = user.onboarding_completed === true || user.onboarding_completed === 1 || user.profile_completed === true || user.profile_completed === 1;
-      const introCompleted = user.intro_completed === true || user.intro_completed === 1;
+      const onboardingCompleted = 
+        user.onboarding_completed === true || 
+        user.onboarding_completed === 1 || 
+        user.onboarding_completed === 'true' || 
+        user.onboarding_completed === '1' ||
+        user.profile_completed === true || 
+        user.profile_completed === 1 ||
+        user.profile_completed === 'true' || 
+        user.profile_completed === '1';
+
+      const introCompleted = 
+        user.intro_completed === true || 
+        user.intro_completed === 1 ||
+        user.intro_completed === 'true' || 
+        user.intro_completed === '1';
 
       if (!onboardingCompleted) {
         if (path !== '/onboarding') {
