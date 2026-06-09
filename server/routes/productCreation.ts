@@ -1100,10 +1100,13 @@ router.post('/quiz/generate', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
+    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
+    const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
+
     // 1. Check if quiz questions already exist for this session
     const [existing]: any = await p.execute(
-      'SELECT id, quiz_questions.phase_id, question, options, correct_index, explanation FROM quiz_questions WHERE phase_id = 2 AND session_id = ?',
-      [session_id]
+      'SELECT id, quiz_questions.phase_id, question, options, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
+      [actualPhase2Id, session_id]
     );
 
     if (existing && existing.length > 0) {
@@ -1169,8 +1172,8 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
     for (const q of parsedQuestions) {
       const [insertRes]: any = await p.execute(
         `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
-         VALUES (2, ?, ?, ?, ?, ?)`,
-        [session_id, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [actualPhase2Id, session_id, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
       );
       questionsToFetch.push({
         id: insertRes.insertId,

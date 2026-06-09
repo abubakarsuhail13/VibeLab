@@ -44,6 +44,7 @@ interface DashboardProps {
 
 interface Phase {
   id: number;
+  order_index: number;
   name: string;
   description: string;
   status: 'locked' | 'active' | 'completed';
@@ -718,7 +719,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                     let displayName = formatPhaseNameForUI(phase.name);
                     
                     // If Phase 1 (ideation_completed) is done, Phase 2 is automatically unlocked
-                    if (phase.id === 2 && user?.ideation_completed) {
+                    if (phase.order_index === 2 && user?.ideation_completed) {
                       if (displayStatus === 'locked') {
                         displayStatus = 'active';
                       }
@@ -1382,7 +1383,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                          if (!user?.ideation_completed) {
                                             return "Phase 1 — Discovery & Ideation";
                                          }
-                                         const activePhase = phases.find(p => p.status === 'active' || (p.id === 2 && !phases.some(x => x.id === 2 && x.status === 'completed')));
+                                         const activePhase = phases.find(p => p.status === 'active' || (p.order_index === 2 && !phases.some(x => x.order_index === 2 && x.status === 'completed')));
                                          if (activePhase) {
                                             return formatPhaseNameForUI(activePhase.name);
                                          }
@@ -1416,7 +1417,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                       let isActive = isP1 ? !user?.ideation_completed : false;
                                       
                                       if (!isP1 && !!user?.ideation_completed) {
-                                        const isP2Active = p.id === 2 && !phases.some(x => x.id === 2 && x.status === 'completed');
+                                        const isP2Active = p.order_index === 2 && !phases.some(x => x.order_index === 2 && x.status === 'completed');
                                         isActive = p.status === 'active' || isP2Active;
                                       }
                                       

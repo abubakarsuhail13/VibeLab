@@ -612,9 +612,11 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             fetch(`/api/habits`, { headers: { 'Authorization': `Bearer ${token}` } })
           ]);
           
+          const isPhase2 = phaseData?.order_index === 2;
+
           if (resRes.ok) {
             let resData = await resRes.json();
-            if (phaseId === 2) {
+            if (isPhase2) {
               resData = [
                 { id: 'mvp-1', title: 'What is an MVP?', url: 'https://www.productplan.com/glossary/minimum-viable-product/', resource_type: 'Reading' },
                 { id: 'mvp-2', title: 'How to think like a product creator', url: 'https://uxdesign.cc/how-to-think-like-a-product-manager-782c58900d72', resource_type: 'Reading' },
@@ -643,7 +645,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           if (habitsRes.ok) {
             setHabitLogs(await habitsRes.json());
           }
-          if (phaseId === 2) {
+          if (isPhase2) {
             const sessRes = await fetch('/api/product/session', { headers: { 'Authorization': `Bearer ${token}` } });
             if (sessRes.ok) {
               const sessData = await sessRes.json();
@@ -953,7 +955,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               {phase.status === 'locked' && <Lock className="text-slate-400 w-5 h-5" />}
             </div>
             <p className="text-slate-500 font-medium">{phase.description}</p>
-            {phaseId === 2 && (
+            {phase?.order_index === 2 && (
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1208,7 +1210,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                               You scored <strong className="font-black">{quizResult.score}%</strong> ({quizResult.correctCount} of {quizResult.totalQuestions} questions correct).
                             </p>
                             
-                            {phaseId === 2 ? (
+                            {phase?.order_index === 2 ? (
                               <div className="p-4 bg-white/70 rounded-2xl border border-white/60 text-sm font-bold text-slate-800">
                                 {quizResult.passed ? (
                                   <span>You understand <strong className="text-emerald-700">{activeSession?.blueprint?.project_name || "your product"}</strong>! Phase 2 theory complete.</span>
@@ -1417,7 +1419,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             exit={{ opacity: 0, scale: 0.95 }}
             className="h-full"
           >
-            {phaseId === 2 ? (
+            {phase?.order_index === 2 ? (
               <Phase2BuildWalkthrough />
             ) : selectedProject ? (
               <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col overflow-hidden sm:p-4">
@@ -1964,7 +1966,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               </div>
             )}
            {activeTab === 'progress' && (
-          phaseId === 2 ? (
+          phase?.order_index === 2 ? (
             <motion.div 
               key="progress-p2"
               initial={{ opacity: 0, y: 20 }}

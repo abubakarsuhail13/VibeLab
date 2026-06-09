@@ -325,8 +325,11 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
       [req.user.userId, id]
     );
 
+    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
+    const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
+
     let rows: any = [];
-    if (Number(id) === 2) {
+    if (Number(id) === actualPhase2Id) {
       const [sessions]: any = await p.execute(
         'SELECT id FROM product_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1',
         [req.user.userId]
@@ -334,8 +337,8 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
       if (sessions && sessions.length > 0) {
         const sessionId = sessions[0].id;
         const [existing]: any = await p.execute(
-          'SELECT id, question, options FROM quiz_questions WHERE phase_id = 2 AND session_id = ?',
-          [sessionId]
+          'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
+          [actualPhase2Id, sessionId]
         );
         if (existing && existing.length > 0) {
           rows = existing;
@@ -379,7 +382,7 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
               contents: prompt,
               config: {
                 responseMimeType: "application/json"
-              }
+               }
             });
 
             const clean = parseGeminiResponse(geminiRes);
@@ -390,8 +393,8 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
               for (const q of parsedQuestions) {
                 const [insertRes]: any = await p.execute(
                   `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
-                   VALUES (2, ?, ?, ?, ?, ?)`,
-                  [sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
+                   VALUES (?, ?, ?, ?, ?, ?)`,
+                  [actualPhase2Id, sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
                 );
                 generatedList.push({
                   id: insertRes.insertId,
@@ -470,8 +473,11 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       }
     }
     
+    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
+    const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
+
     let questions: any[] = [];
-    if (Number(id) === 2) {
+    if (Number(id) === actualPhase2Id) {
       const [sessions]: any = await p.execute(
         'SELECT id FROM product_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1',
         [req.user.userId]
@@ -479,8 +485,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       if (sessions && sessions.length > 0) {
         const sessionId = sessions[0].id;
         const [sessionQuestions]: any = await p.execute(
-          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = 2 AND session_id = ?',
-          [sessionId]
+          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
+          [actualPhase2Id, sessionId]
         );
         questions = sessionQuestions;
       }
