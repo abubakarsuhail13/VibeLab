@@ -1682,21 +1682,22 @@ export default function App() {
       path.startsWith('/profile/') || 
       path.startsWith('/verify/');
 
-    if (!user) {
+    const token = localStorage.getItem('vibelab_token');
+    if (!token || !user) {
       // If NOT logged in, restrict access to private paths
       if (!isPublicPath) {
         navigate('/login', { replace: true });
       }
     } else {
-      // If logged in
-      const hasCompletedOnboarding = user.onboarding_completed === true || user.profile_completed === true || (user.profile_completed !== false && user.profile_completed !== undefined);
-      const hasCompletedIntro = user.intro_completed === true;
+      // If logged in & token valid
+      const onboardingCompleted = user.onboarding_completed === true || user.onboarding_completed === 1 || user.profile_completed === true || user.profile_completed === 1;
+      const introCompleted = user.intro_completed === true || user.intro_completed === 1;
 
-      if (!hasCompletedOnboarding) {
+      if (!onboardingCompleted) {
         if (path !== '/onboarding') {
           navigate('/onboarding', { replace: true });
         }
-      } else if (!hasCompletedIntro) {
+      } else if (!introCompleted) {
         if (path !== '/intro') {
           navigate('/intro', { replace: true });
         }
