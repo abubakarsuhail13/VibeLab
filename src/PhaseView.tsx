@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
+import Phase2BuildWalkthrough from "./components/Phase2BuildWalkthrough";
 import MonacoEditor from '@monaco-editor/react';
 import { 
   CheckCircle2, 
@@ -1359,7 +1360,9 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             exit={{ opacity: 0, scale: 0.95 }}
             className="h-full"
           >
-            {selectedProject ? (
+            {phaseId === 2 ? (
+              <Phase2BuildWalkthrough />
+            ) : selectedProject ? (
               <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col overflow-hidden sm:p-4">
                 {/* Header Bar */}
                 <div className="bg-slate-900/50 backdrop-blur-md border-b border-white/5 p-4 flex items-center justify-between">

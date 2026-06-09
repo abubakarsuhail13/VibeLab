@@ -233,6 +233,15 @@ router.get('/progress', authenticateToken, async (req: any, res) => {
 router.get('/phase/:id/resources', authenticateToken, async (req: any, res) => {
   const { id } = req.params;
   try {
+    if (Number(id) === 2) {
+      return res.json([
+        { id: 201, phase_id: id, title: 'What is an MVP?', type: 'Reading', url: 'https://www.productplan.com/glossary/minimum-viable-product/' },
+        { id: 202, phase_id: id, title: 'How to think like a product creator', type: 'Reading', url: 'https://medium.com/product-coalition/how-to-think-like-a-product-creator-eb5e76a16c14' },
+        { id: 203, phase_id: id, title: 'User journey basics', type: 'Reading', url: 'https://www.interaction-design.org/literature/article/customer-journey-map' },
+        { id: 204, phase_id: id, title: 'How to pitch your idea', type: 'Reading', url: 'https://hbr.org/2020/03/how-to-pitch-an-idea-so-it-doesnt-get-shot-down' }
+      ]);
+    }
+
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     
