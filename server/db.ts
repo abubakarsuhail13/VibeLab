@@ -1001,6 +1001,10 @@ export const getPool = async () => {
         await addColumnIfNeeded('project_submissions', 'reviewed_by', "INT DEFAULT NULL");
         await addColumnIfNeeded('project_submissions', 'reviewed_at', "TIMESTAMP DEFAULT NULL");
 
+        // Migrate Quiz Questions Columns для Phase 2 Custom Quiz
+        await addColumnIfNeeded('quiz_questions', 'session_id', 'INT NULL DEFAULT NULL');
+        await addColumnIfNeeded('quiz_questions', 'explanation', 'TEXT NULL DEFAULT NULL');
+
         // Migration query to assign vl_id for users with NULL results, running safely immediately after columns migrate
         try {
           const [usersWithoutVlId]: any = await connection.execute(

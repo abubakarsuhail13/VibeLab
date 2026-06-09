@@ -161,8 +161,9 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [quizActive, setQuizActive] = useState(false);
   const [selectedQuizAnswers, setSelectedQuizAnswers] = useState<Record<number, number>>({});
   const [quizSubmitting, setQuizSubmitting] = useState(false);
-  const [quizResult, setQuizResult] = useState<{ score: number, passed: boolean, correctCount: number, totalQuestions: number } | null>(null);
+  const [quizResult, setQuizResult] = useState<{ score: number, passed: boolean, correctCount: number, totalQuestions: number, details?: Record<number, { correct: boolean; correctIndex: number; explanation: string }> } | null>(null);
   const [quizErrorMsg, setQuizErrorMsg] = useState('');
+  const [activeSession, setActiveSession] = useState<any>(null);
 
   // Daily tracker logging states
   const [learnMinutes, setLearnMinutes] = useState(15);
@@ -641,6 +642,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           }
           if (habitsRes.ok) {
             setHabitLogs(await habitsRes.json());
+          }
+          if (phaseId === 2) {
+            const sessRes = await fetch('/api/product/session', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (sessRes.ok) {
+              const sessData = await sessRes.json();
+              setActiveSession(sessData);
+            }
           }
         } catch (e) {
           console.error("Curriculum dynamic datasets failed to fetch", e);
@@ -1127,45 +1135,94 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                       <div className="space-y-8">
                         {quizQuestions.map((qIndex, index) => {
                           const options = parseOptions(qIndex.options);
+                          const qDetails = quizResult?.details?.[qIndex.id];
+                          
                           return (
-                            <div key={qIndex.id} className="space-y-3">
-                              <p className="font-bold text-slate-900 text-base">
+                            <div key={qIndex.id} className="space-y-3 p-5 bg-white/50 rounded-2xl border border-slate-100/80">
+                              <p className="font-bold text-slate-950 text-base font-display">
                                 {index + 1}. {qIndex.question}
                               </p>
+                              
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {options.map((opt: string, optIdx: number) => {
                                   const isSelected = selectedQuizAnswers[qIndex.id] === optIdx;
+                                  
+                                  let buttonStyle = 'bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50';
+                                  
+                                  if (qDetails) {
+                                    if (optIdx === qDetails.correctIndex) {
+                                      buttonStyle = 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/10 font-bold';
+                                    } else if (isSelected) {
+                                      buttonStyle = 'bg-rose-600 text-white border-rose-600 shadow-bold-500 shadow-rose-500/10 font-bold';
+                                    } else {
+                                      buttonStyle = 'bg-slate-50 text-slate-400 border-slate-200/60 opacity-60 pointer-events-none';
+                                    }
+                                  } else if (isSelected) {
+                                    buttonStyle = 'bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/10';
+                                  }
+
                                   return (
                                     <button
                                       key={optIdx}
                                       type="button"
+                                      disabled={!!qDetails}
                                       onClick={() => setSelectedQuizAnswers(prev => ({ ...prev, [qIndex.id]: optIdx }))}
-                                      className={`p-4 rounded-xl border text-left text-sm font-medium transition-all ${
-                                        isSelected 
-                                          ? 'bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/10' 
-                                          : 'bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50'
-                                      }`}
+                                      className={`p-4 rounded-xl border text-left text-sm font-medium transition-all ${buttonStyle}`}
                                     >
                                       {opt}
                                     </button>
                                   );
                                 })}
                               </div>
+
+                              {qDetails && (
+                                qDetails.correct ? (
+                                  <div className="p-4 bg-emerald-50/80 border border-emerald-200/70 text-emerald-900 rounded-xl text-xs leading-relaxed space-y-1">
+                                    <p className="font-black text-emerald-850 uppercase tracking-wider text-[10px] mb-1">✓ Correct Answer</p>
+                                    <p className="font-medium text-emerald-950">{qDetails.explanation}</p>
+                                  </div>
+                                ) : (
+                                  <div className="p-4 bg-rose-50/80 border border-rose-250 text-rose-900 rounded-xl text-xs leading-relaxed space-y-1.5">
+                                    <p className="font-black text-rose-850 uppercase tracking-wider text-[10px] mb-1">✗ Incorrect Choice</p>
+                                    <p className="text-slate-800 font-semibold mb-1">
+                                      Correct choice was: <strong className="font-extrabold text-slate-900 underline">{options[qDetails.correctIndex]}</strong>
+                                    </p>
+                                    <p className="font-medium text-rose-950 leading-relaxed">{qDetails.explanation}</p>
+                                  </div>
+                                )
+                              )}
                             </div>
                           );
                         })}
 
                         {quizResult && (
-                          <div className={`p-6 rounded-2xl border ${
+                          <div className={`p-6 rounded-3xl border-2 ${
                             quizResult.passed 
-                              ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
-                              : 'bg-rose-50 border-rose-100 text-rose-800'
+                              ? 'bg-emerald-50/80 border-emerald-250 text-emerald-900 shadow-sm' 
+                              : 'bg-rose-50/80 border-rose-250 text-rose-900 shadow-sm'
                           }`}>
-                            <h4 className="font-bold text-lg mb-1">{quizResult.passed ? 'Congratulations!' : 'Practice makes perfect.'}</h4>
-                            <p className="text-sm">
-                              You scored <strong>{quizResult.score}%</strong>. ({quizResult.correctCount} of {quizResult.totalQuestions} questions correct). 
-                              {quizResult.passed ? ' You have satisfied the theoretical condition for Phase Certification!' : ' You must score 70% or higher to pass. You can retry immediately!'}
+                            <h4 className="font-black text-xl tracking-tight mb-2">
+                              {quizResult.passed ? '🎉 Challenge Passed!' : '😢 Attempt Unsuccessful'}
+                            </h4>
+                            <p className="text-sm leading-relaxed mb-4 font-medium">
+                              You scored <strong className="font-black">{quizResult.score}%</strong> ({quizResult.correctCount} of {quizResult.totalQuestions} questions correct).
                             </p>
+                            
+                            {phaseId === 2 ? (
+                              <div className="p-4 bg-white/70 rounded-2xl border border-white/60 text-sm font-bold text-slate-800">
+                                {quizResult.passed ? (
+                                  <span>You understand <strong className="text-emerald-700">{activeSession?.blueprint?.project_name || "your product"}</strong>! Phase 2 theory complete.</span>
+                                ) : (
+                                  <span className="text-rose-700">Review your product and try again in 24 hours.</span>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs font-semibold">
+                                {quizResult.passed 
+                                  ? 'You have satisfied the theoretical condition for Phase Certification!' 
+                                  : 'You must score 70% or higher to pass. You can retry immediately!'}
+                              </p>
+                            )}
                           </div>
                         )}
 

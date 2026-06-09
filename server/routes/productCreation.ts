@@ -1015,4 +1015,177 @@ router.post('/demo/save', authenticateToken, async (req: any, res) => {
   }
 });
 
+// POST /api/product/walkthrough/explain
+router.post('/walkthrough/explain', authenticateToken, async (req: any, res) => {
+  const { session_id, section_index, project_name, feature_name } = req.body;
+  if (session_id === undefined || section_index === undefined) {
+    return res.status(400).json({ error: 'Missing session_id or section_index' });
+  }
+
+  try {
+    const sectionNames = [
+      'The File Structure',
+      'The Navigation System',
+      `The Core Feature: ${feature_name || 'Main Operation'}`,
+      `The Additional Feature: ${feature_name || 'Sub-system'}`,
+      'The Sample Database / Memory Store'
+    ];
+    const sectionName = sectionNames[section_index] || 'The Codebase';
+
+    const prompt = `
+      You are an inspiring, friendly technical mentor teaching code to high-school beginners (13-16 years old).
+      The student is building an app named "${project_name || 'MVP Product'}" and needs to understand its code walkthrough.
+      Write a clear, non-technical, plain English explanation (3 sentences maximum) for the file section: "${sectionName}".
+      Explain *what this part of the code does* using a simple, relatable real-world analogy. Avoid any deep technical terms like "array.prototype.reduce" or "event loops". Keep the tone extremely positive and encouraging!
+      Example style: "Think of this like your app's main highway. It sets up the rules so your clicks know exactly which digital screen to visit next, keeping everything organized and fast!"
+      
+      Return ONLY the explanation text. No markdown quotes, no labels, no extra text.
+    `;
+
+    const geminiRes = await getGeminiClient().models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt
+    });
+
+    const explanation = parseGeminiResponse(geminiRes).trim();
+    res.json({ success: true, explanation });
+  } catch (error: any) {
+    console.error('Walkthrough explanation generation failed:', error);
+    res.status(500).json({ error: error.message || 'Failed to explain section' });
+  }
+});
+
+// POST /api/product/step/complete
+router.post('/step/complete', authenticateToken, async (req: any, res) => {
+  const { session_id, step } = req.body;
+  if (!session_id || !step) {
+    return res.status(400).json({ error: 'Missing session_id or step name' });
+  }
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // Map the completed step to the next database current_step value
+    const nextSteps: Record<string, string> = {
+      'code_walkthrough': 'description',
+      'description': 'explain',
+      'explain': 'demo',
+      'demo': 'complete'
+    };
+
+    const nextStepName = nextSteps[step];
+    if (nextStepName) {
+      await p.execute(
+        'UPDATE product_sessions SET current_step = ? WHERE id = ?',
+        [nextStepName, session_id]
+      );
+    }
+
+    res.json({ success: true, current_step: nextStepName || step });
+  } catch (error: any) {
+    console.error('Failed to update step progress:', error);
+    res.status(500).json({ error: 'Failed to update step progress' });
+  }
+});
+
+// 13. POST /api/product/quiz/generate
+router.post('/quiz/generate', authenticateToken, async (req: any, res) => {
+  const { session_id } = req.body;
+  if (!session_id) {
+    return res.status(400).json({ error: 'Missing session_id' });
+  }
+
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // 1. Check if quiz questions already exist for this session
+    const [existing]: any = await p.execute(
+      'SELECT id, quiz_questions.phase_id, question, options, correct_index, explanation FROM quiz_questions WHERE phase_id = 2 AND session_id = ?',
+      [session_id]
+    );
+
+    if (existing && existing.length > 0) {
+      return res.json({ success: true, questions: existing });
+    }
+
+    // 2. Fetch blueprint details
+    const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [session_id]);
+    if (!bpRows || bpRows.length === 0) {
+      return res.status(404).json({ error: 'Product blueprint not found for this session.' });
+    }
+    const bp = bpRows[0];
+
+    // 3. Fetch product features
+    const [features]: any = await p.execute('SELECT * FROM product_features WHERE session_id = ?', [session_id]);
+    const featuresList = features.map((f: any) => `- ${f.feature_name}: ${f.feature_description} [${f.category}]`).join('\n');
+
+    // 4. Generate questions using Gemini-3.5-flash
+    const prompt = `
+Generate 10 multiple choice quiz questions for a Grade 9-12 student
+who just built the following product:
+
+Product name: ${bp.project_name || 'Autonomous App'}
+Problem it solves: ${bp.problem_statement || 'N/A'}
+Target Users: ${bp.target_users || 'N/A'}
+MVP Scope: ${bp.mvp_scope || 'N/A'}
+Key Features:
+${featuresList || 'None listed'}
+
+We want to test if they understand how their product is designed, how it works, and key software design/theory decisions.
+Ensure the questions are highly personalized to their product and target users, yet educational about product management, software logic, and MVP design.
+
+Please output as a valid JSON array of objects with this exact structure:
+[
+  {
+    "question": "The question text, references their product directly",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct_index": 0,
+    "explanation": "Extremely clear explanation of why the correct option is right based on product design and theory."
+  }
+]
+
+Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
+`;
+
+    const geminiRes = await getGeminiClient().models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    const clean = parseGeminiResponse(geminiRes);
+    const parsedQuestions = JSON.parse(clean);
+
+    if (!Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
+      throw new Error("Invalid format returned by Gemini model.");
+    }
+
+    // 5. Insert generated questions into the database
+    const questionsToFetch: any[] = [];
+    for (const q of parsedQuestions) {
+      const [insertRes]: any = await p.execute(
+        `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
+         VALUES (2, ?, ?, ?, ?, ?)`,
+        [session_id, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
+      );
+      questionsToFetch.push({
+        id: insertRes.insertId,
+        question: q.question,
+        options: q.options,
+        correct_index: q.correct_index,
+        explanation: q.explanation
+      });
+    }
+
+    res.json({ success: true, questions: questionsToFetch });
+  } catch (error: any) {
+    console.error('Failed to generate product quiz questions:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate quiz questions' });
+  }
+});
+
 export default router;

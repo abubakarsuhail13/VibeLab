@@ -1,8 +1,48 @@
 import express from 'express';
+import { GoogleGenAI } from "@google/genai";
 import { getPool } from '../db.js';
 import { authenticateToken } from '../auth.js';
 
 const router = express.Router();
+
+let aiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured in the server environment settings.');
+  }
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+  return aiClient;
+}
+
+function parseGeminiResponse(data: any): string {
+  let raw = '';
+  if (data && data.content && Array.isArray(data.content)) {
+    raw = data.content.map((i: any) => i.text || '').join('');
+  } else if (data && data.text) {
+    raw = data.text;
+  } else if (data && data.candidates && data.candidates[0]?.content?.parts) {
+    raw = data.candidates[0].content.parts.map((p: any) => p.text || '').join('');
+  } else if (data && data.candidates && data.candidates[0]?.content) {
+    const content = data.candidates[0].content;
+    if (Array.isArray(content.parts)) {
+      raw = content.parts.map((i: any) => i.text || '').join('');
+    } else if (content.text) {
+      raw = content.text;
+    }
+  }
+  
+  return raw.replace(/```json|```|```html/g, '').trim();
+}
 
 router.get('/phases', authenticateToken, async (req: any, res) => {
   try {
@@ -285,7 +325,92 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
       [req.user.userId, id]
     );
 
-    const [rows]: any = await p.execute('SELECT id, question, options FROM quiz_questions WHERE phase_id = ?', [id]);
+    let rows: any = [];
+    if (Number(id) === 2) {
+      const [sessions]: any = await p.execute(
+        'SELECT id FROM product_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+        [req.user.userId]
+      );
+      if (sessions && sessions.length > 0) {
+        const sessionId = sessions[0].id;
+        const [existing]: any = await p.execute(
+          'SELECT id, question, options FROM quiz_questions WHERE phase_id = 2 AND session_id = ?',
+          [sessionId]
+        );
+        if (existing && existing.length > 0) {
+          rows = existing;
+        } else {
+          // Auto generate if none exist yet
+          const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [sessionId]);
+          if (bpRows && bpRows.length > 0) {
+            const bp = bpRows[0];
+            const [features]: any = await p.execute('SELECT * FROM product_features WHERE session_id = ?', [sessionId]);
+            const featuresList = features.map((f: any) => `- ${f.feature_name}: ${f.feature_description} [${f.category}]`).join('\n');
+
+            const prompt = `
+Generate 10 multiple choice quiz questions for a Grade 9-12 student
+who just built the following product:
+
+Product name: ${bp.project_name || 'Autonomous App'}
+Problem it solves: ${bp.problem_statement || 'N/A'}
+Target Users: ${bp.target_users || 'N/A'}
+MVP Scope: ${bp.mvp_scope || 'N/A'}
+Key Features:
+${featuresList || 'None listed'}
+
+We want to test if they understand how their product is designed, how it works, and key software design/theory decisions.
+Ensure the questions are highly personalized to their product and target users, yet educational about product management, software logic, and MVP design.
+
+Please output as a valid JSON array of objects with this exact structure:
+[
+  {
+    "question": "The question text, references their product directly",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct_index": 0,
+    "explanation": "Extremely clear explanation of why the correct option is right based on product design and theory."
+  }
+]
+
+Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
+`;
+
+            const geminiRes = await getGeminiClient().models.generateContent({
+              model: "gemini-3.5-flash",
+              contents: prompt,
+              config: {
+                responseMimeType: "application/json"
+              }
+            });
+
+            const clean = parseGeminiResponse(geminiRes);
+            const parsedQuestions = JSON.parse(clean);
+
+            if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+              const generatedList: any[] = [];
+              for (const q of parsedQuestions) {
+                const [insertRes]: any = await p.execute(
+                  `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
+                   VALUES (2, ?, ?, ?, ?, ?)`,
+                  [sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
+                );
+                generatedList.push({
+                  id: insertRes.insertId,
+                  question: q.question,
+                  options: q.options
+                });
+              }
+              rows = generatedList;
+            }
+          }
+        }
+      }
+    }
+
+    if (rows.length === 0) {
+      const [staticRows]: any = await p.execute('SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL', [id]);
+      rows = staticRows;
+    }
+
     // Retrieve up to 10 randomized quiz questions
     const shuffled = rows.sort(() => 0.5 - Math.random()).slice(0, 10);
     
@@ -345,17 +470,49 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       }
     }
     
-    const [questions]: any = await p.execute('SELECT id, correct_index FROM quiz_questions WHERE phase_id = ?', [id]);
+    let questions: any[] = [];
+    if (Number(id) === 2) {
+      const [sessions]: any = await p.execute(
+        'SELECT id FROM product_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+        [req.user.userId]
+      );
+      if (sessions && sessions.length > 0) {
+        const sessionId = sessions[0].id;
+        const [sessionQuestions]: any = await p.execute(
+          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = 2 AND session_id = ?',
+          [sessionId]
+        );
+        questions = sessionQuestions;
+      }
+    }
+
+    if (questions.length === 0) {
+      const [staticQuestions]: any = await p.execute(
+        'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL',
+        [id]
+      );
+      questions = staticQuestions;
+    }
+
     let correctCount = 0;
-    
+    const resultDetails: Record<string, { correct: boolean; correctIndex: number; explanation: string }> = {};
+
     for (const ans of answers) {
       const question = questions.find((q: any) => q.id === ans.questionId);
-      if (question && question.correct_index === ans.selectedIndex) {
-        correctCount++;
+      if (question) {
+        const isCorrect = question.correct_index === ans.selectedIndex;
+        if (isCorrect) {
+          correctCount++;
+        }
+        resultDetails[ans.questionId] = {
+          correct: isCorrect,
+          correctIndex: question.correct_index,
+          explanation: question.explanation || "Well done!"
+        };
       }
     }
     
-    const totalQuestions = questions.length || 1;
+    const totalQuestions = answers.length || 1;
     const score = Math.round((correctCount / totalQuestions) * 100);
     const passed = score >= 70;
     
@@ -369,7 +526,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       score,
       passed,
       correctCount,
-      totalQuestions
+      totalQuestions,
+      details: resultDetails
     });
   } catch (err: any) {
     console.error('Quiz submit error:', err);
