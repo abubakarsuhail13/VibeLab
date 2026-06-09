@@ -323,12 +323,12 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
         ];
       case 2:
         return [
-          "React Declarative UI, Component States & Props",
-          "Tailwind CSS Layout Utility Structures",
-          "React Hooks Lifecycle, UseState & UseEffect",
-          "Integrating Async Web API Fetch Requests",
-          "High Contrast Form Validation Patterns",
-          "Fluid Design & Mobile-First Device Rendering"
+          "What is a Minimum Viable Product (MVP)?",
+          "How to define your target user",
+          "What makes a good product feature?",
+          "What is a user journey?",
+          "How to explain your product clearly",
+          "How to demo a product confidently"
         ];
       case 3:
         return [
@@ -611,7 +611,16 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           ]);
           
           if (resRes.ok) {
-            setResources(await resRes.json());
+            let resData = await resRes.json();
+            if (phaseId === 2) {
+              resData = [
+                { id: 'mvp-1', title: 'What is an MVP?', url: 'https://www.productplan.com/glossary/minimum-viable-product/', resource_type: 'Reading' },
+                { id: 'mvp-2', title: 'How to think like a product creator', url: 'https://uxdesign.cc/how-to-think-like-a-product-manager-782c58900d72', resource_type: 'Reading' },
+                { id: 'mvp-3', title: 'User journey basics', url: 'https://www.interaction-design.org/literature/article/customer-journey-maps-a-quick-guide-to-profiles-and-routes', resource_type: 'Reading' },
+                { id: 'mvp-4', title: 'How to pitch your idea', url: 'https://hbr.org/2020/01/how-to-pitch-a-brilliant-idea', resource_type: 'Reading' }
+              ];
+            }
+            setResources(resData);
           }
           if (quizRes.ok) {
             const qData = await quizRes.json();
