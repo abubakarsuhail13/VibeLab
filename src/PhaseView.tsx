@@ -1963,207 +1963,433 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                 )}
               </div>
             )}
-          </motion.div>
-        )}
+           {activeTab === 'progress' && (
+          phaseId === 2 ? (
+            <motion.div 
+              key="progress-p2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
+              id="phase2-progress-tracker"
+            >
+              {(() => {
+                const STEP_MAP_ORDER: Record<string, number> = {
+                  'blueprint': 1,
+                  'features': 2,
+                  'user_journey': 3,
+                  'screens': 4,
+                  'building': 5,
+                  'review': 6,
+                  'description': 7,
+                  'explain': 8,
+                  'demo': 9,
+                  'complete': 10,
+                  'approved': 10
+                };
+                const currentStepVal = activeSession?.session?.current_step 
+                  ? (STEP_MAP_ORDER[activeSession.session.current_step] || 1)
+                  : 1;
+                const isSessionCompleted = activeSession?.session?.status === 'completed' || activeSession?.session?.current_step === 'approved' || activeSession?.session?.current_step === 'complete';
+                const completedCount = isSessionCompleted ? 10 : currentStepVal - 1;
+                const progressPct = Math.round((completedCount / 10) * 100);
 
-        {activeTab === 'progress' && (
-          <motion.div 
-            key="progress"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="grid lg:grid-cols-2 gap-8"
-          >
-            <div className="space-y-8">
-              <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
-                <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
-                  <BarChart3 className="text-indigo-500 w-6 h-6" />
-                  Phase Stats
-                </h2>
-                
-                <div className="space-y-10 relative z-10">
-                  <div className="text-center p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 ring-4 ring-white shadow-inner">
-                    <div className="text-6xl font-display font-black text-slate-900 mb-2">{phase.progress_percentage}%</div>
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Phase Completion</p>
-                  </div>
+                const getStepDate = (stepNum: number) => {
+                  if (!activeSession) return 'pending';
+                  if (stepNum === 1 && activeSession.blueprint?.approved_at) {
+                    return new Date(activeSession.blueprint.approved_at).toLocaleDateString();
+                  }
+                  if (stepNum === 3 && activeSession.user_journey?.approved_at) {
+                    return new Date(activeSession.user_journey.approved_at).toLocaleDateString();
+                  }
+                  if (stepNum === 5 && activeSession.mvp?.generated_at) {
+                    return new Date(activeSession.mvp.generated_at).toLocaleDateString();
+                  }
+                  const baseDate = activeSession.session?.updated_at || activeSession.session?.created_at || new Date().toISOString();
+                  return new Date(baseDate).toLocaleDateString();
+                };
 
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
-                      <div className="text-2xl font-bold text-slate-900 mb-1">
-                        {projects.filter(p => p.completed_steps.length === p.steps.length).length} / {projects.length}
+                const stepsList = [
+                  { step: 1, label: "Blueprint Confirmed" },
+                  { step: 2, label: "Features Locked In" },
+                  { step: 3, label: "User Journey Approved" },
+                  { step: 4, label: "Screens Generated" },
+                  { step: 5, label: "Product Built" },
+                  { step: 6, label: "Code Walkthrough" },
+                  { step: 7, label: "Product Description" },
+                  { step: 8, label: "Feature Explanation" },
+                  { step: 9, label: "Demo Preparation" },
+                  { step: 10, label: "Phase Complete" }
+                ];
+
+                return (
+                  <>
+                    {/* Overall Progress Bar Card */}
+                    <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative" id="p2-progress-header">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100/20 rounded-full blur-3xl -mr-32 -mt-32" />
+                      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                          <h2 className="text-2xl font-black text-slate-900 font-display flex items-center gap-2.5">
+                            <span className="text-amber-500">🏆</span> Phase 2 Progress
+                          </h2>
+                          <p className="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">{completedCount} of 10 steps complete</p>
+                        </div>
+                        
+                        <div className="flex-1 max-w-md w-full">
+                          <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 relative p-0.5">
+                            <motion.div 
+                              className="h-full bg-[#C9A84C] rounded-full shadow-inner shadow-white/30"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-3xl font-black font-display text-slate-900">{progressPct}%</span>
+                        </div>
                       </div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projects Finished</p>
                     </div>
-                    <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
-                      <div className="text-2xl font-bold text-slate-900 mb-1">
-                        {projects.reduce((acc, p) => acc + (p.completed_steps?.length || 0), 0)}
+
+                    <div className="grid lg:grid-cols-2 gap-8">
+                      {/* Left: 10 vertical list of Steps with status indicators */}
+                      <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative space-y-6" id="p2-progress-steps-list">
+                        <h3 className="text-lg font-bold text-slate-900 font-display flex items-center gap-2">
+                          📋 Step-by-Step Milestones
+                        </h3>
+                        
+                        <div className="space-y-3">
+                          {stepsList.map(({ step, label }) => {
+                            let statusIcon = "⬜";
+                            let statusText = "[locked]";
+                            let statusColorClass = "text-slate-400 border-slate-100 bg-slate-50/50";
+
+                            const isCompleted = isSessionCompleted || step < currentStepVal;
+                            const isCurrent = !isSessionCompleted && step === currentStepVal;
+
+                            if (isCompleted) {
+                              statusIcon = "✅";
+                              statusText = `[completed — ${getStepDate(step)}]`;
+                              statusColorClass = "text-emerald-700 bg-emerald-50/60 border-emerald-100/80";
+                            } else if (isCurrent) {
+                              statusIcon = "🔵";
+                              statusText = "[in progress]";
+                              statusColorClass = "text-indigo-700 bg-indigo-50/60 border-indigo-100/85 ring-2 ring-indigo-500/10";
+                            }
+
+                            return (
+                              <div key={step} className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${statusColorClass}`}>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-base font-bold select-none">{statusIcon}</span>
+                                  <span className="font-extrabold text-sm tracking-tight">Step {step}: {label}</span>
+                                </div>
+                                <span className="text-[11px] font-mono font-bold tracking-tight lowercase">
+                                  {statusText}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Steps Completed</p>
+
+                      {/* Right: 2 summary cards */}
+                      <div className="space-y-8" id="p2-progress-summary-cards">
+                        {/* Summary Card 1: Theory Quiz */}
+                        <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative" id="p2-theory-quiz-card">
+                          <h3 className="text-lg font-bold text-slate-900 font-display flex items-center gap-2 mb-6">
+                            🧠 Theory Quiz
+                          </h3>
+                          
+                          {previousQuizAttempt ? (
+                            <div className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex items-center gap-4">
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-xl ${previousQuizAttempt.passed ? 'bg-emerald-50 text-emerald-750' : 'bg-rose-50 text-rose-750'}`}>
+                                {previousQuizAttempt.passed ? 'Passed ✅' : 'Failed ❌'}
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-slate-950 text-sm">Best Attempt Result</h4>
+                                <p className="text-xs text-slate-500 mt-1 font-semibold">
+                                  Score: <strong className="text-slate-900 font-extrabold">{previousQuizAttempt.score}%</strong> • {previousQuizAttempt.passed ? 'Satisfied!' : 'Retry recommended'}
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0 font-bold">
+                                🔔
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-slate-950 text-sm">Not attempted yet</h4>
+                                <p className="text-xs text-slate-500 mt-1 font-semibold">Go to the Learn tab to test your product theory model!</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Summary Card 2: Daily Build Log */}
+                        <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative" id="p2-daily-build-log-card">
+                          <form onSubmit={handleLogHabit} className="space-y-5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                <BookOpen className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-slate-950 font-display">Daily Build Log</h3>
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Save build minutes effort</p>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Read (min)</label>
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  value={learnMinutes}
+                                  onChange={(e) => setLearnMinutes(parseInt(e.target.value) || 0)}
+                                  className="w-full p-3 rounded-xl border border-slate-200 font-mono text-sm bg-slate-50 text-slate-800 focus:outline-none focus:border-cyan-500 transition-colors"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Build (min)</label>
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  value={buildMinutes}
+                                  onChange={(e) => setBuildMinutes(parseInt(e.target.value) || 0)}
+                                  className="w-full p-3 rounded-xl border border-slate-200 font-mono text-sm bg-slate-50 text-slate-800 focus:outline-none focus:border-cyan-500 transition-colors"
+                                />
+                              </div>
+                            </div>
+
+                            <button
+                              type="submit"
+                              disabled={isLoggingHabit || (learnMinutes === 0 && buildMinutes === 0)}
+                              className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 hover:scale-[1.01] active:scale-95 text-white font-extrabold text-xs rounded-xl uppercase tracking-wider transition-all disabled:opacity-50"
+                            >
+                              {isLoggingHabit ? "Saving minutes..." : "Log Effort Minutes"}
+                            </button>
+                          </form>
+
+                          {/* Micro history review list */}
+                          {habitLogs.length > 0 && (
+                            <div className="mt-6 pt-4 border-t border-slate-100">
+                              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Recent Build Logs</h4>
+                              <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                                {habitLogs.slice(-4).reverse().map((log, i) => (
+                                  <div key={i} className="flex items-center justify-between text-xs p-2 bg-slate-50 rounded-lg text-slate-600 font-mono font-medium">
+                                    <span>{new Date(log.log_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>
+                                    <span>📚 {log.learn_minutes}m • 💻 {log.build_minutes}m</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="progress"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="grid lg:grid-cols-2 gap-8"
+            >
+              <div className="space-y-8">
+                <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
+                  <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
+                    <BarChart3 className="text-indigo-500 w-6 h-6" />
+                    Phase Stats
+                  </h2>
+                  
+                  <div className="space-y-10 relative z-10">
+                    <div className="text-center p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 ring-4 ring-white shadow-inner">
+                      <div className="text-6xl font-display font-black text-slate-900 mb-2">{phase.progress_percentage}%</div>
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Phase Completion</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
+                        <div className="text-2xl font-bold text-slate-900 mb-1">
+                          {projects.filter(p => p.completed_steps.length === p.steps.length).length} / {projects.length}
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projects Finished</p>
+                      </div>
+                      <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
+                        <div className="text-2xl font-bold text-slate-900 mb-1">
+                          {projects.reduce((acc, p) => acc + (p.completed_steps?.length || 0), 0)}
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Steps Completed</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Submission Section */}
-              <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
-                 <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
-                   <Code2 className="text-emerald-500 w-6 h-6" />
-                   Project Submissions
-                 </h2>
-                 
-                 <div className="space-y-4 relative z-10">
-                   {projects.filter(p => p.completed_steps.length === p.steps.length).length === 0 ? (
-                     <div className="p-8 text-center bg-slate-50 rounded-3xl border border-slate-100">
-                        <p className="text-sm text-slate-500">Finish at least one project in the Build tab to enable submission!</p>
-                     </div>
-                   ) : (
-                     projects.filter(p => p.completed_steps.length === p.steps.length).map(proj => {
-                        const isSelected = submitProjectId === proj.id;
-                        const existingSub = userSubmissions.find((s: any) => s.project_id === proj.id);
-                        return (
-                          <div key={proj.id} className={`rounded-3xl border transition-all ${isSelected ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-100 bg-white'}`}>
-                             <div className="p-6 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                   <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                                      <CheckCircle2 className="w-5 h-5" />
-                                   </div>
-                                   <div>
-                                      <h4 className="font-bold text-slate-900 leading-none mb-1">{proj.title}</h4>
-                                      {existingSub ? (
-                                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Submitted &amp; Ready for Review</p>
-                                      ) : (
-                                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Ready to Submit</p>
-                                      )}
-                                   </div>
-                                </div>
-                                <button 
-                                  onClick={() => setSubmitProjectId(isSelected ? null : proj.id)}
-                                  className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${isSelected ? 'bg-white text-slate-400 border border-slate-200' : (existingSub ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/10')}`}
-                                >
-                                   {isSelected ? 'Cancel' : (existingSub ? 'Edit Submission' : 'Submit Now')}
-                                </button>
-                             </div>
+                {/* Submission Section */}
+                <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
+                   <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
+                     <Code2 className="text-emerald-500 w-6 h-6" />
+                     Project Submissions
+                   </h2>
+                   
+                   <div className="space-y-4 relative z-10">
+                     {projects.filter(p => p.completed_steps.length === p.steps.length).length === 0 ? (
+                       <div className="p-8 text-center bg-slate-50 rounded-3xl border border-slate-100">
+                          <p className="text-sm text-slate-500">Finish at least one project in the Build tab to enable submission!</p>
+                       </div>
+                     ) : (
+                       projects.filter(p => p.completed_steps.length === p.steps.length).map(proj => {
+                          const isSelected = submitProjectId === proj.id;
+                          const existingSub = userSubmissions.find((s: any) => s.project_id === proj.id);
+                          return (
+                            <div key={proj.id} className={`rounded-3xl border transition-all ${isSelected ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-100 bg-white'}`}>
+                               <div className="p-6 flex items-center justify-between">
+                                  <div className="flex items-center gap-4">
+                                     <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <CheckCircle2 className="w-5 h-5" />
+                                     </div>
+                                     <div>
+                                        <h4 className="font-bold text-slate-900 leading-none mb-1">{proj.title}</h4>
+                                        {existingSub ? (
+                                          <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Submitted &amp; Ready for Review</p>
+                                        ) : (
+                                          <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Ready to Submit</p>
+                                        )}
+                                     </div>
+                                  </div>
+                                  <button 
+                                    onClick={() => setSubmitProjectId(isSelected ? null : proj.id)}
+                                    className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${isSelected ? 'bg-white text-slate-400 border border-slate-200' : (existingSub ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/10')}`}
+                                  >
+                                     {isSelected ? 'Cancel' : (existingSub ? 'Edit Submission' : 'Submit Now')}
+                                  </button>
+                               </div>
 
-                             {isSelected && (
-                               <motion.div 
-                                 initial={{ height: 0, opacity: 0 }}
-                                 animate={{ height: 'auto', opacity: 1 }}
-                                 className="px-6 pb-6 pt-2 border-t border-emerald-100"
-                               >
-                                 <form 
-                                   onSubmit={(e) => {
-                                     e.preventDefault();
-                                     handleProjectSubmission(e, proj);
-                                   }} 
-                                   className="space-y-4 mt-4"
+                               {isSelected && (
+                                 <motion.div 
+                                   initial={{ height: 0, opacity: 0 }}
+                                   animate={{ height: 'auto', opacity: 1 }}
+                                   className="px-6 pb-6 pt-2 border-t border-emerald-100"
                                  >
-                                   <div>
-                                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">GitHub URL</label>
-                                     <input 
-                                       type="url"
-                                       placeholder="https://github.com/vibelab/project"
-                                       className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
-                                       value={submission.github_url}
-                                       onChange={(e) => setSubmission(s => ({ ...s, github_url: e.target.value }))}
-                                       required
-                                     />
-                                   </div>
-                                   <div>
-                                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Live Demo URL</label>
-                                     <input 
-                                       type="url"
-                                       placeholder="https://vibelab-demo.vercel.app"
-                                       className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
-                                       value={submission.live_url}
-                                       onChange={(e) => setSubmission(s => ({ ...s, live_url: e.target.value }))}
-                                     />
-                                   </div>
-                                   <button 
-                                     disabled={isSubmitting}
-                                     className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all"
+                                   <form 
+                                     onSubmit={(e) => {
+                                       e.preventDefault();
+                                       handleProjectSubmission(e, proj);
+                                     }} 
+                                     className="space-y-4 mt-4"
                                    >
-                                      {isSubmitting ? (
-                                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                      ) : (
-                                        <>
-                                          <Sparkles className="w-4 h-4" />
-                                          Confirm Submission
-                                        </>
-                                      )}
-                                   </button>
-                                   {submissionStatus === 'success' && <p className="text-[10px] font-bold text-emerald-500 text-center uppercase tracking-widest">Saved Successfully!</p>}
-                                 </form>
-                               </motion.div>
-                             )}
-                          </div>
-                        );
-                     })
-                   )}
-                 </div>
+                                     <div>
+                                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">GitHub URL</label>
+                                       <input 
+                                         type="url"
+                                         placeholder="https://github.com/vibelab/project"
+                                         className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                                         value={submission.github_url}
+                                         onChange={(e) => setSubmission(s => ({ ...s, github_url: e.target.value }))}
+                                         required
+                                       />
+                                     </div>
+                                     <div>
+                                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Live Demo URL</label>
+                                       <input 
+                                         type="url"
+                                         placeholder="https://vibelab-demo.vercel.app"
+                                         className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all shadow-sm"
+                                         value={submission.live_url}
+                                         onChange={(e) => setSubmission(s => ({ ...s, live_url: e.target.value }))}
+                                       />
+                                     </div>
+                                     <button 
+                                       disabled={isSubmitting}
+                                       className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all"
+                                     >
+                                        {isSubmitting ? (
+                                          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                          <>
+                                            <Sparkles className="w-4 h-4" />
+                                            Confirm Submission
+                                          </>
+                                        )}
+                                     </button>
+                                     {submissionStatus === 'success' && <p className="text-[10px] font-bold text-emerald-550 text-center uppercase tracking-widest">Saved Successfully!</p>}
+                                   </form>
+                                 </motion.div>
+                               )}
+                            </div>
+                          );
+                       })
+                     )}
+                   </div>
+                </div>
               </div>
-            </div>
 
-            <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
-              <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
-                <Trophy className="text-amber-500 w-6 h-6" />
-                Phase Rewards
-              </h2>
-              
-              <div className="space-y-6 relative z-10">
-                {[
-                  { title: "Foundations Badge", desc: "Awarded for completing all projects in this phase.", locked: !hasBadge, icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" /> },
-                  { title: "Verified Skills", desc: "Skills from this phase are added to your digital profile.", locked: !hasBadge, icon: <Sparkles className="w-8 h-8 text-cyan-400" />, skills: ["Project Lifecycle", "Architecture", "Best Practices", "AI Workflows"] },
-                ].map((reward, i) => (
-                  <div key={i} className={`p-6 rounded-3xl border flex flex-col gap-6 transition-all ${reward.locked ? 'opacity-40 grayscale bg-slate-50 border-slate-100' : 'bg-white border-slate-200 shadow-lg ring-1 ring-slate-100'}`}>
-                    <div className="flex items-center gap-6">
-                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${reward.locked ? 'bg-slate-200' : 'bg-gradient-to-br from-slate-50 to-white shadow-inner'}`}>
-                        {React.cloneElement(reward.icon as React.ReactElement, { className: `${(reward.icon as React.ReactElement).props.className} ${reward.locked ? 'text-slate-400 !fill-none' : ''}` })}
+              <div className="glass p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
+                <h2 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 relative z-10">
+                  <Trophy className="text-amber-500 w-6 h-6" />
+                  Phase Rewards
+                </h2>
+                
+                <div className="space-y-6 relative z-10">
+                  {[
+                    { title: "Foundations Badge", desc: "Awarded for completing all projects in this phase.", locked: !hasBadge, icon: <Star className="w-8 h-8 text-amber-400 fill-amber-400" /> },
+                    { title: "Verified Skills", desc: "Skills from this phase are added to your digital profile.", locked: !hasBadge, icon: <Sparkles className="w-8 h-8 text-cyan-400" />, skills: ["Project Lifecycle", "Architecture", "Best Practices", "AI Workflows"] },
+                  ].map((reward, i) => (
+                    <div key={i} className={`p-6 rounded-3xl border flex flex-col gap-6 transition-all ${reward.locked ? 'opacity-40 grayscale bg-slate-50 border-slate-100' : 'bg-white border-slate-200 shadow-lg ring-1 ring-slate-100'}`}>
+                      <div className="flex items-center gap-6">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${reward.locked ? 'bg-slate-200' : 'bg-gradient-to-br from-slate-50 to-white shadow-inner'}`}>
+                          {React.cloneElement(reward.icon as React.ReactElement, { className: `${(reward.icon as React.ReactElement).props.className} ${reward.locked ? 'text-slate-400 !fill-none' : ''}` })}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 leading-tight">{reward.title}</h4>
+                          <p className="text-sm text-slate-500 mt-1">{reward.desc}</p>
+                          {!reward.locked && (
+                            <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                               Claimed
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-slate-900 leading-tight">{reward.title}</h4>
-                        <p className="text-sm text-slate-500 mt-1">{reward.desc}</p>
-                        {!reward.locked && (
-                          <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
-                             Claimed
-                          </div>
-                        )}
-                      </div>
+                      
+                      {reward.skills && !reward.locked && (
+                        <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
+                          {reward.skills.map((skill, si) => (
+                            <span key={si} className="px-3 py-1 bg-cyan-50 text-cyan-600 rounded-lg text-xs font-bold border border-cyan-100 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    
-                    {reward.skills && !reward.locked && (
-                      <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
-                        {reward.skills.map((skill, si) => (
-                          <span key={si} className="px-3 py-1 bg-cyan-50 text-cyan-600 rounded-lg text-xs font-bold border border-cyan-100 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3 h-3" />
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  ))}
 
-                {!hasBadge && phase.progress_percentage === 100 && (
-                   <motion.div 
-                     initial={{ opacity: 0, y: 10 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     className="p-6 rounded-3xl bg-indigo-50 border border-indigo-100 text-center shadow-xl shadow-indigo-100"
-                   >
-                     <p className="text-sm font-bold text-indigo-700 mb-3">You've mastered this phase!</p>
-                     <button 
-                       onClick={handleCertify}
-                       disabled={isCertifying}
-                       className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all"
+                  {!hasBadge && phase.progress_percentage === 100 && (
+                     <motion.div 
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       className="p-6 rounded-3xl bg-indigo-50 border border-indigo-100 text-center shadow-xl shadow-indigo-100"
                      >
-                       {isCertifying ? 'Processing...' : 'Claim Phase Certificate'}
-                     </button>
-                   </motion.div>
-                )}
+                       <p className="text-sm font-bold text-indigo-700 mb-3">You've mastered this phase!</p>
+                       <button 
+                         onClick={handleCertify}
+                         disabled={isCertifying}
+                         className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/20 hover:scale-105 active:scale-95 transition-all"
+                       >
+                         {isCertifying ? 'Processing...' : 'Claim Phase Certificate'}
+                       </button>
+                     </motion.div>
+                  )}
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )
+        )}         </motion.div>
         )}
       </AnimatePresence>
       <AnimatePresence>
