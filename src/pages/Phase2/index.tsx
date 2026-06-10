@@ -219,17 +219,17 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#02050e] flex flex-col justify-center items-center font-sans text-white">
-        <Loader2 className="w-12 h-12 text-[#C9A84C] animate-spin mb-4" />
-        <p className="text-[#C9A84C] font-jetbrains text-xs tracking-widest font-bold">LOADING PHASE 2 CONTEXT...</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center font-sans text-white">
+        <Loader2 className="w-12 h-12 text-[#2563eb] animate-spin mb-4" />
+        <p className="text-[#2563eb] font-jetbrains text-xs tracking-widest font-bold">LOADING PHASE 2 CONTEXT...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#02050e] text-white selection:bg-[#C9A84C]/20 selection:text-white relative overflow-hidden font-dmsans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-[#2563eb]/20 selection:text-white relative overflow-hidden font-dmsans">
       {/* Premium ambient glows */}
-      <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#C9A84C]/5 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#2563eb]/5 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none" />
 
       <AnimatePresence mode="wait">
@@ -248,7 +248,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="font-jetbrains text-xs tracking-[0.25em] text-[#C9A84C] font-semibold uppercase mb-4 block"
+              className="font-jetbrains text-xs tracking-[0.25em] text-[#2563eb] font-semibold uppercase mb-4 block"
             >
               PHASE 2 OF 5
             </motion.span>
@@ -258,7 +258,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="font-bebas text-5xl sm:text-7xl lg:text-8xl tracking-widest text-white leading-none mb-6"
+              className="font-bebas text-5xl sm:text-7xl lg:text-8xl tracking-widest text-slate-900 leading-none mb-6"
             >
               PRODUCT CREATION
             </motion.h1>
@@ -268,7 +268,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
               initial={{ width: 0 }}
               animate={{ width: 60 }}
               transition={{ delay: 0.4, duration: 0.6 }}
-              className="h-[2px] bg-[#C9A84C] mx-auto mb-10"
+              className="h-[2px] bg-[#2563eb] mx-auto mb-10"
             />
 
             {/* Narrative Body Text */}
@@ -276,7 +276,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto space-y-6"
+              className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto space-y-6"
             >
               <p>
                 Welcome to the Product Creation phase. In Phase 1, you identified a problem and designed a solution. Now it's time to bring your idea to life.
@@ -299,13 +299,13 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
               transition={{ delay: 0.6 }}
               className="flex flex-wrap justify-center gap-3 mt-10"
             >
-              <span className="px-5 py-2 rounded-full text-xs font-semibold font-jetbrains bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] backdrop-blur-sm shadow-md">
+              <span className="px-5 py-2 rounded-full text-xs font-semibold font-jetbrains bg-[#2563eb]/10 border border-[#2563eb]/30 text-[#2563eb] backdrop-blur-sm shadow-md">
                 🏗️ Working MVP
               </span>
-              <span className="px-5 py-2 rounded-full text-xs font-semibold font-jetbrains bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] backdrop-blur-sm shadow-md">
+              <span className="px-5 py-2 rounded-full text-xs font-semibold font-jetbrains bg-[#2563eb]/10 border border-[#2563eb]/30 text-[#2563eb] backdrop-blur-sm shadow-md">
                 📋 Blueprint
               </span>
-              <span className="px-5 py-2 rounded-full text-xs font-semibold font-jetbrains bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] backdrop-blur-sm shadow-md">
+              <span className="px-5 py-2 rounded-full text-xs font-semibold font-jetbrains bg-[#2563eb]/10 border border-[#2563eb]/30 text-[#2563eb] backdrop-blur-sm shadow-md">
                 🎤 Demo Script
               </span>
             </motion.div>
@@ -320,7 +320,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
               <button
                 onClick={handleStartProductCreation}
                 disabled={isSubmitting}
-                className="w-full max-w-[400px] inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-wider text-sm sm:text-base px-8 py-5 rounded-2xl transition-all shadow-xl shadow-[#C9A84C]/10 hover:shadow-[#C9A84C]/25 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                className="w-full max-w-[400px] inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-wider text-sm sm:text-base px-8 py-5 rounded-2xl transition-all shadow-xl shadow-[#2563eb]/10 hover:shadow-[#2563eb]/25 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -347,7 +347,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
             {/* Custom Back Nav Button */}
             <button
               onClick={() => navigateTo('/dashboard')}
-              className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-400 hover:text-[#C9A84C] mb-8 transition-colors uppercase gap-2 cursor-pointer"
+              className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-500 hover:text-[#2563eb] mb-8 transition-colors uppercase gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" /> Back to Dashboard
             </button>
@@ -357,77 +357,77 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
 
             {/* Header Content */}
             <div className="mb-10 text-center sm:text-left">
-              <h2 className="font-bebas text-4xl sm:text-6xl tracking-widest text-white leading-none mb-3">
+              <h2 className="font-bebas text-4xl sm:text-6xl tracking-widest text-slate-900 leading-none mb-3">
                 YOUR PROJECT BLUEPRINT
               </h2>
-              <p className="font-dmsans text-slate-400 text-sm sm:text-base leading-relaxed">
+              <p className="font-dmsans text-slate-500 text-sm sm:text-base leading-relaxed">
                 Based on your Phase 1 ideation, here is your blueprint. Review it carefully — you can edit anything before approving.
               </p>
             </div>
 
             {/* Form Fields */}
-            <div className="space-y-8 bg-slate-950/40 border border-slate-800 p-8 rounded-3xl shadow-xl backdrop-blur-md">
+            <div className="space-y-8 bg-white/40 border border-slate-200 p-8 rounded-3xl shadow-xl backdrop-blur-md">
               
               {/* Field 1: Project Name */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-semibold tracking-wider font-jetbrains text-[#C9A84C] uppercase flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-[#C9A84C] rounded-full inline-block"></span> Project Name
+                <label className="text-xs font-semibold tracking-wider font-jetbrains text-[#2563eb] uppercase flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#2563eb] rounded-full inline-block"></span> Project Name
                 </label>
                 <input
                   type="text"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder="e.g. FitTrack Elite"
-                  className="w-full bg-slate-900 border border-slate-800 hover:border-slate-700 focus:border-[#C9A84C] text-sm text-white px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans shadow-inner"
+                  className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-[#2563eb] text-sm text-white px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans shadow-inner"
                 />
               </div>
 
               {/* Field 2: Problem Statement */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-semibold tracking-wider font-jetbrains text-[#C9A84C] uppercase flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-[#C9A84C] rounded-full inline-block"></span> Problem Statement
+                <label className="text-xs font-semibold tracking-wider font-jetbrains text-[#2563eb] uppercase flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#2563eb] rounded-full inline-block"></span> Problem Statement
                 </label>
                 <textarea
                   value={problemStatement}
                   onChange={(e) => setProblemStatement(e.target.value)}
                   rows={3}
                   placeholder="Describe the precise, high-importance problem your user faces..."
-                  className="w-full bg-slate-900 border border-slate-800 hover:border-slate-700 focus:border-[#C9A84C] text-sm text-slate-200 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans resize-y leading-relaxed shadow-inner"
+                  className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-[#2563eb] text-sm text-slate-700 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans resize-y leading-relaxed shadow-inner"
                 />
               </div>
 
               {/* Field 3: Target Users */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-semibold tracking-wider font-jetbrains text-[#C9A84C] uppercase flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-[#C9A84C] rounded-full inline-block"></span> Target Users
+                <label className="text-xs font-semibold tracking-wider font-jetbrains text-[#2563eb] uppercase flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#2563eb] rounded-full inline-block"></span> Target Users
                 </label>
                 <textarea
                   value={targetUsers}
                   onChange={(e) => setTargetUsers(e.target.value)}
                   rows={2}
                   placeholder="Define the exact audience type who will benefit most from this app..."
-                  className="w-full bg-slate-900 border border-slate-800 hover:border-slate-700 focus:border-[#C9A84C] text-sm text-slate-200 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans resize-y leading-relaxed shadow-inner"
+                  className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-[#2563eb] text-sm text-slate-700 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans resize-y leading-relaxed shadow-inner"
                 />
               </div>
 
               {/* Field 4: MVP Scope */}
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-semibold tracking-wider font-jetbrains text-[#C9A84C] uppercase flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-[#C9A84C] rounded-full inline-block"></span> MVP Scope
+                <label className="text-xs font-semibold tracking-wider font-jetbrains text-[#2563eb] uppercase flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#2563eb] rounded-full inline-block"></span> MVP Scope
                 </label>
                 <textarea
                   value={mvpScope}
                   onChange={(e) => setMvpScope(e.target.value)}
                   rows={3}
                   placeholder="Outline the lean, focused scope of features or value deliverables for phase 1..."
-                  className="w-full bg-slate-900 border border-slate-800 hover:border-slate-700 focus:border-[#C9A84C] text-sm text-slate-200 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans resize-y leading-relaxed shadow-inner"
+                  className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-[#2563eb] text-sm text-slate-700 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans resize-y leading-relaxed shadow-inner"
                 />
               </div>
 
               {/* Informative Guidance */}
-              <div className="p-4 rounded-2xl bg-[#C9A84C]/5 border border-[#C9A84C]/15 flex items-start gap-3 mt-4">
-                <Sparkles className="w-5 h-5 text-[#C9A84C] shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              <div className="p-4 rounded-2xl bg-[#2563eb]/5 border border-[#2563eb]/15 flex items-start gap-3 mt-4">
+                <Sparkles className="w-5 h-5 text-[#2563eb] shrink-0 mt-0.5" />
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Reviewing this details allows the Product Builder to set clean guardrails. Our AI will automatically suggest appropriate, high-fidelity UX elements and specific feature listings on the next step.
                 </p>
               </div>
@@ -437,7 +437,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
                 <button
                   onClick={handleApproveBlueprint}
                   disabled={isSubmitting}
-                  className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-wider text-sm sm:text-base px-8 py-4.5 rounded-2xl transition-all shadow-xl shadow-[#C9A84C]/5 hover:shadow-[#C9A84C]/15 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                  className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-wider text-sm sm:text-base px-8 py-4.5 rounded-2xl transition-all shadow-xl shadow-[#2563eb]/5 hover:shadow-[#2563eb]/15 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -462,21 +462,21 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
             exit={{ opacity: 0 }}
             className="flex flex-col justify-center items-center min-h-screen px-6 text-center max-w-lg mx-auto"
           >
-            <div className="bg-[#C9A84C]/10 border border-[#C9A84C]/30 p-6 rounded-full mb-6 text-[#C9A84C] animate-pulse">
+            <div className="bg-[#2563eb]/10 border border-[#2563eb]/30 p-6 rounded-full mb-6 text-[#2563eb] animate-pulse">
               <Check className="w-12 h-12" />
             </div>
             
-            <h3 className="font-bebas text-3xl tracking-widest text-white leading-none mb-3">
+            <h3 className="font-bebas text-3xl tracking-widest text-slate-900 leading-none mb-3">
               Features Generation Active
             </h3>
             
-            <p className="text-slate-400 text-sm leading-relaxed mb-8">
+            <p className="text-slate-500 text-sm leading-relaxed mb-8">
               Your blueprint has been approved! The AI is generating feature suggestions. You're ready for Step 2: Feature Scope Selection.
             </p>
 
             <button
               onClick={() => navigateTo('/dashboard')}
-              className="px-6 py-3 rounded-xl border border-slate-700 hover:border-[#C9A84C] text-[#C9A84C] font-semibold text-xs tracking-wider uppercase transition-colors"
+              className="px-6 py-3 rounded-xl border border-slate-300 hover:border-[#2563eb] text-[#2563eb] font-semibold text-xs tracking-wider uppercase transition-colors"
             >
               Back to Dashboard
             </button>

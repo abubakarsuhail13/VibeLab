@@ -161,7 +161,7 @@ const getInjectedMvpCode = (codeText: string) => {
             overlay.style.left = (rect.left + window.scrollX) + 'px';
             overlay.style.width = rect.width + 'px';
             overlay.style.height = rect.height + 'px';
-            overlay.style.border = '3px solid #C9A84C';
+            overlay.style.border = '3px solid #2563eb';
             overlay.style.borderRadius = '8px';
             overlay.style.pointerEvents = 'none';
             overlay.style.zIndex = '99999';
@@ -173,7 +173,7 @@ const getInjectedMvpCode = (codeText: string) => {
             tag.style.position = 'absolute';
             tag.style.top = '-25px';
             tag.style.left = '0';
-            tag.style.backgroundColor = '#C9A84C';
+            tag.style.backgroundColor = '#2563eb';
             tag.style.color = '#000000';
             tag.style.padding = '2px 8px';
             tag.style.borderRadius = '4px';
@@ -941,8 +941,8 @@ export default function Phase2BuildWalkthrough() {
   if (isLoading) {
     return (
       <div className="py-12 flex flex-col justify-center items-center text-center">
-        <Loader2 className="w-8 h-8 text-[#C9A84C] animate-spin mb-3" />
-        <p className="text-[#C9A84C] font-mono text-xs tracking-wider">SYNCING PRODUCT STEPPER CONTEXT...</p>
+        <Loader2 className="w-8 h-8 text-[#2563eb] animate-spin mb-3" />
+        <p className="text-[#2563eb] font-mono text-xs tracking-wider">SYNCING PRODUCT STEPPER CONTEXT...</p>
       </div>
     );
   }
@@ -959,12 +959,12 @@ export default function Phase2BuildWalkthrough() {
             <div 
               key={item.step}
               id={`step-block-${item.step}`}
-              className={`border rounded-[1.8rem] transition-all overflow-hidden bg-slate-950/40 backdrop-blur-md ${
+              className={`border rounded-[1.8rem] transition-all overflow-hidden bg-white/40 backdrop-blur-md ${
                 isActive 
-                  ? 'border-[#C9A84C]/50 shadow-lg shadow-[#C9A84C]/5 ring-1 ring-[#C9A84C]/10 bg-[#040817]/60' 
+                  ? 'border-[#2563eb]/50 shadow-lg shadow-[#2563eb]/5 ring-1 ring-[#2563eb]/10 bg-white/60' 
                   : isCompleted 
-                    ? 'border-emerald-500/20 bg-slate-900/10' 
-                    : 'border-slate-800 bg-slate-950/20 opacity-60'
+                    ? 'border-emerald-500/20 bg-slate-100/10' 
+                    : 'border-slate-200 bg-slate-50/20 opacity-60'
               }`}
             >
               {/* Step Title Header Row */}
@@ -980,12 +980,12 @@ export default function Phase2BuildWalkthrough() {
               >
                 <div className="flex items-center gap-4">
                   {/* Circle Icon Badge */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-slate-700/50 ${
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-slate-300/50 ${
                     isCompleted 
                       ? 'bg-emerald-500/10 text-emerald-400 border-emerald-400/30' 
                       : isActive 
-                        ? 'bg-[#C9A84C]/20 text-[#C9A84C] border-[#C9A84C]/40 ring-4 ring-[#C9A84C]/5' 
-                        : 'bg-slate-900 text-slate-500 border-slate-800'
+                        ? 'bg-[#2563eb]/20 text-[#2563eb] border-[#2563eb]/40 ring-4 ring-[#2563eb]/5' 
+                        : 'bg-white text-slate-500 border-slate-200'
                   }`}>
                     {isCompleted ? (
                       <Check className="w-4.5 h-4.5 stroke-[3]" />
@@ -998,19 +998,19 @@ export default function Phase2BuildWalkthrough() {
 
                   <div>
                     <h3 className={`text-base font-bold font-sans flex items-center gap-2 ${
-                      isActive ? 'text-[#C9A84C]' : 'text-white'
+                      isActive ? 'text-[#2563eb]' : 'text-white'
                     }`}>
                       {item.label}
-                      {isActive && <span className="inline-block px-2 py-0.5 bg-[#C9A84C]/10 text-[#C9A84C] text-[9px] uppercase tracking-wider font-mono rounded border border-[#C9A84C]/20 animate-pulse">Now Active</span>}
+                      {isActive && <span className="inline-block px-2 py-0.5 bg-[#2563eb]/10 text-[#2563eb] text-[9px] uppercase tracking-wider font-mono rounded border border-[#2563eb]/20 animate-pulse">Now Active</span>}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1">{item.desc}</p>
+                    <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
                   </div>
                 </div>
 
                 {/* Right State Indicator Arrow */}
-                <div className="text-slate-500 hover:text-white transition-colors p-1">
+                <div className="text-slate-500 hover:text-slate-700 transition-colors p-1">
                   {!isLocked && (
-                    <ChevronRight className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'rotate-90 text-[#C9A84C]' : ''}`} />
+                    <ChevronRight className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'rotate-90 text-[#2563eb]' : ''}`} />
                   )}
                 </div>
               </div>
@@ -1023,65 +1023,65 @@ export default function Phase2BuildWalkthrough() {
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="border-t border-slate-800/60"
+                    className="border-t border-slate-200/60"
                   >
-                    <div className="p-6 md:p-8 space-y-6 bg-slate-900/10">
+                    <div className="p-6 md:p-8 space-y-6 bg-slate-100/10">
 
                       {/**********************************************************
                        * STEP 1: Blueprint Approver View
                        ***********************************************************/}
                       {item.step === 1 && (
                         <div className="space-y-6">
-                          <p className="text-xs font-semibold text-slate-400 font-sans tracking-wide">
+                          <p className="text-xs font-semibold text-slate-500 font-sans tracking-wide">
                             Based on your Phase 1 ideation — review and confirm.
                           </p>
 
                           <div className="grid grid-cols-1 gap-5">
                             {/* Project Name Field */}
                             <div className="flex flex-col gap-2">
-                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#C9A84C] font-semibold">Project Name</label>
+                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Project Name</label>
                               <input 
                                 type="text"
                                 value={projectName}
                                 onChange={(e) => setProjectName(e.target.value)}
                                 placeholder="Enter project name..."
-                                className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C] text-sm text-white px-4 py-3 rounded-xl outline-none transition-colors"
+                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-white px-4 py-3 rounded-xl outline-none transition-colors"
                               />
                             </div>
 
                             {/* Problem Statement Field */}
                             <div className="flex flex-col gap-2">
-                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#C9A84C] font-semibold">Problem Statement</label>
+                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Problem Statement</label>
                               <textarea 
                                 value={problemStatement}
                                 onChange={(e) => setProblemStatement(e.target.value)}
                                 rows={2}
                                 placeholder="Describe the pain point..."
-                                className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
                               />
                             </div>
 
                             {/* Target Users Field */}
                             <div className="flex flex-col gap-2">
-                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#C9A84C] font-semibold">Target Users</label>
+                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Target Users</label>
                               <textarea 
                                 value={targetUsers}
                                 onChange={(e) => setTargetUsers(e.target.value)}
                                 rows={2}
                                 placeholder="Who are your primary target users?"
-                                className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
                               />
                             </div>
 
                             {/* MVP Scope Field */}
                             <div className="flex flex-col gap-2">
-                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#C9A84C] font-semibold">MVP Scope</label>
+                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">MVP Scope</label>
                               <textarea 
                                 value={mvpScope}
                                 onChange={(e) => setMvpScope(e.target.value)}
                                 rows={3}
                                 placeholder="What core features are inside the MVP?"
-                                className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
                               />
                             </div>
                           </div>
@@ -1089,7 +1089,7 @@ export default function Phase2BuildWalkthrough() {
                           <button 
                             disabled={isSubmitting}
                             onClick={handleApproveBlueprint}
-                            className="w-full inline-flex items-center justify-center bg-[#C9A84C] hover:bg-[#E3C268] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
+                            className="w-full inline-flex items-center justify-center bg-[#2563eb] hover:bg-[#3b82f6] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
                           >
                             {isSubmitting ? (
                               <>
@@ -1110,7 +1110,7 @@ export default function Phase2BuildWalkthrough() {
                        ***********************************************************/}
                       {item.step === 2 && (
                         <div className="space-y-8">
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-slate-500">
                             Below are your product features generated which you can prioritize. Organize them across columns, include/exclude them, or add custom ones!
                           </p>
 
@@ -1128,8 +1128,8 @@ export default function Phase2BuildWalkthrough() {
                                     key={feat.id}
                                     className={`p-4 rounded-xl border transition-all ${
                                       Boolean(feat.is_included) 
-                                        ? 'bg-slate-900/85 border-[#C9A84C]/30 shadow-md' 
-                                        : 'bg-slate-950/60 border-slate-800 opacity-50'
+                                        ? 'bg-slate-50/85 border-[#2563eb]/30 shadow-md' 
+                                        : 'bg-white/65 border-slate-200 opacity-50'
                                     }`}
                                   >
                                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -1138,18 +1138,18 @@ export default function Phase2BuildWalkthrough() {
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
                                         onChange={(e) => handleToggleIncludeFeature(feat.id, e.target.checked)}
-                                        className="rounded border-slate-700 bg-slate-900 text-[#C9A84C] focus:ring-0 cursor-pointer"
+                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer"
                                       />
                                     </div>
-                                    <p className="text-[11px] text-slate-400 leading-normal mb-3">{feat.feature_description}</p>
+                                    <p className="text-[11px] text-slate-500 leading-normal mb-3">{feat.feature_description}</p>
                                     
                                     {/* Action Select to move column */}
-                                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-800/50">
+                                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/50">
                                       <span className="text-[9.5px] font-mono text-slate-500 uppercase leading-none">Move:</span>
                                       <select 
                                         value={feat.category}
                                         onChange={(e) => handleChangeFeatureCategory(feat.id, e.target.value as any)}
-                                        className="text-[9.5px] bg-slate-900 border border-slate-800 rounded font-bold px-1.5 py-0.5 text-[#C9A84C] outline-none"
+                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none"
                                       >
                                         <option value="must_have">Must Have</option>
                                         <option value="nice_to_have">Nice To Have</option>
@@ -1175,8 +1175,8 @@ export default function Phase2BuildWalkthrough() {
                                     key={feat.id}
                                     className={`p-4 rounded-xl border transition-all ${
                                       Boolean(feat.is_included) 
-                                        ? 'bg-slate-900/85 border-[#C9A84C]/30 shadow-md' 
-                                        : 'bg-slate-950/60 border-slate-800 opacity-50'
+                                        ? 'bg-slate-50/85 border-[#2563eb]/30 shadow-md' 
+                                        : 'bg-white/65 border-slate-200 opacity-50'
                                     }`}
                                   >
                                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -1185,18 +1185,18 @@ export default function Phase2BuildWalkthrough() {
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
                                         onChange={(e) => handleToggleIncludeFeature(feat.id, e.target.checked)}
-                                        className="rounded border-slate-700 bg-slate-900 text-[#C9A84C] focus:ring-0 cursor-pointer"
+                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer"
                                       />
                                     </div>
-                                    <p className="text-[11px] text-slate-400 leading-normal mb-3">{feat.feature_description}</p>
+                                    <p className="text-[11px] text-slate-500 leading-normal mb-3">{feat.feature_description}</p>
                                     
                                     {/* Action Select to move column */}
-                                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-800/50">
+                                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/50">
                                       <span className="text-[9.5px] font-mono text-slate-500 uppercase leading-none">Move:</span>
                                       <select 
                                         value={feat.category}
                                         onChange={(e) => handleChangeFeatureCategory(feat.id, e.target.value as any)}
-                                        className="text-[9.5px] bg-slate-900 border border-slate-800 rounded font-bold px-1.5 py-0.5 text-[#C9A84C] outline-none"
+                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none"
                                       >
                                         <option value="must_have">Must Have</option>
                                         <option value="nice_to_have">Nice To Have</option>
@@ -1222,8 +1222,8 @@ export default function Phase2BuildWalkthrough() {
                                     key={feat.id}
                                     className={`p-4 rounded-xl border transition-all ${
                                       Boolean(feat.is_included) 
-                                        ? 'bg-slate-900/85 border-[#C9A84C]/30 shadow-md' 
-                                        : 'bg-slate-950/60 border-slate-800 opacity-50'
+                                        ? 'bg-slate-50/85 border-[#2563eb]/30 shadow-md' 
+                                        : 'bg-white/65 border-slate-200 opacity-50'
                                     }`}
                                   >
                                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -1232,18 +1232,18 @@ export default function Phase2BuildWalkthrough() {
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
                                         onChange={(e) => handleToggleIncludeFeature(feat.id, e.target.checked)}
-                                        className="rounded border-slate-700 bg-slate-900 text-[#C9A84C] focus:ring-0 cursor-pointer"
+                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer"
                                       />
                                     </div>
-                                    <p className="text-[11px] text-slate-400 leading-normal mb-3">{feat.feature_description}</p>
+                                    <p className="text-[11px] text-slate-500 leading-normal mb-3">{feat.feature_description}</p>
                                     
                                     {/* Action Select to move column */}
-                                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-800/50">
+                                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/50">
                                       <span className="text-[9.5px] font-mono text-slate-500 uppercase leading-none">Move:</span>
                                       <select 
                                         value={feat.category}
                                         onChange={(e) => handleChangeFeatureCategory(feat.id, e.target.value as any)}
-                                        className="text-[9.5px] bg-slate-900 border border-slate-800 rounded font-bold px-1.5 py-0.5 text-[#C9A84C] outline-none"
+                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none"
                                       >
                                         <option value="must_have">Must Have</option>
                                         <option value="nice_to_have">Nice To Have</option>
@@ -1261,9 +1261,9 @@ export default function Phase2BuildWalkthrough() {
                           </div>
 
                           {/* Add Custom Feature Sub-Form */}
-                          <form onSubmit={handleAddCustomFeature} className="p-5 border border-slate-800 bg-slate-950/50 rounded-2xl space-y-4">
+                          <form onSubmit={handleAddCustomFeature} className="p-5 border border-slate-200 bg-white/50 rounded-2xl space-y-4">
                             <h5 className="text-xs font-bold text-white flex items-center gap-2">
-                              <Plus className="w-4 h-4 text-[#C9A84C]" />
+                              <Plus className="w-4 h-4 text-[#2563eb]" />
                               Add Custom Feature
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1272,13 +1272,13 @@ export default function Phase2BuildWalkthrough() {
                                 placeholder="Feature Name (e.g., Live Sync)"
                                 value={customFeatureName}
                                 onChange={(e) => setCustomFeatureName(e.target.value)}
-                                className="bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white placeholder:text-slate-500 focus:border-[#C9A84C] outline-none"
+                                className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-white placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
                               />
 
                               <select 
                                 value={customFeatureCategory}
                                 onChange={(e) => setCustomFeatureCategory(e.target.value as any)}
-                                className="bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-[#C9A84C] focus:border-[#C9A84C] outline-none"
+                                className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-[#2563eb] focus:border-[#2563eb] outline-none"
                               >
                                 <option value="must_have">Must Have</option>
                                 <option value="nice_to_have">Nice To Have</option>
@@ -1291,13 +1291,13 @@ export default function Phase2BuildWalkthrough() {
                               value={customFeatureDesc}
                               onChange={(e) => setCustomFeatureDesc(e.target.value)}
                               rows={2}
-                              className="w-full bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl text-xs text-white placeholder:text-slate-500 focus:border-[#C9A84C] outline-none"
+                              className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-white placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
                             />
 
                             <button 
                               type="submit"
                               disabled={isAddingFeature}
-                              className="w-full py-2 px-4 rounded-xl border border-[#C9A84C]/30 hover:border-[#C9A84C] text-[#C9A84C] text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase disabled:opacity-50"
+                              className="w-full py-2 px-4 rounded-xl border border-[#2563eb]/30 hover:border-[#2563eb] text-[#2563eb] text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase disabled:opacity-50"
                             >
                               {isAddingFeature ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                               Add Feature
@@ -1309,7 +1309,7 @@ export default function Phase2BuildWalkthrough() {
                             <button 
                               disabled={isSubmitting}
                               onClick={handleApproveFeatures}
-                              className="w-full inline-flex items-center justify-center bg-[#C9A84C] hover:bg-[#E3C268] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
+                              className="w-full inline-flex items-center justify-center bg-[#2563eb] hover:bg-[#3b82f6] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
                             >
                               {isSubmitting ? (
                                 <>
@@ -1331,7 +1331,7 @@ export default function Phase2BuildWalkthrough() {
                        ***********************************************************/}
                       {item.step === 3 && (
                         <div className="space-y-6">
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-slate-500">
                             This is how someone will use <strong className="text-white">{projectName || 'your app'}</strong> from start to finish.
                           </p>
 
@@ -1340,13 +1340,13 @@ export default function Phase2BuildWalkthrough() {
                             <div className="flex flex-col md:flex-row gap-6 md:items-stretch overflow-x-auto py-4 px-1 scrollbar-thin">
                               {userJourney.steps.map((uStep, index) => (
                                 <React.Fragment key={uStep.step_number}>
-                                  <div className="flex-1 min-w-[200px] p-5 rounded-2xl bg-slate-900/45 border border-slate-800 flex flex-col justify-between hover:border-cyan-500/30 transition-all">
+                                  <div className="flex-1 min-w-[200px] p-5 rounded-2xl bg-slate-50/45 border border-slate-200 flex flex-col justify-between hover:border-cyan-500/30 transition-all">
                                     <div>
-                                      <div className="w-6 h-6 rounded-full bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/25 text-[10px] font-black font-mono flex items-center justify-center mb-4 leading-none">
+                                      <div className="w-6 h-6 rounded-full bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/25 text-[10px] font-black font-mono flex items-center justify-center mb-4 leading-none">
                                         {uStep.step_number}
                                       </div>
                                       <h5 className="text-xs font-bold text-white mb-2">{uStep.title}</h5>
-                                      <p className="text-[11px] text-slate-400 leading-relaxed font-sans">{uStep.description}</p>
+                                      <p className="text-[11px] text-slate-500 leading-relaxed font-sans">{uStep.description}</p>
                                     </div>
                                     <div className="pt-4 flex justify-end">
                                       <span className="text-[9.5px] font-mono text-slate-500 font-bold uppercase">Journey Step</span>
@@ -1362,14 +1362,14 @@ export default function Phase2BuildWalkthrough() {
                               ))}
                               
                               {/* SUCCESS OR SUCCESSIVE TAG */}
-                              <div className="flex-1 min-w-[140px] p-5 rounded-2xl bg-[#C9A84C]/5 border border-[#C9A84C]/15 flex flex-col items-center justify-center text-center max-w-[200px]">
-                                <Sparkles className="w-8 h-8 text-[#C9A84C] mb-2 animate-bounce" />
+                              <div className="flex-1 min-w-[140px] p-5 rounded-2xl bg-[#2563eb]/5 border border-[#2563eb]/15 flex flex-col items-center justify-center text-center max-w-[200px]">
+                                <Sparkles className="w-8 h-8 text-[#2563eb] mb-2 animate-bounce" />
                                 <span className="text-xs font-bold text-white">End Goal Met!</span>
-                                <p className="text-[10px] text-slate-400 mt-1 leading-normal">Solve client pain-point</p>
+                                <p className="text-[10px] text-slate-500 mt-1 leading-normal">Solve client pain-point</p>
                               </div>
                             </div>
                           ) : (
-                            <div className="p-6 bg-slate-900/50 rounded-xl text-center text-xs text-slate-500 italic">
+                            <div className="p-6 bg-white/50 rounded-xl text-center text-xs text-slate-500 italic">
                               No active journey loaded.
                             </div>
                           )}
@@ -1378,7 +1378,7 @@ export default function Phase2BuildWalkthrough() {
                             <button 
                               disabled={isSubmitting}
                               onClick={handleApproveJourney}
-                              className="w-full inline-flex items-center justify-center bg-[#C9A84C] hover:bg-[#E3C268] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
+                              className="w-full inline-flex items-center justify-center bg-[#2563eb] hover:bg-[#3b82f6] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
                             >
                               {isSubmitting ? (
                                 <>
@@ -1400,7 +1400,7 @@ export default function Phase2BuildWalkthrough() {
                        ***********************************************************/}
                       {item.step === 4 && (
                         <div className="space-y-6">
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-slate-500">
                             Here are your pre-arranged user interfaces. Click on any template layout to review the simulated design preview in full size.
                           </p>
 
@@ -1409,14 +1409,14 @@ export default function Phase2BuildWalkthrough() {
                             {screens.map(scr => (
                               <div 
                                 key={scr.id}
-                                className="group rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden flex flex-col hover:border-[#C9A84C]/35 transition-all"
+                                className="group rounded-2xl border border-slate-200 bg-white/65 overflow-hidden flex flex-col hover:border-[#2563eb]/35 transition-all"
                               >
                                 {/* Header */}
-                                <div className="p-4 border-b border-slate-800/60 flex items-center justify-between">
+                                <div className="p-4 border-b border-slate-200/60 flex items-center justify-between">
                                   <h4 className="text-xs font-bold text-white truncate">{scr.screen_name}</h4>
                                   <button 
                                     onClick={() => setSelectedScreen(scr)}
-                                    className="p-1 hover:bg-slate-900 rounded text-[#C9A84C] hover:text-white transition-colors"
+                                    className="p-1 hover:bg-white rounded text-[#2563eb] hover:text-slate-700 transition-colors"
                                     title="View full preview"
                                   >
                                     <Eye className="w-4 h-4" />
@@ -1449,7 +1449,7 @@ export default function Phase2BuildWalkthrough() {
                                 {/* Desc */}
                                 <div className="p-4 space-y-1 mt-auto">
                                   <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 font-mono">Purpose:</span>
-                                  <p className="text-[11px] text-slate-300 leading-relaxed font-sans line-clamp-2">{scr.screen_purpose}</p>
+                                  <p className="text-[11px] text-slate-600 leading-relaxed font-sans line-clamp-2">{scr.screen_purpose}</p>
                                 </div>
                               </div>
                             ))}
@@ -1457,7 +1457,7 @@ export default function Phase2BuildWalkthrough() {
 
                           {/* Request Changes Form */}
                           <div className="flex flex-col gap-2 pt-4">
-                            <label className="text-xs font-semibold tracking-wider font-mono text-[#C9A84C] uppercase flex items-center gap-1.5">
+                            <label className="text-xs font-semibold tracking-wider font-mono text-[#2563eb] uppercase flex items-center gap-1.5">
                               Request changes (optional)
                             </label>
                             <textarea 
@@ -1465,7 +1465,7 @@ export default function Phase2BuildWalkthrough() {
                               value={changeRequests}
                               onChange={(e) => setChangeRequests(e.target.value)}
                               rows={2.5}
-                              className="w-full bg-slate-900 border border-slate-800 hover:border-slate-750 focus:border-[#C9A84C] text-xs text-white px-4 py-3 rounded-xl outline-none"
+                              className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-xs text-white px-4 py-3 rounded-xl outline-none"
                             />
                             <p className="text-[10px] text-slate-500">Provide adjustments instructions to re-generate modified visual drafts above.</p>
                           </div>
@@ -1475,7 +1475,7 @@ export default function Phase2BuildWalkthrough() {
                             <button 
                               disabled={isSubmitting}
                               onClick={handleApproveScreensAndBuild}
-                              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-wider text-xs sm:text-sm py-4 rounded-xl shadow-xl shadow-[#C9A84C]/5 transition-all disabled:opacity-50 uppercase cursor-pointer"
+                              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-wider text-xs sm:text-sm py-4 rounded-xl shadow-xl shadow-[#2563eb]/5 transition-all disabled:opacity-50 uppercase cursor-pointer"
                             >
                               Build My Product →
                             </button>
@@ -1490,22 +1490,22 @@ export default function Phase2BuildWalkthrough() {
                         <div className="py-12 flex flex-col justify-center items-center text-center space-y-6">
                           <div className="relative">
                             {/* Golden Spinner Circle */}
-                            <div className="w-16 h-16 border-4 border-[#C9A84C]/10 border-t-[#C9A84C] rounded-full animate-spin"></div>
-                            <Sparkles className="w-6 h-6 text-[#C9A84C] absolute top-5 left-5 animate-pulse" />
+                            <div className="w-16 h-16 border-4 border-[#2563eb]/10 border-t-[#2563eb] rounded-full animate-spin"></div>
+                            <Sparkles className="w-6 h-6 text-[#2563eb] absolute top-5 left-5 animate-pulse" />
                           </div>
 
                           <div>
-                            <h2 className="font-bebas text-5xl tracking-widest text-[#C9A84C] inline-block animate-pulse mb-3 leading-none">
+                            <h2 className="font-bebas text-5xl tracking-widest text-[#2563eb] inline-block animate-pulse mb-3 leading-none">
                               BUILDING YOUR PRODUCT
                             </h2>
-                            <p className="text-xs text-slate-400 font-mono tracking-wider max-w-sm mx-auto uppercase mt-2">
+                            <p className="text-xs text-slate-500 font-mono tracking-wider max-w-sm mx-auto uppercase mt-2">
                               {cyclingMessages[loadingMsgIdx]}
                             </p>
                           </div>
 
-                          <div className="p-4 bg-slate-950/70 border border-slate-800/60 rounded-2xl max-w-md text-left flex gap-3">
-                            <Info className="w-4.5 h-4.5 text-[#C9A84C] shrink-0 mt-0.5" />
-                            <p className="text-[10px] text-slate-400 leading-normal">
+                          <div className="p-4 bg-white/70 border border-slate-200/60 rounded-2xl max-w-md text-left flex gap-3">
+                            <Info className="w-4.5 h-4.5 text-[#2563eb] shrink-0 mt-0.5" />
+                            <p className="text-[10px] text-slate-500 leading-normal">
                               VibeLab is compiling your entire single-file HTML/CSS/JS MVP code on the server-side, integrating mock analytics models, interactive templates, and navigation features. Please hold on!
                             </p>
                           </div>
@@ -1516,12 +1516,12 @@ export default function Phase2BuildWalkthrough() {
                        * STEP 6: Understand Your Code (Interactive 3-Panel Walkthrough)
                        ***********************************************************/}
                       {item.step === 6 && (
-                        <div className="flex flex-col lg:flex-row min-h-[580px] bg-slate-900/65 rounded-2xl border border-slate-800/80 overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-800/80">
+                        <div className="flex flex-col lg:flex-row min-h-[580px] bg-slate-50/65 rounded-2xl border border-slate-200 overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
                           {/* Left Panel: Guide (33% width) */}
-                          <div className="w-full lg:w-[33%] p-5 flex flex-col justify-between space-y-5 bg-slate-950/40">
+                          <div className="w-full lg:w-[33%] p-5 flex flex-col justify-between space-y-5 bg-white/40">
                             <div className="space-y-4">
                               <div>
-                                <div className="text-[10px] font-bold text-[#C9A84C] font-mono tracking-widest uppercase mb-1">
+                                <div className="text-[10px] font-bold text-[#2563eb] font-mono tracking-widest uppercase mb-1">
                                   YOUR PRODUCT GUIDE
                                 </div>
                                 <h4 className="text-sm font-bold text-white truncate">
@@ -1543,37 +1543,37 @@ export default function Phase2BuildWalkthrough() {
                                     onClick={() => handleTaskClick(idx)}
                                     className={`w-full text-left p-3 rounded-xl border flex items-start gap-3 transition-colors ${
                                       selectedTaskIdx === idx 
-                                        ? 'bg-[#C9A84C]/10 border-[#C9A84C]/45 text-white' 
-                                        : 'bg-slate-900/40 border-slate-800/80 hover:bg-slate-900/85 text-slate-300'
+                                        ? 'bg-[#2563eb]/10 border-[#2563eb]/45 text-white' 
+                                        : 'bg-slate-50/40 border-slate-200 hover:bg-slate-50/85 text-slate-600'
                                     }`}
                                   >
                                     <span className={`w-5 h-5 rounded-full text-[11px] font-bold font-mono shrink-0 flex items-center justify-center border ${
                                       selectedTaskIdx === idx 
-                                        ? 'bg-[#C9A84C] border-[#C9A84C] text-black' 
-                                        : 'bg-slate-950 border-slate-800 text-slate-400'
+                                        ? 'bg-[#2563eb] border-[#2563eb] text-black' 
+                                        : 'bg-white border-slate-200 text-slate-500'
                                     }`}>
                                       {idx + 1}
                                     </span>
                                     <div>
                                       <p className="text-xs font-bold leading-tight">{task.title}</p>
-                                      <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{task.desc}</p>
+                                      <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">{task.desc}</p>
                                     </div>
                                   </button>
                                 ))}
                               </div>
 
                               {/* Explanation block */}
-                              <div className="p-4 bg-slate-900/60 border border-slate-800/80 rounded-xl space-y-2">
-                                <p className="text-[10px] font-bold text-[#C9A84C] tracking-wide uppercase font-mono">
+                              <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
+                                <p className="text-[10px] font-bold text-[#2563eb] tracking-wide uppercase font-mono">
                                   What this code does
                                 </p>
                                 {isExplaining ? (
                                   <div className="flex items-center gap-2 py-2">
-                                    <Loader2 className="w-4 h-4 text-[#C9A84C] animate-spin" />
-                                    <span className="text-[11px] text-slate-400 animate-pulse font-mono uppercase tracking-wider">Compiling expert review...</span>
+                                    <Loader2 className="w-4 h-4 text-[#2563eb] animate-spin" />
+                                    <span className="text-[11px] text-slate-500 animate-pulse font-mono uppercase tracking-wider">Compiling expert review...</span>
                                   </div>
                                 ) : (
-                                  <p className="text-[11px] text-slate-300 leading-normal pl-0.5">
+                                  <p className="text-[11px] text-slate-600 leading-normal pl-0.5">
                                     {taskExplanations[selectedTaskIdx] || 'Think of this like your app\'s foundation. It defines the central shell that ensures your text, inputs, and screens have space to exist and flow perfectly!'}
                                   </p>
                                 )}
@@ -1584,7 +1584,7 @@ export default function Phase2BuildWalkthrough() {
                               <button
                                 onClick={handleCompleteStep6}
                                 disabled={isSubmitting}
-                                className="w-full py-3.5 bg-[#C9A84C] hover:bg-[#E3C268] text-black rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#C9A84C]/5 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 font-sans"
+                                className="w-full py-3.5 bg-[#2563eb] hover:bg-[#3b82f6] text-black rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#2563eb]/5 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 font-sans"
                               >
                                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : 'I Understand — Complete Step 6 →'}
                               </button>
@@ -1592,9 +1592,9 @@ export default function Phase2BuildWalkthrough() {
                           </div>
 
                           {/* Center Panel: Monaco Editor (34% width) */}
-                          <div className="w-full lg:w-[34%] flex flex-col bg-slate-950">
+                          <div className="w-full lg:w-[34%] flex flex-col bg-white">
                             {/* Editor Utilities header */}
-                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/80 bg-slate-950 font-mono text-[10px]">
+                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white font-mono text-[10px]">
                               <span className="text-cyan-400 font-bold uppercase tracking-wide">index.html</span>
                               <div className="flex items-center gap-3">
                                 <button
@@ -1604,7 +1604,7 @@ export default function Phase2BuildWalkthrough() {
                                     setCopied(true);
                                     setTimeout(() => setCopied(false), 2000);
                                   }}
-                                  className="text-slate-400 hover:text-white flex items-center gap-1 uppercase transition-colors font-bold"
+                                  className="text-slate-500 hover:text-white flex items-center gap-1 uppercase transition-colors font-bold"
                                 >
                                   {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                                   Copy
@@ -1614,7 +1614,7 @@ export default function Phase2BuildWalkthrough() {
                                     handleTaskClick(selectedTaskIdx);
                                     toast.success('Template view reset!');
                                   }}
-                                  className="text-slate-400 hover:text-white flex items-center gap-1 uppercase transition-colors font-bold opacity-80"
+                                  className="text-slate-500 hover:text-white flex items-center gap-1 uppercase transition-colors font-bold opacity-80"
                                 >
                                   <RotateCw className="w-3 h-3" />
                                   Reset
@@ -1647,37 +1647,37 @@ export default function Phase2BuildWalkthrough() {
                                   }}
                                 />
                               ) : (
-                                <div className="absolute inset-0 bg-slate-950 flex flex-col justify-center items-center text-slate-500 gap-2">
-                                  <Loader2 className="w-6 h-6 animate-spin text-[#C9A84C]" />
-                                  <span className="text-[10px] uppercase font-mono tracking-widest text-[#C9A84C]">LOADING SOURCE...</span>
+                                <div className="absolute inset-0 bg-white flex flex-col justify-center items-center text-slate-500 gap-2">
+                                  <Loader2 className="w-6 h-6 animate-spin text-[#2563eb]" />
+                                  <span className="text-[10px] uppercase font-mono tracking-widest text-[#2563eb]">LOADING SOURCE...</span>
                                 </div>
                               )}
                             </div>
                           </div>
 
                           {/* Right Panel: Live Interactive Preview Simulated (33% width) */}
-                          <div className="w-full lg:w-[33%] flex flex-col bg-slate-950">
+                          <div className="w-full lg:w-[33%] flex flex-col bg-white">
                             {/* Device controls header */}
-                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/80 bg-slate-950">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase font-mono tracking-widest">FLUID PREVIEW</span>
+                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase font-mono tracking-widest">FLUID PREVIEW</span>
                               
                               {/* Device Toggles */}
-                              <div className="flex items-center gap-1 p-0.5 bg-slate-900 border border-slate-800/80 rounded-md">
+                              <div className="flex items-center gap-1 p-0.5 bg-white border border-slate-200 rounded-md">
                                 <button
                                   onClick={() => setPreviewDevice('desktop')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'desktop' ? 'bg-[#C9A84C] text-black' : 'text-slate-400 hover:text-white'}`}
+                                  className={`p-1 rounded transition-colors ${previewDevice === 'desktop' ? 'bg-[#2563eb] text-black' : 'text-slate-500 hover:text-white'}`}
                                 >
                                   <Monitor className="w-3 h-3" />
                                 </button>
                                 <button
                                   onClick={() => setPreviewDevice('tablet')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'tablet' ? 'bg-[#C9A84C] text-black' : 'text-slate-400 hover:text-white'}`}
+                                  className={`p-1 rounded transition-colors ${previewDevice === 'tablet' ? 'bg-[#2563eb] text-black' : 'text-slate-500 hover:text-white'}`}
                                 >
                                   <Tablet className="w-3 h-3" />
                                 </button>
                                 <button
                                   onClick={() => setPreviewDevice('mobile')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'mobile' ? 'bg-[#C9A84C] text-black' : 'text-slate-400 hover:text-white'}`}
+                                  className={`p-1 rounded transition-colors ${previewDevice === 'mobile' ? 'bg-[#2563eb] text-black' : 'text-slate-500 hover:text-white'}`}
                                 >
                                   <Smartphone className="w-3 h-3" />
                                 </button>
@@ -1685,8 +1685,8 @@ export default function Phase2BuildWalkthrough() {
                             </div>
 
                             {/* Iframe stage rendering container */}
-                            <div className="flex-1 bg-[#050814] flex flex-col justify-center items-center p-3 relative overflow-hidden">
-                              <div className={`transition-all duration-300 shadow-2xl h-full border border-slate-850 rounded-xl overflow-hidden bg-[#090d1a] ${
+                            <div className="flex-1 bg-slate-50 flex flex-col justify-center items-center p-3 relative overflow-hidden">
+                              <div className={`transition-all duration-300 shadow-2xl h-full border border-slate-200 rounded-xl overflow-hidden bg-slate-50 ${
                                 previewDevice === 'mobile' ? 'w-[280px]' : previewDevice === 'tablet' ? 'w-[420px]' : 'w-full'
                               }`}>
                                 {mvp?.mvp_html ? (
@@ -1698,9 +1698,9 @@ export default function Phase2BuildWalkthrough() {
                                     className="w-full h-full border-none"
                                   />
                                 ) : (
-                                  <div className="w-full h-full bg-[#02050e] flex flex-col justify-center items-center text-slate-500 gap-2">
-                                    <RefreshCw className="w-6 h-6 animate-spin text-[#C9A84C]" />
-                                    <p className="text-[10px] uppercase font-mono tracking-wider text-[#C9A84C]">LOADING SANDBOX SCREEN...</p>
+                                  <div className="w-full h-full bg-slate-50 flex flex-col justify-center items-center text-slate-500 gap-2">
+                                    <RefreshCw className="w-6 h-6 animate-spin text-[#2563eb]" />
+                                    <p className="text-[10px] uppercase font-mono tracking-wider text-[#2563eb]">LOADING SANDBOX SCREEN...</p>
                                   </div>
                                 )}
                               </div>
@@ -1715,19 +1715,19 @@ export default function Phase2BuildWalkthrough() {
                       {item.step === 7 && (
                         <div className="p-6 md:p-8 space-y-6">
                           <div>
-                            <span className="px-2.5 py-1 bg-[#C9A84C]/10 text-[#C9A84C] text-[10px] font-black uppercase tracking-widest rounded-md border border-[#C9A84C]/20 font-mono">
+                            <span className="px-2.5 py-1 bg-[#2563eb]/10 text-[#2563eb] text-[10px] font-black uppercase tracking-widest rounded-md border border-[#2563eb]/20 font-mono">
                               Product Launch Pitch
                             </span>
-                            <h3 className="font-bebas text-4xl tracking-widest text-[#C9A84C] mt-3 uppercase leading-none">
+                            <h3 className="font-bebas text-4xl tracking-widest text-[#2563eb] mt-3 uppercase leading-none">
                               DESCRIBE YOUR PRODUCT
                             </h3>
-                            <p className="text-xs text-slate-400 mt-1 pl-0.5">
+                            <p className="text-xs text-slate-500 mt-1 pl-0.5">
                               This description serves as the core narrative of your product. Edit the AI-generated starter draft until it sounds perfect!
                             </p>
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase font-[#C9A84C] font-mono">
+                            <label className="text-xs font-bold text-slate-600 flex items-center gap-1.5 uppercase font-[#2563eb] font-mono">
                               Edit this until it sounds like you:
                             </label>
                             <textarea
@@ -1735,21 +1735,21 @@ export default function Phase2BuildWalkthrough() {
                               onChange={(e) => setProductDescription(e.target.value)}
                               rows={10}
                               placeholder="Write a clear startup marketing pitch detailing the user journey and outcomes..."
-                              className="w-full bg-slate-900/60 border border-slate-800 hover:border-slate-750 focus:border-[#C9A84C] text-sm text-slate-100 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-650 leading-relaxed font-sans resize-y"
+                              className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-650 leading-relaxed font-sans resize-y"
                             />
                             
                             {/* Live Word Count Indicator */}
-                            <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono uppercase">
+                            <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono uppercase">
                               <span>WORD COUNT: <strong className="text-emerald-400">{productDescription.trim() ? productDescription.trim().split(/\s+/).length : 0}</strong> words</span>
-                              <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-[#C9A84C]" /> Drafted with Gemini AI</span>
+                              <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-[#2563eb]" /> Drafted with Gemini AI</span>
                             </div>
                           </div>
 
-                          <div className="flex justify-end pt-4 border-t border-slate-900">
+                          <div className="flex justify-end pt-4 border-t border-slate-200">
                             <button
                               onClick={handleSaveDescriptionStep7}
                               disabled={isSubmitting}
-                              className="px-8 py-3.5 bg-[#C9A84C] hover:bg-[#E3C268] text-black font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#C9A84C]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
+                              className="px-8 py-3.5 bg-[#2563eb] hover:bg-[#3b82f6] text-white font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#2563eb]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
                             >
                               {isSubmitting ? (
                                 <Loader2 className="w-4 h-4 animate-spin text-black" />
@@ -1769,13 +1769,13 @@ export default function Phase2BuildWalkthrough() {
                       {item.step === 8 && (
                         <div className="p-6 md:p-8 space-y-6">
                           <div>
-                            <span className="px-2.5 py-1 bg-[#C9A84C]/10 text-[#C9A84C] text-[10px] font-black uppercase tracking-widest rounded-md border border-[#C9A84C]/20 font-mono">
+                            <span className="px-2.5 py-1 bg-[#2563eb]/10 text-[#2563eb] text-[10px] font-black uppercase tracking-widest rounded-md border border-[#2563eb]/20 font-mono">
                               System Mechanics
                             </span>
-                            <h3 className="font-bebas text-4xl tracking-widest text-[#C9A84C] mt-3 uppercase leading-none">
+                            <h3 className="font-bebas text-4xl tracking-widest text-[#2563eb] mt-3 uppercase leading-none">
                               EXPLAIN YOUR FEATURES
                             </h3>
-                            <p className="text-xs text-slate-400 mt-1 pl-0.5">
+                            <p className="text-xs text-slate-500 mt-1 pl-0.5">
                               Startup founders must explain *why* every must-have feature serves user value. Fill out your rationales below, and click away to get real-time encouragement from your startup mentor!
                             </p>
                           </div>
@@ -1785,20 +1785,20 @@ export default function Phase2BuildWalkthrough() {
                             {features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true)).map((feat) => (
                               <div 
                                 key={feat.id}
-                                className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/85 flex flex-col justify-between space-y-4"
+                                className="p-5 rounded-2xl bg-white/50 border border-slate-200/85 flex flex-col justify-between space-y-4"
                               >
                                 <div className="space-y-1">
                                   <h4 className="text-sm font-bold text-white flex items-center gap-1.5 font-sans">
-                                    <span className="w-2 h-2 rounded-full bg-[#C9A84C]"></span>
+                                    <span className="w-2 h-2 rounded-full bg-[#2563eb]"></span>
                                     {feat.feature_name}
                                   </h4>
-                                  <p className="text-xs text-slate-400 leading-relaxed font-sans">
+                                  <p className="text-xs text-slate-500 leading-relaxed font-sans">
                                     {feat.feature_description}
                                   </p>
                                 </div>
 
                                 <div className="space-y-2">
-                                  <label className="text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider">
+                                  <label className="text-[10px] font-bold text-slate-500 font-mono uppercase tracking-wider">
                                     Why did you include this feature?
                                   </label>
                                   <textarea
@@ -1807,21 +1807,21 @@ export default function Phase2BuildWalkthrough() {
                                     onBlur={() => handleExplainFeatureStep8(feat.id, featureRationales[feat.id] || '')}
                                     rows={2.5}
                                     placeholder="e.g. Because students lose track of paper schedules, putting this dynamic log on their phone helps them remember..."
-                                    className="w-full bg-slate-950 border border-slate-800 hover:border-slate-750 focus:border-[#C9A84C] text-xs text-slate-200 px-4 py-3 rounded-xl outline-none"
+                                    className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-xs text-slate-700 px-4 py-3 rounded-xl outline-none"
                                   />
                                 </div>
 
                                 {/* AI Gold Feedback Bubble */}
                                 {(featureFeedback[feat.id] || featureSubmitting[feat.id]) && (
-                                  <div className="p-3.5 rounded-xl bg-[#C9A84C]/5 border border-[#C9A84C]/15 flex items-start gap-2 relative overflow-hidden">
-                                    <Sparkles className="w-4 h-4 text-[#C9A84C] shrink-0 mt-0.5" />
+                                  <div className="p-3.5 rounded-xl bg-[#2563eb]/5 border border-[#2563eb]/15 flex items-start gap-2 relative overflow-hidden">
+                                    <Sparkles className="w-4 h-4 text-[#2563eb] shrink-0 mt-0.5" />
                                     {featureSubmitting[feat.id] ? (
                                       <div className="flex items-center gap-1.5">
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C9A84C]" />
-                                        <span className="text-[10px] text-slate-400 uppercase font-mono tracking-widest animate-pulse">Consulting AI Mentor...</span>
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#2563eb]" />
+                                        <span className="text-[10px] text-slate-500 uppercase font-mono tracking-widest animate-pulse">Consulting AI Mentor...</span>
                                       </div>
                                     ) : (
-                                      <p className="text-[11px] text-[#C9A84C] italic font-sans pl-0.5 leading-normal">
+                                      <p className="text-[11px] text-[#2563eb] italic font-sans pl-0.5 leading-normal">
                                         "{featureFeedback[feat.id]}"
                                       </p>
                                     )}
@@ -1831,11 +1831,11 @@ export default function Phase2BuildWalkthrough() {
                             ))}
                           </div>
 
-                          <div className="flex justify-end pt-4 border-t border-slate-900">
+                          <div className="flex justify-end pt-4 border-t border-slate-200">
                             <button
                               onClick={handleCompleteStep8}
                               disabled={isSubmitting}
-                              className="px-8 py-3.5 bg-[#C9A84C] hover:bg-[#E3C268] text-black font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#C9A84C]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
+                              className="px-8 py-3.5 bg-[#2563eb] hover:bg-[#3b82f6] text-white font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#2563eb]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
                             >
                               I've Explained My Features <ArrowRight className="w-4 h-4" />
                             </button>
@@ -1849,13 +1849,13 @@ export default function Phase2BuildWalkthrough() {
                       {item.step === 9 && (
                         <div className="p-6 md:p-8 space-y-6">
                           <div>
-                            <span className="px-2.5 py-1 bg-[#C9A84C]/10 text-[#C9A84C] text-[10px] font-black uppercase tracking-widest rounded-md border border-[#C9A84C]/20 font-mono">
+                            <span className="px-2.5 py-1 bg-[#2563eb]/10 text-[#2563eb] text-[10px] font-black uppercase tracking-widest rounded-md border border-[#2563eb]/20 font-mono">
                               Investor Pitch Kit
                             </span>
-                            <h3 className="font-bebas text-4xl tracking-widest text-[#C9A84C] mt-3 uppercase leading-none">
+                            <h3 className="font-bebas text-4xl tracking-widest text-[#2563eb] mt-3 uppercase leading-none">
                               DEMO PREPARATION
                             </h3>
-                            <p className="text-xs text-slate-400 mt-1 pl-0.5">
+                            <p className="text-xs text-slate-500 mt-1 pl-0.5">
                               Prepare your delivery script, focus on key benefits, and warm-up speaking using our dedicated practice rehearsal tools!
                             </p>
                           </div>
@@ -1864,9 +1864,9 @@ export default function Phase2BuildWalkthrough() {
                             {/* DEMO SCRIPT & REHEARSAL TIMER (Left 8 cols) */}
                             <div className="lg:col-span-8 flex flex-col gap-5">
                               {/* 1. Editable Demo Script */}
-                              <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 space-y-3">
-                                <h4 className="text-xs font-bold text-slate-300 font-mono uppercase tracking-wider flex items-center gap-2">
-                                  <span className="w-1.5 h-1.5 bg-[#C9A84C] rounded-full"></span>
+                              <div className="p-5 rounded-2xl bg-slate-50/40 border border-slate-200 space-y-3">
+                                <h4 className="text-xs font-bold text-slate-600 font-mono uppercase tracking-wider flex items-center gap-2">
+                                  <span className="w-1.5 h-1.5 bg-[#2563eb] rounded-full"></span>
                                   1. Demo Script Narrative
                                 </h4>
                                 <textarea
@@ -1874,25 +1874,25 @@ export default function Phase2BuildWalkthrough() {
                                   onChange={(e) => setDemoScript(e.target.value)}
                                   rows={8}
                                   placeholder="Review and polish your detailed step-by-step presentation narrative..."
-                                  className="w-full bg-slate-950 border border-slate-800/80 hover:border-slate-750 focus:border-[#C9A84C] text-xs text-slate-100 px-4 py-3 rounded-xl outline-none leading-relaxed font-sans resize-y"
+                                  className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-xs text-slate-800 px-4 py-3 rounded-xl outline-none leading-relaxed font-sans resize-y"
                                 />
                               </div>
 
                               {/* 3. Rehearsal countdown timer */}
-                              <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex flex-col sm:flex-row justify-between items-center gap-4">
+                              <div className="p-5 rounded-2xl bg-slate-50/40 border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
                                 <div className="space-y-1 block max-w-sm">
-                                  <h4 className="text-xs font-bold text-slate-300 font-mono uppercase tracking-wider flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 bg-[#C9A84C] rounded-full"></span>
+                                  <h4 className="text-xs font-bold text-slate-600 font-mono uppercase tracking-wider flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-[#2563eb] rounded-full"></span>
                                     3. Practice Mode Rehearsal
                                   </h4>
-                                  <p className="text-[10px] text-slate-400 leading-normal font-sans">
+                                  <p className="text-[10px] text-slate-500 leading-normal font-sans">
                                     Read your demo script aloud and click Start, testing feature walkthrough steps within our 3-minute presentation limit!
                                   </p>
                                 </div>
 
-                                <div className="flex items-center gap-4 shrink-0 bg-slate-950 px-5 py-3 rounded-xl border border-slate-800">
+                                <div className="flex items-center gap-4 shrink-0 bg-white px-5 py-3 rounded-xl border border-slate-200">
                                   {/* Timer countdown view */}
-                                  <div className="font-mono text-2xl font-black text-[#C9A84C] tracking-widest w-16 text-center select-none">
+                                  <div className="font-mono text-2xl font-black text-[#2563eb] tracking-widest w-16 text-center select-none">
                                     {Math.floor(timerSeconds / 60).toString().padStart(2, '0')}:
                                     {(timerSeconds % 60).toString().padStart(2, '0')}
                                   </div>
@@ -1922,9 +1922,9 @@ export default function Phase2BuildWalkthrough() {
 
                             {/* KEY TALKING POINTS (Right 4 cols) */}
                             <div className="lg:col-span-4 flex flex-col gap-4">
-                              <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-805 space-y-3">
-                                <h4 className="text-xs font-bold text-slate-350 font-mono uppercase tracking-wider flex items-center gap-1.5 font-sans">
-                                  <span className="w-1.5 h-1.5 bg-[#C9A84C] rounded-full"></span>
+                              <div className="p-4 rounded-2xl bg-white/40 border border-slate-805 space-y-3">
+                                <h4 className="text-xs font-bold text-slate-650 font-mono uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                                  <span className="w-1.5 h-1.5 bg-[#2563eb] rounded-full"></span>
                                   2. Talking Points
                                 </h4>
                                 <div className="space-y-2.5">
@@ -1936,7 +1936,7 @@ export default function Phase2BuildWalkthrough() {
                                   ]).map((tp: string, tpIdx: number) => (
                                     <div 
                                       key={tpIdx}
-                                      className="p-3.5 rounded-xl border border-[#C9A84C]/25 bg-[#C9A84C]/5 text-[11px] text-slate-200 leading-normal font-sans hover:border-[#C9A84C]/45 transition-all"
+                                      className="p-3.5 rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/5 text-[11px] text-slate-700 leading-normal font-sans hover:border-[#2563eb]/45 transition-all"
                                     >
                                       <strong>Benefit #{tpIdx + 1}:</strong> {tp}
                                     </div>
@@ -1946,11 +1946,11 @@ export default function Phase2BuildWalkthrough() {
                             </div>
                           </div>
 
-                          <div className="flex justify-end pt-4 border-t border-slate-900">
+                          <div className="flex justify-end pt-4 border-t border-slate-200">
                             <button
                               onClick={handleSaveDemoStep9}
                               disabled={isSubmitting}
-                              className="px-8 py-3.5 bg-[#C9A84C] hover:bg-[#E3C268] text-black font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#C9A84C]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
+                              className="px-8 py-3.5 bg-[#2563eb] hover:bg-[#3b82f6] text-white font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#2563eb]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
                             >
                               I've Designed My Demo Script <ArrowRight className="w-5 h-5" />
                             </button>
@@ -1969,26 +1969,26 @@ export default function Phase2BuildWalkthrough() {
                               initial={{ scale: 0, rotate: -45 }}
                               animate={{ scale: 1, rotate: 0 }}
                               transition={{ type: 'spring', damping: 12, stiffness: 100 }}
-                              className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#C9A84C]/25 to-amber-400/25 border border-[#C9A84C]/40 flex items-center justify-center text-[#C9A84C] relative shadow-lg shadow-[#C9A84C]/5"
+                              className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#2563eb]/25 to-amber-400/25 border border-[#2563eb]/40 flex items-center justify-center text-[#2563eb] relative shadow-lg shadow-[#2563eb]/5"
                             >
-                              <Trophy className="w-10 h-10 animate-pulse text-[#C9A84C]" />
+                              <Trophy className="w-10 h-10 animate-pulse text-[#2563eb]" />
                               <span className="absolute -top-1 -right-1 flex h-4 w-4">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-4 w-4 bg-[#C9A84C]"></span>
+                                <span className="relative inline-flex rounded-full h-4 w-4 bg-[#2563eb]"></span>
                               </span>
                             </motion.div>
 
-                            <span className="px-3 py-1 bg-[#C9A84C] text-black text-[10px] font-black font-mono tracking-widest rounded-full uppercase shadow-md shadow-[#C9A84C]/20 select-none animate-bounce mt-2">
+                            <span className="px-3 py-1 bg-[#2563eb] text-black text-[10px] font-black font-mono tracking-widest rounded-full uppercase shadow-md shadow-[#2563eb]/20 select-none animate-bounce mt-2">
                               READY FOR QA
                             </span>
                           </div>
 
                           {/* Titles */}
                           <div className="space-y-2">
-                            <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#C9A84C] leading-none uppercase">
+                            <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#2563eb] leading-none uppercase">
                               YOUR PRODUCT IS READY
                             </h2>
-                            <p className="text-slate-400 text-xs max-w-md mx-auto leading-relaxed pl-0.5">
+                            <p className="text-slate-500 text-xs max-w-md mx-auto leading-relaxed pl-0.5">
                               You completed <strong>{projectName || 'your project'}</strong>! Your initial campaign MVP and pitching collateral have compiled flawlessly.
                             </p>
                           </div>
@@ -2010,12 +2010,12 @@ export default function Phase2BuildWalkthrough() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.05 * dIdx }}
-                                className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center gap-2 hover:border-[#C9A84C]/25 transition-all font-sans"
+                                className="p-3.5 rounded-xl bg-white border border-slate-200 flex items-center gap-2 hover:border-[#2563eb]/25 transition-all font-sans"
                               >
                                 <div className="w-4.5 h-4.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
                                   <Check className="w-3 h-3 text-emerald-400" />
                                 </div>
-                                <span className="text-[11px] font-bold text-slate-200 truncate">{del.label}</span>
+                                <span className="text-[11px] font-bold text-slate-700 truncate">{del.label}</span>
                               </motion.div>
                             ))}
                           </div>
@@ -2025,14 +2025,14 @@ export default function Phase2BuildWalkthrough() {
                             <button
                               onClick={handleCompletePhase2}
                               disabled={isSubmitting}
-                              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-widest text-xs uppercase px-6 py-4.5 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/15 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer text-center font-sans h-12"
+                              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-widest text-xs uppercase px-6 py-4.5 rounded-xl transition-all shadow-xl shadow-[#2563eb]/15 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 cursor-pointer text-center font-sans h-12"
                             >
                               Continue — Phase 3: Testing & Validation →
                             </button>
                             
                             <button
                               onClick={() => setShowFullProductModal(true)}
-                              className="w-full px-6 py-4 bg-slate-950 border border-slate-850 hover:border-slate-800 text-slate-300 hover:text-white font-mono text-xs font-bold tracking-widest uppercase rounded-xl transition-colors cursor-pointer text-center h-12"
+                              className="w-full px-6 py-4 bg-white border border-slate-200 hover:border-slate-200 text-slate-600 hover:text-white font-mono text-xs font-bold tracking-widest uppercase rounded-xl transition-colors cursor-pointer text-center h-12"
                             >
                               View My Full Product
                             </button>
@@ -2044,7 +2044,7 @@ export default function Phase2BuildWalkthrough() {
                               navigator.clipboard.writeText(shareUrl);
                               toast.success('Campaign share URL copied to clipboard!');
                             }}
-                            className="w-full text-center text-[10px] uppercase tracking-widest font-mono font-bold text-slate-500 hover:text-[#C9A84C] transition-colors cursor-pointer border-none bg-transparent"
+                            className="w-full text-center text-[10px] uppercase tracking-widest font-mono font-bold text-slate-500 hover:text-[#2563eb] transition-colors cursor-pointer border-none bg-transparent"
                           >
                             Share My Product
                           </button>
@@ -2066,30 +2066,30 @@ export default function Phase2BuildWalkthrough() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-white/85 backdrop-blur-md flex items-center justify-center p-4"
           >
             <motion.div 
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+              className="bg-white border border-slate-200 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
             >
-              <div className="p-6 border-b border-slate-800/80 flex justify-between items-center bg-slate-950/60 shrink-0">
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-white/65 shrink-0">
                 <div>
-                  <h4 className="text-sm font-black uppercase text-[#C9A84C] tracking-widest font-mono">Screen Preview</h4>
+                  <h4 className="text-sm font-black uppercase text-[#2563eb] tracking-widest font-mono">Screen Preview</h4>
                   <h3 className="text-lg font-bold text-white mt-1">{selectedScreen.screen_name}</h3>
                 </div>
                 <button 
                   onClick={() => setSelectedScreen(null)}
-                  className="px-4 py-2 border border-slate-800 hover:border-slate-750 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 hover:border-slate-200 text-slate-500 hover:text-white rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
                 >
                   Close ×
                 </button>
               </div>
 
               {/* Full view wrapper */}
-              <div className="flex-1 overflow-hidden bg-slate-950 flex flex-col p-4">
-                <div className="flex-1 border border-slate-800/60 rounded-2xl overflow-hidden bg-slate-100 relative">
+              <div className="flex-1 overflow-hidden bg-white flex flex-col p-4">
+                <div className="flex-1 border border-slate-200/60 rounded-2xl overflow-hidden bg-slate-100 relative">
                   <iframe 
                     title={selectedScreen.screen_name}
                     srcDoc={`
@@ -2113,8 +2113,8 @@ export default function Phase2BuildWalkthrough() {
               </div>
 
               {/* Footer specs */}
-              <div className="p-6 border-t border-slate-800/60 bg-slate-950/40 text-[11px] text-slate-400 font-medium leading-relaxed shrink-0 flex items-center gap-2">
-                <Sparkles className="w-4.5 h-4.5 text-[#C9A84C]" />
+              <div className="p-6 border-t border-slate-200/60 bg-white/40 text-[11px] text-slate-500 font-medium leading-relaxed shrink-0 flex items-center gap-2">
+                <Sparkles className="w-4.5 h-4.5 text-[#2563eb]" />
                 <span><strong>Purpose spec:</strong> {selectedScreen.screen_purpose}</span>
               </div>
             </motion.div>
@@ -2129,22 +2129,22 @@ export default function Phase2BuildWalkthrough() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 selection:bg-[#C9A84C]/30"
+            className="fixed inset-0 z-50 bg-white/85 backdrop-blur-md flex items-center justify-center p-4 selection:bg-[#2563eb]/30"
           >
             <motion.div 
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl text-left"
+              className="bg-white border border-slate-200 rounded-3xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl text-left"
             >
-              <div className="p-6 border-b border-slate-800/80 flex justify-between items-center bg-slate-950/60 shrink-0">
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-white/65 shrink-0">
                 <div>
-                  <h4 className="text-[10px] font-black uppercase text-[#C9A84C] tracking-widest font-mono">Launch Kit Board</h4>
+                  <h4 className="text-[10px] font-black uppercase text-[#2563eb] tracking-widest font-mono">Launch Kit Board</h4>
                   <h3 className="text-lg font-bold text-white mt-1">Campaign Deliverables: {projectName}</h3>
                 </div>
                 <button 
                   onClick={() => setShowFullProductModal(false)}
-                  className="px-4 py-2 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-white rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
                 >
                   Close ×
                 </button>
@@ -2154,55 +2154,55 @@ export default function Phase2BuildWalkthrough() {
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 
                 {/* 1. Project Blueprint */}
-                <div className="p-5 rounded-2xl bg-slate-950/40 border border-slate-850 space-y-3">
-                  <h4 className="text-xs font-bold text-[#C9A84C] font-mono uppercase tracking-wider">
+                <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 space-y-3">
+                  <h4 className="text-xs font-bold text-[#2563eb] font-mono uppercase tracking-wider">
                     I. Foundational Project Blueprint
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                     <div>
                       <p className="text-slate-500 uppercase font-mono text-[9px] font-bold">Project Name</p>
-                      <p className="text-slate-200 font-bold mt-0.5">{projectName}</p>
+                      <p className="text-slate-700 font-bold mt-0.5">{projectName}</p>
                     </div>
                     <div>
                       <p className="text-slate-500 uppercase font-mono text-[9px] font-bold">Target User Base</p>
-                      <p className="text-slate-200 mt-0.5">{targetUsers}</p>
+                      <p className="text-slate-700 mt-0.5">{targetUsers}</p>
                     </div>
                     <div className="md:col-span-2">
                       <p className="text-slate-500 uppercase font-mono text-[9px] font-bold">Problem Statement</p>
-                      <p className="text-slate-200 mt-0.5 leading-relaxed">{problemStatement}</p>
+                      <p className="text-slate-700 mt-0.5 leading-relaxed">{problemStatement}</p>
                     </div>
                     <div className="md:col-span-2">
                       <p className="text-slate-500 uppercase font-mono text-[9px] font-bold">Minimum Viable Scope</p>
-                      <p className="text-slate-200 mt-0.5 leading-relaxed">{mvpScope}</p>
+                      <p className="text-slate-700 mt-0.5 leading-relaxed">{mvpScope}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 2. Campaign Description */}
-                <div className="p-5 rounded-2xl bg-slate-950/40 border border-slate-850 space-y-2">
-                  <h4 className="text-xs font-bold text-[#C9A84C] font-mono uppercase tracking-wider">
+                <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 space-y-2">
+                  <h4 className="text-xs font-bold text-[#2563eb] font-mono uppercase tracking-wider">
                     II. Campaign Product Pitch
                   </h4>
-                  <p className="text-xs text-slate-200 leading-relaxed font-sans whitespace-pre-wrap select-text pl-1 border-l-2 border-[#C9A84C]/35">
+                  <p className="text-xs text-slate-700 leading-relaxed font-sans whitespace-pre-wrap select-text pl-1 border-l-2 border-[#2563eb]/35">
                     {productDescription || 'Describe details locked in Step 7 pitch board.'}
                   </p>
                 </div>
 
                 {/* 3. Features & Rationales */}
-                <div className="p-5 rounded-2xl bg-slate-950/40 border border-slate-850 space-y-3">
-                  <h4 className="text-xs font-bold text-[#C9A84C] font-mono uppercase tracking-wider">
+                <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 space-y-3">
+                  <h4 className="text-xs font-bold text-[#2563eb] font-mono uppercase tracking-wider">
                     III. Core MVP System Features
                   </h4>
                   <div className="space-y-3">
                     {features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true)).map((feat) => (
-                      <div key={feat.id} className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-800 text-xs space-y-2">
-                        <div className="flex items-center gap-1.5 font-bold text-slate-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]"></span>
+                      <div key={feat.id} className="p-3.5 rounded-xl bg-white/50 border border-slate-200 text-xs space-y-2">
+                        <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
                           {feat.feature_name}
                         </div>
-                        <p className="text-slate-400 text-[11px] leading-relaxed">{feat.feature_description}</p>
-                        <div className="p-2.5 rounded bg-slate-950 border border-slate-855 text-slate-300">
-                          <strong className="text-[#C9A84C] font-mono text-[9px] uppercase tracking-wide block mb-1">Founder's Rationale:</strong>
+                        <p className="text-slate-500 text-[11px] leading-relaxed">{feat.feature_description}</p>
+                        <div className="p-2.5 rounded bg-white border border-slate-855 text-slate-600">
+                          <strong className="text-[#2563eb] font-mono text-[9px] uppercase tracking-wide block mb-1">Founder's Rationale:</strong>
                           <p className="italic text-[11px] leading-normal select-text">"{featureRationales[feat.id] || 'Under development.'}"</p>
                         </div>
                       </div>
@@ -2211,11 +2211,11 @@ export default function Phase2BuildWalkthrough() {
                 </div>
 
                 {/* 4. Demo script */}
-                <div className="p-5 rounded-2xl bg-slate-950/40 border border-slate-850 space-y-2">
-                  <h4 className="text-xs font-bold text-[#C9A84C] font-mono uppercase tracking-wider">
+                <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 space-y-2">
+                  <h4 className="text-xs font-bold text-[#2563eb] font-mono uppercase tracking-wider">
                     IV. Step-by-Step Demo Script
                   </h4>
-                  <p className="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-wrap select-text pl-1 border-l-2 border-[#C9A84C]/35">
+                  <p className="text-xs text-slate-600 leading-relaxed font-sans whitespace-pre-wrap select-text pl-1 border-l-2 border-[#2563eb]/35">
                     {demoScript || 'Script details locked in Step 9 presentation rehearsal.'}
                   </p>
                 </div>
@@ -2223,8 +2223,8 @@ export default function Phase2BuildWalkthrough() {
               </div>
 
               {/* Footer */}
-              <div className="p-5 border-t border-slate-800 bg-[#070b16] flex justify-between items-center text-slate-500 font-mono text-[10px] shrink-0">
-                <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-[#C9A84C]" /> VibeLab Campaign Launch Board</span>
+              <div className="p-5 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-slate-500 font-mono text-[10px] shrink-0">
+                <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-[#2563eb]" /> VibeLab Campaign Launch Board</span>
                 <span>ID: {session?.id || '200'}</span>
               </div>
             </motion.div>

@@ -150,24 +150,24 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#02050e] flex flex-col justify-center items-center font-sans text-white">
-        <Loader2 className="w-12 h-12 text-[#C9A84C] animate-spin mb-4" />
-        <p className="text-[#C9A84C] font-jetbrains text-xs tracking-widest font-bold">LOADING HIGH-FIDELITY WIREFLOWS...</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center font-sans text-white">
+        <Loader2 className="w-12 h-12 text-[#2563eb] animate-spin mb-4" />
+        <p className="text-[#2563eb] font-jetbrains text-xs tracking-widest font-bold">LOADING HIGH-FIDELITY WIREFLOWS...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#02050e] text-white selection:bg-[#C9A84C]/25 pb-24 relative overflow-hidden font-dmsans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-[#2563eb]/25 pb-24 relative overflow-hidden font-dmsans">
       {/* Decorative radial glows */}
-      <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#C9A84C]/5 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#2563eb]/5 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-6xl mx-auto px-6 py-12 pb-24">
         {/* Back navigation Row */}
         <button
           onClick={() => navigateTo('/phase/2/journey')}
-          className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-400 hover:text-[#C9A84C] mb-8 transition-colors uppercase gap-2 cursor-pointer"
+          className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-500 hover:text-[#2563eb] mb-8 transition-colors uppercase gap-2 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" /> Go back to Journey Map
         </button>
@@ -177,10 +177,10 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
 
         {/* Big styled Bebas Header */}
         <div className="mb-12 text-center md:text-left">
-          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#C9A84C] leading-none mb-4">
+          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#2563eb] leading-none mb-4">
             YOUR PRODUCT SCREENS
           </h2>
-          <p className="font-sans text-slate-350 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
+          <p className="font-sans text-slate-650 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
             Here are the screens for your product. Review each one.
           </p>
         </div>
@@ -220,18 +220,18 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.1 }}
                   onClick={() => setSelectedModalScreen(sc)}
-                  className="w-[280px] sm:w-[320px] shrink-0 bg-slate-950/60 border border-slate-900 hover:border-[#C9A84C]/50 rounded-2xl p-4.5 cursor-pointer flex flex-col justify-between group shadow-lg transition-all duration-300 hover:-translate-y-1"
+                  className="w-[280px] sm:w-[320px] shrink-0 bg-white/65 border border-slate-200 hover:border-[#2563eb]/50 rounded-2xl p-4.5 cursor-pointer flex flex-col justify-between group shadow-lg transition-all duration-300 hover:-translate-y-1"
                 >
                   {/* Card top details */}
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-[9px] font-bold font-jetbrains text-[#C9A84C] tracking-widest uppercase">
+                    <span className="text-[9px] font-bold font-jetbrains text-[#2563eb] tracking-widest uppercase">
                       SCREEN 0{idx + 1}
                     </span>
-                    <Maximize2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#C9A84C] transition-colors" />
+                    <Maximize2 className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#2563eb] transition-colors" />
                   </div>
 
                   {/* Sandboxed responsive preview iframe */}
-                  <div className="w-full h-44 bg-slate-950 rounded-xl overflow-hidden border border-slate-900 pointer-events-none relative mb-4">
+                  <div className="w-full h-44 bg-white rounded-xl overflow-hidden border border-slate-200 pointer-events-none relative mb-4">
                     <iframe
                       srcDoc={srcDoc}
                       className="w-full h-full border-0"
@@ -239,7 +239,7 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
                       sandbox="allow-scripts"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-3">
-                      <span className="text-[10px] uppercase font-bold tracking-wider font-jetbrains bg-slate-900/90 text-slate-400 px-2 py-0.5 rounded border border-slate-850">
+                      <span className="text-[10px] uppercase font-bold tracking-wider font-jetbrains bg-white/90 text-slate-500 px-2 py-0.5 rounded border border-slate-200">
                         Render Mock
                       </span>
                     </div>
@@ -247,10 +247,10 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
 
                   {/* Screen Content Metadata */}
                   <div className="space-y-1">
-                    <h4 className="text-sm font-bold text-white group-hover:text-[#C9A84C] transition-colors font-sans truncate">
+                    <h4 className="text-sm font-bold text-white group-hover:text-[#2563eb] transition-colors font-sans truncate">
                       {sc.screen_name}
                     </h4>
-                    <p className="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">
+                    <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
                       {sc.screen_purpose}
                     </p>
                   </div>
@@ -261,11 +261,11 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
         </div>
 
         {/* Change Request refinement form box */}
-        <div className="bg-slate-950/50 rounded-2xl border border-slate-900 p-6 md:p-8 mb-12">
-          <h3 className="font-bebas text-2xl tracking-widest text-[#C9A84C] mb-4 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-[#C9A84C]" /> Request changes (optional)
+        <div className="bg-white/50 rounded-2xl border border-slate-200 p-6 md:p-8 mb-12">
+          <h3 className="font-bebas text-2xl tracking-widest text-[#2563eb] mb-4 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-[#2563eb]" /> Request changes (optional)
           </h3>
-          <p className="text-xs text-slate-400 font-sans leading-relaxed mb-5">
+          <p className="text-xs text-slate-500 font-sans leading-relaxed mb-5">
             Describe what you would like changed... We will automatically weave these refinements into the final layouts.
           </p>
 
@@ -276,7 +276,7 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
               disabled={isSubmitting || isCompiling}
               placeholder="Describe what you would like changed..."
               rows={3}
-              className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C] text-sm text-slate-100 p-5 rounded-xl outline-none transition-all placeholder:text-slate-650 resize-y leading-relaxed font-sans"
+              className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 p-5 rounded-xl outline-none transition-all placeholder:text-slate-650 resize-y leading-relaxed font-sans"
             />
 
             <div className="flex flex-col sm:flex-row gap-4 justify-end">
@@ -284,11 +284,11 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
               <button
                 onClick={handleRegenerateScreens}
                 disabled={isSubmitting || isCompiling || !changeRequests.trim()}
-                className="inline-flex items-center justify-center bg-slate-950 hover:bg-slate-900 text-[#C9A84C] border border-[#C9A84C]/30 hover:border-[#C9A84C] font-bold text-xs tracking-widest uppercase px-6 py-4 rounded-xl transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer font-jetbrains"
+                className="inline-flex items-center justify-center bg-white hover:bg-white text-[#2563eb] border border-[#2563eb]/30 hover:border-[#2563eb] font-bold text-xs tracking-widest uppercase px-6 py-4 rounded-xl transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer font-jetbrains"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2.5 animate-spin text-[#C9A84C]" />
+                    <Loader2 className="w-4 h-4 mr-2.5 animate-spin text-[#2563eb]" />
                     REFRACTING SCREENS...
                   </>
                 ) : (
@@ -300,7 +300,7 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
               <button
                 onClick={handleApproveLayoutsAndCompile}
                 disabled={isSubmitting || isCompiling}
-                className="inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-widest text-xs sm:text-sm uppercase px-8 py-4 px-10 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/5 hover:shadow-[#C9A84C]/25 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                className="inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-widest text-xs sm:text-sm uppercase px-8 py-4 px-10 rounded-xl transition-all shadow-xl shadow-[#2563eb]/5 hover:shadow-[#2563eb]/25 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
               >
                 {isCompiling ? (
                   <>
@@ -318,21 +318,21 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
         </div>
 
         {/* Footer Technical Metadata paths row (Explicitly requirement: "Show every file path") */}
-        <div className="pt-6 border-t border-slate-900 flex flex-wrap gap-4 items-center justify-between text-slate-500 font-jetbrains text-[9px] uppercase tracking-widest">
+        <div className="pt-6 border-t border-slate-200 flex flex-wrap gap-4 items-center justify-between text-slate-500 font-jetbrains text-[9px] uppercase tracking-widest">
           <div className="flex items-center gap-2">
-            <FileCode className="w-3.5 h-3.5 text-[#C9A84C]" />
+            <FileCode className="w-3.5 h-3.5 text-[#2563eb]" />
             <span>Active Modules Checklist:</span>
           </div>
           <div className="flex flex-wrap gap-3">
-            <span className="text-slate-400 hover:text-[#C9A84C] transition-colors">
+            <span className="text-slate-500 hover:text-[#2563eb] transition-colors">
               src/pages/Phase2/FeaturesScreen.tsx
             </span>
             <span className="text-slate-600">|</span>
-            <span className="text-slate-400 hover:text-[#C9A84C] transition-colors">
+            <span className="text-slate-500 hover:text-[#2563eb] transition-colors">
               src/pages/Phase2/JourneyScreen.tsx
             </span>
             <span className="text-slate-600">|</span>
-            <span className="text-slate-[#C9A84C] transition-colors">
+            <span className="text-slate-[#2563eb] transition-colors">
               src/pages/Phase2/ScreensPreview.tsx
             </span>
           </div>
@@ -352,13 +352,13 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
               initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
-              className="w-full max-w-5xl bg-[#02050e] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[85vh]"
+              className="w-full max-w-5xl bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[85vh]"
             >
               {/* Modal top heading bar */}
-              <div className="flex justify-between items-center bg-slate-950 p-4.5 border-b border-slate-900">
+              <div className="flex justify-between items-center bg-white p-4.5 border-b border-slate-200">
                 <div className="flex items-center gap-2">
-                  <Layout className="w-4 h-4 text-[#C9A84C]" />
-                  <span className="font-jetbrains text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-900 px-2 py-0.5 rounded border border-slate-850">
+                  <Layout className="w-4 h-4 text-[#2563eb]" />
+                  <span className="font-jetbrains text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white px-2 py-0.5 rounded border border-slate-200">
                     HI-FI INTERACTIVE WIREFRAME
                   </span>
                   <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide font-sans ml-2.5">
@@ -367,15 +367,15 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
                 </div>
                 <button
                   onClick={() => setSelectedModalScreen(null)}
-                  className="p-1 px-2 rounded-lg bg-slate-900 text-slate-400 hover:text-white transition-all border border-slate-850 flex items-center justify-center gap-1.5 text-[10px] font-jetbrains uppercase tracking-widest cursor-pointer"
+                  className="p-1 px-2 rounded-lg bg-white text-slate-500 hover:text-white transition-all border border-slate-200 flex items-center justify-center gap-1.5 text-[10px] font-jetbrains uppercase tracking-widest cursor-pointer"
                 >
                   <X className="w-4.5 h-4.5 text-rose-500" /> Close View
                 </button>
               </div>
 
               {/* Centered iframe preview viewport */}
-              <div className="flex-1 bg-slate-950 p-6 flex items-center justify-center overflow-hidden">
-                <div className="w-full h-full bg-[#02050e] rounded-xl overflow-hidden border border-slate-900 shadow-inner">
+              <div className="flex-1 bg-white p-6 flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full bg-slate-50 rounded-xl overflow-hidden border border-slate-200 shadow-inner">
                   <iframe
                     srcDoc={`
                       <!DOCTYPE html>
@@ -410,20 +410,20 @@ export default function ScreensPreview({ onNavigate }: { onNavigate?: (page: str
               </div>
 
               {/* Display specifications below iframe */}
-              <div className="p-5.5 bg-slate-950 border-t border-slate-900 flex flex-wrap gap-4 items-start justify-between">
+              <div className="p-5.5 bg-white border-t border-slate-200 flex flex-wrap gap-4 items-start justify-between">
                 <div className="space-y-1 max-w-xl">
-                  <span className="block text-[9px] font-bold font-jetbrains text-[#C9A84C] uppercase tracking-widest">
+                  <span className="block text-[9px] font-bold font-jetbrains text-[#2563eb] uppercase tracking-widest">
                     Mechanism Specs
                   </span>
-                  <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+                  <p className="text-[11px] text-slate-500 leading-relaxed font-sans">
                     {selectedModalScreen.screen_description}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="block text-[9px] font-bold font-jetbrains text-[#C9A84C] uppercase tracking-widest">
+                  <span className="block text-[9px] font-bold font-jetbrains text-[#2563eb] uppercase tracking-widest">
                     Layout Purpose
                   </span>
-                  <span className="inline-block text-[10px] text-slate-300 font-bold font-sans bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-850">
+                  <span className="inline-block text-[10px] text-slate-600 font-bold font-sans bg-white px-3 py-1.5 rounded-lg border border-slate-200">
                     {selectedModalScreen.screen_purpose}
                   </span>
                 </div>

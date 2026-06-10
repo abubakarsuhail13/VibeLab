@@ -851,7 +851,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-white backdrop-blur-md"
             onClick={() => setShowErrorModal(false)}
           >
             <motion.div 
@@ -884,7 +884,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                          }
                        }, 200);
                      }}
-                     className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     className="w-full py-4 bg-white hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                    >
                      <BookOpen className="w-4 h-4" />
                      Take Phase Quiz Now
@@ -903,7 +903,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                          }
                        }, 200);
                      }}
-                     className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     className="w-full py-4 bg-white hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                    >
                      <CheckCircle2 className="w-4 h-4" />
                      Review Curriculum Checklist
@@ -916,7 +916,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                        setActiveTab('build');
                        setShowErrorModal(false);
                      }}
-                     className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     className="w-full py-4 bg-white hover:bg-slate-800 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                    >
                      <Code2 className="w-4 h-4" />
                      Go to Projects View
@@ -952,7 +952,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   Certified
                 </span>
               )}
-              {phase.status === 'locked' && <Lock className="text-slate-400 w-5 h-5" />}
+              {phase.status === 'locked' && <Lock className="text-slate-500 w-5 h-5" />}
             </div>
             <p className="text-slate-500 font-medium">{phase.description}</p>
             {phase?.order_index === 2 && (
@@ -967,15 +967,15 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     <Sparkles className="w-6 h-6 animate-pulse" />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold leading-none mb-1 text-base">Build Your Custom Startup MVP</h4>
-                    <p className="text-slate-400 text-xs font-medium leading-relaxed">
+                    <h4 className="text-slate-800 font-bold leading-none mb-1 text-base">Build Your Custom Startup MVP</h4>
+                    <p className="text-slate-500 text-xs font-medium leading-relaxed">
                       Transform the custom product concept and idea you co-created in Phase 1 into a fully-functional MVP with our interactive 10-step builder wizard!
                     </p>
                   </div>
                 </div>
                 <button 
                   onClick={() => navigate('/phase/2')}
-                  className="px-5 py-2.5 bg-[#C9A84C] text-slate-950 hover:bg-[#b0903c] rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-[#2563eb] text-slate-950 hover:bg-[#b0903c] rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
                 >
                   Launch Custom Builder <ChevronRight className="w-3.5 h-3.5" />
                 </button>
@@ -1013,7 +1013,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                onClick={() => setActiveTab(tab.id as any)}
                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
                  activeTab === tab.id 
-                   ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
+                   ? 'bg-white text-white shadow-lg shadow-slate-900/10' 
                    : 'text-slate-500 hover:bg-slate-50'
                }`}
             >
@@ -1157,7 +1157,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                     } else if (isSelected) {
                                       buttonStyle = 'bg-rose-600 text-white border-rose-600 shadow-bold-500 shadow-rose-500/10 font-bold';
                                     } else {
-                                      buttonStyle = 'bg-slate-50 text-slate-400 border-slate-200/60 opacity-60 pointer-events-none';
+                                      buttonStyle = 'bg-slate-50 text-slate-500 border-slate-200/60 opacity-60 pointer-events-none';
                                     }
                                   } else if (isSelected) {
                                     buttonStyle = 'bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/10';
@@ -1274,7 +1274,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                         </div>
                         
                         <div className="text-left bg-white border border-slate-200/80 p-6 rounded-2xl space-y-4">
-                          <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recommended Study Checklist</h5>
+                          <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Recommended Study Checklist</h5>
                           <ul className="space-y-3">
                             {getStudySuggestions(phase?.order_index || 1).map((s, idx) => (
                               <li key={idx} className="flex gap-3 items-start text-xs text-slate-600 font-medium">
@@ -1287,7 +1287,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                       </div>
                     ) : (
                       <>
-                        <Trophy className="w-10 h-10 text-slate-300" />
+                        <Trophy className="w-10 h-10 text-slate-600" />
                         <div>
                           <h4 className="font-bold text-slate-900">Quiz Challenge</h4>
                           <p className="text-slate-500 text-xs font-medium max-w-md mx-auto leading-relaxed mt-1">
@@ -1303,7 +1303,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                             setSelectedQuizAnswers({});
                             setQuizErrorMsg('');
                           }}
-                          className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
+                          className="px-6 py-2.5 bg-white hover:bg-slate-800 text-slate-800 font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
                         >
                           Start Trivia Quiz
                         </button>
@@ -1334,13 +1334,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     >
                       <div>
                         <span className="text-sm font-bold text-slate-800 group-hover:text-cyan-600 block leading-tight">{res.title}</span>
-                        <span className="text-[10px] text-slate-400 font-medium block mt-0.5 uppercase tracking-wider">{res.resource_type || 'Reading'}</span>
+                        <span className="text-[10px] text-slate-500 font-medium block mt-0.5 uppercase tracking-wider">{res.resource_type || 'Reading'}</span>
                       </div>
-                      <ExternalLink className="w-4 h-4 text-slate-300 group-hover:text-cyan-400 shrink-0" />
+                      <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-cyan-400 shrink-0" />
                     </a>
                   )) : (
                     <div className="text-center py-6 border border-dashed border-slate-200 bg-slate-50 rounded-xl">
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No dynamic custom resources added yet.</p>
+                      <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">No dynamic custom resources added yet.</p>
                     </div>
                   )}
                 </div>
@@ -1355,13 +1355,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-900">Daily Build Log</h3>
-                      <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Save build minutes effort</p>
+                      <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Save build minutes effort</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Read (min)</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Read (min)</label>
                       <input 
                         type="number"
                         min="0"
@@ -1371,7 +1371,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Build (min)</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Build (min)</label>
                       <input 
                         type="number"
                         min="0"
@@ -1385,7 +1385,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   <button 
                     type="submit"
                     disabled={isLoggingHabit || (learnMinutes === 0 && buildMinutes === 0)}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-colors disabled:opacity-50"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-slate-800 font-bold text-xs rounded-xl uppercase tracking-wider transition-colors disabled:opacity-50"
                   >
                     {isLoggingHabit ? "Saving minutes..." : "Log Effort Minutes"}
                   </button>
@@ -1394,7 +1394,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                 {/* Micro history review list */}
                 {habitLogs.length > 0 && (
                   <div className="mt-6 pt-4 border-t border-slate-100">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Recent Build Logs</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Recent Build Logs</h4>
                     <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
                       {habitLogs.slice(-4).reverse().map((log, i) => (
                         <div key={i} className="flex items-center justify-between text-xs p-2 bg-slate-50 rounded-lg text-slate-600 font-mono font-medium">
@@ -1422,18 +1422,18 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             {phase?.order_index === 2 ? (
               <Phase2BuildWalkthrough />
             ) : selectedProject ? (
-              <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col overflow-hidden sm:p-4">
+              <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden sm:p-4">
                 {/* Header Bar */}
-                <div className="bg-slate-900/50 backdrop-blur-md border-b border-white/5 p-4 flex items-center justify-between">
+                <div className="bg-white/50 backdrop-blur-md border-b border-white/5 p-4 flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <button 
                       onClick={() => setSelectedProject(null)}
-                      className="p-2 hover:bg-white/10 rounded-xl transition-all text-slate-400 hover:text-white"
+                      className="p-2 hover:bg-white/10 rounded-xl transition-all text-slate-500 hover:text-white"
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </button>
                     <div>
-                      <h2 className="text-white font-bold leading-none mb-1">{selectedProject.title}</h2>
+                      <h2 className="text-slate-800 font-bold leading-none mb-1">{selectedProject.title}</h2>
                       <div className="flex items-center gap-2">
                         <div className="h-1 w-24 bg-white/10 rounded-full overflow-hidden">
                           <motion.div 
@@ -1452,7 +1452,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={() => setIsTutorOpen(!isTutorOpen)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isTutorOpen ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'}`}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isTutorOpen ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' : 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-white'}`}
                     >
                       <Sparkles className="w-4 h-4" />
                       AI Tutor
@@ -1470,11 +1470,11 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                 </div>
 
                 {/* Main Builder Area: Three Panels layout */}
-                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-950">
+                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-white">
                   {/* Sidebar: Steps & Instructions */}
                   <div className="w-full lg:w-96 bg-white border-r border-slate-200 flex flex-col overflow-hidden shrink-0 z-10">
                     <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                       <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Project Guide</h3>
+                       <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Project Guide</h3>
                        <span className="text-xs font-bold text-slate-500">{currentStepIndex + 1} / {selectedProject.steps.length}</span>
                     </div>
 
@@ -1490,7 +1490,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                       </div>
 
                       <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100">
-                         <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
+                         <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
                            <Zap className="w-3 h-3 text-amber-500" />
                            Your Tasks
                          </h5>
@@ -1510,7 +1510,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
 
                       {/* Step Navigation List */}
                       <div className="pt-8 border-t border-slate-100">
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Build Roadmap</h3>
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">Build Roadmap</h3>
                         <div className="space-y-2">
                           {selectedProject.steps.map((step, i) => (
                             <button 
@@ -1518,7 +1518,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                               onClick={() => handleStepChange(i)}
                               className={`w-full p-4 rounded-2xl flex items-center gap-4 transition-all group ${
                                 i === currentStepIndex 
-                                  ? 'bg-slate-900 text-white shadow-xl shadow-slate-900/10' 
+                                  ? 'bg-white text-white shadow-xl shadow-slate-900/10' 
                                   : 'hover:bg-slate-50 text-slate-500'
                               }`}
                             >
@@ -1543,7 +1543,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                   <motion.div 
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 'auto' }}
-                                    className="text-[10px] text-slate-400 mt-1 font-medium"
+                                    className="text-[10px] text-slate-500 mt-1 font-medium"
                                   >
                                     Active Now
                                   </motion.div>
@@ -1561,7 +1561,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                          className={`w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
                            selectedProject.completed_steps.includes(currentStepIndex)
                              ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100'
-                             : 'bg-slate-900 text-white hover:bg-slate-800'
+                             : 'bg-white text-white hover:bg-slate-800'
                          }`}
                        >
                          {selectedProject.completed_steps.includes(currentStepIndex) ? (
@@ -1582,14 +1582,14 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                           <button 
                             disabled={currentStepIndex === 0}
                             onClick={() => handleStepChange(currentStepIndex - 1)}
-                            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-slate-400 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30 text-xs font-bold"
+                            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-slate-500 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30 text-xs font-bold"
                           >
                              <ChevronLeft className="w-4 h-4" /> Previous
                           </button>
                           <button 
                             disabled={currentStepIndex === selectedProject.steps.length - 1}
                             onClick={() => handleStepChange(currentStepIndex + 1)}
-                            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-slate-400 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30 text-xs font-bold"
+                            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-slate-200 text-slate-500 hover:bg-white hover:text-slate-900 transition-all disabled:opacity-30 text-xs font-bold"
                           >
                              Next <ChevronRight className="w-4 h-4" />
                           </button>
@@ -1598,9 +1598,9 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   </div>
 
                   {/* Center Panel: Code Workspace (Monaco Editor) */}
-                  <div className="flex-1 flex flex-col border-r border-white/5 bg-slate-900 overflow-hidden relative">
+                  <div className="flex-1 flex flex-col border-r border-white/5 bg-white overflow-hidden relative">
                      {/* Editor Settings / Header */}
-                     <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-950/80 relative z-10 font-mono">
+                     <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/80 relative z-10 font-mono">
                         <div className="flex items-center gap-3">
                            <span className="px-2.5 py-1 bg-white/5 text-cyan-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-white/5">
                               index.html
@@ -1626,7 +1626,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                setCode(starter);
                                saveStatus !== 'saving' && setSaveStatus('saving');
                              }}
-                             className="flex items-center gap-1 text-slate-400 hover:text-slate-200 text-[10px] font-bold uppercase transition-colors"
+                             className="flex items-center gap-1 text-slate-500 hover:text-slate-700 text-[10px] font-bold uppercase transition-colors"
                              title="Revert template changes to default starter code"
                            >
                               <RotateCw className="w-3 h-3" />
@@ -1638,7 +1638,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                setCopied(true);
                                setTimeout(() => setCopied(false), 2000);
                              }}
-                             className="flex items-center gap-1.5 text-slate-400 hover:text-white text-[10px] font-bold uppercase transition-colors"
+                             className="flex items-center gap-1.5 text-slate-500 hover:text-white text-[10px] font-bold uppercase transition-colors"
                            >
                               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                               Copy starter
@@ -1647,7 +1647,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                      </div>
 
                      {/* The Monaco Editor container */}
-                     <div className="flex-1 relative overflow-hidden flex flex-col pt-2 bg-slate-900">
+                     <div className="flex-1 relative overflow-hidden flex flex-col pt-2 bg-white">
                         <MonacoEditor
                           theme="vs-dark"
                           language="html"
@@ -1668,27 +1668,27 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   </div>
 
                   {/* Right Panel: Live Educational Preview Simulator */}
-                  <div className="w-full lg:w-[42%] flex flex-col bg-slate-950 relative overflow-hidden border-t lg:border-t-0 border-white/5 shrink-0 z-10">
-                     <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-950/80 font-mono font-bold uppercase tracking-widest">
+                  <div className="w-full lg:w-[42%] flex flex-col bg-white relative overflow-hidden border-t lg:border-t-0 border-white/5 shrink-0 z-10">
+                     <div className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-white/80 font-mono font-bold uppercase tracking-widest">
                         {/* Device Emulation Selection */}
                         <div className="flex items-center gap-1 bg-white/5 p-1 rounded-lg">
                            <button 
                              onClick={() => setPreviewDevice('desktop')}
-                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'desktop' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'desktop' ? 'bg-cyan-500 text-white' : 'text-slate-500 hover:text-white'}`}
                              title="Fluid Full Screen size"
                            >
                              <Monitor className="w-3.5 h-3.5" />
                            </button>
                            <button 
                              onClick={() => setPreviewDevice('tablet')}
-                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'tablet' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'tablet' ? 'bg-cyan-500 text-white' : 'text-slate-500 hover:text-white'}`}
                              title="Emulate Tablet size (768px)"
                            >
                              <Tablet className="w-3.5 h-3.5" />
                            </button>
                            <button 
                              onClick={() => setPreviewDevice('mobile')}
-                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'mobile' ? 'bg-cyan-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                             className={`p-1.5 rounded-md transition-all ${previewDevice === 'mobile' ? 'bg-cyan-500 text-white' : 'text-slate-500 hover:text-white'}`}
                              title="Emulate Mobile size (375px)"
                            >
                              <Smartphone className="w-3.5 h-3.5" />
@@ -1709,7 +1709,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                             const blobUrl = URL.createObjectURL(blob);
                             window.open(blobUrl, '_blank');
                           }}
-                          className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-400 hover:text-white transition-all bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5 active:scale-95"
+                          className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-slate-500 hover:text-white transition-all bg-white/5 px-2.5 py-1.5 rounded-lg border border-white/5 active:scale-95"
                         >
                            <ExternalLink className="w-3 h-3" />
                            Sandbox Page
@@ -1717,7 +1717,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                      </div>
 
                      {/* Previews Area with centered simulator frames */}
-                     <div className="flex-1 p-6 flex items-center justify-center bg-slate-900/40 overflow-hidden relative">
+                     <div className="flex-1 p-6 flex items-center justify-center bg-slate-50/40 overflow-hidden relative">
                          <div className="w-full h-full flex items-center justify-center overflow-auto">
                             {previewDevice === 'desktop' && (
                                <div className="w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden relative">
@@ -1731,7 +1731,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                             )}
 
                             {previewDevice === 'tablet' && (
-                               <div className="w-[768px] max-w-full h-full bg-white rounded-3xl shadow-2xl border-[10px] border-slate-800 flex flex-col shrink-0">
+                               <div className="w-[768px] max-w-full h-full bg-white rounded-3xl shadow-2xl border-[10px] border-slate-200 flex flex-col shrink-0">
                                   <div className="h-6 w-full bg-slate-800 flex items-center justify-center">
                                     <div className="w-12 h-1 bg-slate-700 rounded-full" />
                                   </div>
@@ -1747,7 +1747,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                             )}
 
                             {previewDevice === 'mobile' && (
-                               <div className="w-[375px] max-w-full h-[640px] bg-white rounded-[2.5rem] shadow-2xl border-[12px] border-slate-800 flex flex-col relative shrink-0">
+                               <div className="w-[375px] max-w-full h-[640px] bg-white rounded-[2.5rem] shadow-2xl border-[12px] border-slate-200 flex flex-col relative shrink-0">
                                   <div className="absolute top-0 inset-x-0 h-6 bg-slate-800 flex items-center justify-center z-20">
                                     <div className="w-20 h-4 bg-black rounded-b-xl flex items-center justify-center">
                                       <div className="w-2 h-2 rounded-full bg-white/10" />
@@ -1778,7 +1778,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                  <Trophy className="text-white w-5 h-5" />
                               </div>
                               <div className="text-center sm:text-left">
-                                 <h4 className="text-white font-bold text-sm leading-tight leading-none mb-0.5 animate-pulse">Perfect! All steps completed.</h4>
+                                 <h4 className="text-slate-800 font-bold text-sm leading-tight leading-none mb-0.5 animate-pulse">Perfect! All steps completed.</h4>
                                  <p className="text-emerald-100 text-[11px]">Submission panel opened in the Progress overview.</p>
                               </div>
                            </div>
@@ -1805,7 +1805,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setIsTutorOpen(false)}
-                        className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40"
+                        className="fixed inset-0 bg-white/40 backdrop-blur-sm z-40"
                       />
                       <motion.div 
                         initial={{ x: '100%' }}
@@ -1823,12 +1823,12 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                   <h3 className="font-bold text-slate-900 leading-none mb-1">VibeLab AI Tutor</h3>
                                   <div className="flex items-center gap-1.5">
                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Online & Ready</span>
+                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Online & Ready</span>
                                   </div>
                                </div>
                             </div>
                             <button onClick={() => setIsTutorOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                               <X className="w-5 h-5 text-slate-400" />
+                               <X className="w-5 h-5 text-slate-500" />
                             </button>
                          </div>
 
@@ -1866,7 +1866,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                >
                                   <div className={`max-w-[85%] rounded-[2rem] p-5 text-sm leading-relaxed ${
                                     msg.role === 'user' 
-                                      ? 'bg-slate-900 text-white shadow-lg' 
+                                      ? 'bg-white text-white shadow-lg' 
                                       : 'bg-slate-50 text-slate-700 border border-slate-100'
                                   }`}>
                                      {msg.content}
@@ -1901,7 +1901,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                   <Send className="w-5 h-5" />
                                </button>
                             </form>
-                            <p className="text-[10px] text-slate-400 text-center mt-4 font-medium uppercase tracking-widest">
+                            <p className="text-[10px] text-slate-500 text-center mt-4 font-medium uppercase tracking-widest">
                                Powered by Gemini Flash 3
                             </p>
                          </div>
@@ -1920,7 +1920,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     onClick={() => setSelectedProject(project)}
                   >
                     <div className="flex items-center justify-between mb-6">
-                      <span className="px-3 py-1 bg-slate-50 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+                      <span className="px-3 py-1 bg-slate-50 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest">
                         {project.difficulty}
                       </span>
                       {project.is_completed && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
@@ -1934,7 +1934,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     </p>
 
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
                         <span>Progress</span>
                         <span>{Math.round((project.completed_steps.length / project.steps.length) * 100)}%</span>
                       </div>
@@ -1947,7 +1947,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                       </div>
                     </div>
 
-                    <button className="w-full mt-8 py-3 rounded-xl bg-slate-50 text-slate-900 font-bold text-sm group-hover:bg-slate-900 group-hover:text-white transition-all flex items-center justify-center gap-2">
+                    <button className="w-full mt-8 py-3 rounded-xl bg-slate-50 text-slate-900 font-bold text-sm group-hover:bg-white group-hover:text-white transition-all flex items-center justify-center gap-2">
                       {project.is_completed ? 'Review project' : 'Start building'}
                       <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
@@ -1957,7 +1957,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                 {projects.length === 0 && (
                   <div className="col-span-full py-20 text-center">
                     <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Code2 className="text-slate-400 w-10 h-10" />
+                      <Code2 className="text-slate-500 w-10 h-10" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-2">No projects yet</h3>
                     <p className="text-slate-500">We're still crafting the curriculum for this phase.</p>
@@ -2040,7 +2040,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                         <div className="flex-1 max-w-md w-full">
                           <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 relative p-0.5">
                             <motion.div 
-                              className="h-full bg-[#C9A84C] rounded-full shadow-inner shadow-white/30"
+                              className="h-full bg-[#2563eb] rounded-full shadow-inner shadow-white/30"
                               initial={{ width: 0 }}
                               animate={{ width: `${progressPct}%` }}
                             />
@@ -2063,7 +2063,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                           {stepsList.map(({ step, label }) => {
                             let statusIcon = "⬜";
                             let statusText = "[locked]";
-                            let statusColorClass = "text-slate-400 border-slate-100 bg-slate-50/50";
+                            let statusColorClass = "text-slate-500 border-slate-100 bg-slate-50/50";
 
                             const isCompleted = isSessionCompleted || step < currentStepVal;
                             const isCurrent = !isSessionCompleted && step === currentStepVal;
@@ -2135,13 +2135,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                               </div>
                               <div>
                                 <h3 className="font-bold text-slate-950 font-display">Daily Build Log</h3>
-                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Save build minutes effort</p>
+                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Save build minutes effort</p>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Read (min)</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Read (min)</label>
                                 <input 
                                   type="number"
                                   min="0"
@@ -2151,7 +2151,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                 />
                               </div>
                               <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Build (min)</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Build (min)</label>
                                 <input 
                                   type="number"
                                   min="0"
@@ -2174,7 +2174,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                           {/* Micro history review list */}
                           {habitLogs.length > 0 && (
                             <div className="mt-6 pt-4 border-t border-slate-100">
-                              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Recent Build Logs</h4>
+                              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Recent Build Logs</h4>
                               <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
                                 {habitLogs.slice(-4).reverse().map((log, i) => (
                                   <div key={i} className="flex items-center justify-between text-xs p-2 bg-slate-50 rounded-lg text-slate-600 font-mono font-medium">
@@ -2211,7 +2211,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   <div className="space-y-10 relative z-10">
                     <div className="text-center p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 ring-4 ring-white shadow-inner">
                       <div className="text-6xl font-display font-black text-slate-900 mb-2">{phase.progress_percentage}%</div>
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Phase Completion</p>
+                      <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Total Phase Completion</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
@@ -2219,13 +2219,13 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                         <div className="text-2xl font-bold text-slate-900 mb-1">
                           {projects.filter(p => p.completed_steps.length === p.steps.length).length} / {projects.length}
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projects Finished</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Projects Finished</p>
                       </div>
                       <div className="p-6 rounded-2xl border border-slate-100 bg-white/50 text-center shadow-sm">
                         <div className="text-2xl font-bold text-slate-900 mb-1">
                           {projects.reduce((acc, p) => acc + (p.completed_steps?.length || 0), 0)}
                         </div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Steps Completed</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Steps Completed</p>
                       </div>
                     </div>
                   </div>
@@ -2265,7 +2265,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                   </div>
                                   <button 
                                     onClick={() => setSubmitProjectId(isSelected ? null : proj.id)}
-                                    className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${isSelected ? 'bg-white text-slate-400 border border-slate-200' : (existingSub ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/10')}`}
+                                    className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${isSelected ? 'bg-white text-slate-500 border border-slate-200' : (existingSub ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-white text-white shadow-lg shadow-slate-900/10')}`}
                                   >
                                      {isSelected ? 'Cancel' : (existingSub ? 'Edit Submission' : 'Submit Now')}
                                   </button>
@@ -2285,7 +2285,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                      className="space-y-4 mt-4"
                                    >
                                      <div>
-                                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">GitHub URL</label>
+                                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">GitHub URL</label>
                                        <input 
                                          type="url"
                                          placeholder="https://github.com/vibelab/project"
@@ -2296,7 +2296,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                        />
                                      </div>
                                      <div>
-                                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Live Demo URL</label>
+                                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Live Demo URL</label>
                                        <input 
                                          type="url"
                                          placeholder="https://vibelab-demo.vercel.app"
@@ -2345,7 +2345,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     <div key={i} className={`p-6 rounded-3xl border flex flex-col gap-6 transition-all ${reward.locked ? 'opacity-40 grayscale bg-slate-50 border-slate-100' : 'bg-white border-slate-200 shadow-lg ring-1 ring-slate-100'}`}>
                       <div className="flex items-center gap-6">
                         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${reward.locked ? 'bg-slate-200' : 'bg-gradient-to-br from-slate-50 to-white shadow-inner'}`}>
-                          {React.cloneElement(reward.icon as React.ReactElement, { className: `${(reward.icon as React.ReactElement).props.className} ${reward.locked ? 'text-slate-400 !fill-none' : ''}` })}
+                          {React.cloneElement(reward.icon as React.ReactElement, { className: `${(reward.icon as React.ReactElement).props.className} ${reward.locked ? 'text-slate-500 !fill-none' : ''}` })}
                         </div>
                         <div>
                           <h4 className="font-bold text-slate-900 leading-tight">{reward.title}</h4>
@@ -2400,7 +2400,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50/40 backdrop-blur-sm"
             onClick={() => setSelectedResource(null)}
           >
             <motion.div 
@@ -2417,11 +2417,11 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                    onClick={() => setSelectedResource(null)}
                    className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
                  >
-                   <ArrowLeft className="w-5 h-5 text-slate-400 rotate-90" />
+                   <ArrowLeft className="w-5 h-5 text-slate-500 rotate-90" />
                  </button>
                </div>
 
-               <div className="aspect-video bg-slate-100 rounded-3xl flex flex-col items-center justify-center text-slate-400 mb-8 border-2 border-dashed border-slate-200">
+               <div className="aspect-video bg-slate-100 rounded-3xl flex flex-col items-center justify-center text-slate-500 mb-8 border-2 border-dashed border-slate-200">
                   <Play className="w-12 h-12 mb-4 opacity-20" />
                   <p className="text-sm font-medium">Resource content preview for Phase 2</p>
                   <p className="text-[10px] uppercase tracking-widest font-black mt-2">Locked to VibeLab premium</p>
@@ -2433,7 +2433,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                    Review the content carefully as these topics will be directly applied in your builds.
                  </p>
                  <div className="flex gap-3">
-                   <button className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-lg shadow-slate-900/10">
+                   <button className="flex-1 py-3 bg-white text-white rounded-xl font-bold text-sm shadow-lg shadow-slate-900/10">
                      Download PDF
                    </button>
                    <button className="flex-1 py-3 bg-slate-50 text-slate-600 border border-slate-100 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all">
@@ -2451,7 +2451,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-white backdrop-blur-md"
             onClick={() => setShowSuccessModal(false)}
           >
             <motion.div 
@@ -2473,7 +2473,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                </p>
 
                <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 mb-8">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">New Reward Unlocked</p>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">New Reward Unlocked</p>
                  <div className="flex items-center justify-center gap-3">
                    <Star className="text-amber-400 fill-amber-400 w-5 h-5" />
                    <span className="font-bold text-slate-900">Foundations Phase Badge</span>
@@ -2485,7 +2485,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                    setShowSuccessModal(false);
                    onBack();
                  }}
-                 className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95"
+                 className="w-full py-4 bg-white text-white rounded-2xl font-bold text-sm shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95"
                >
                  Continue to Next Phase
                </button>

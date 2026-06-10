@@ -125,24 +125,24 @@ export default function JourneyScreen({ onNavigate }: { onNavigate?: (page: stri
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#02050e] flex flex-col justify-center items-center font-sans text-white">
-        <Loader2 className="w-12 h-12 text-[#C9A84C] animate-spin mb-4" />
-        <p className="text-[#C9A84C] font-jetbrains text-xs tracking-widest font-bold">LOADING USER JOURNEY MAP...</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center font-sans text-white">
+        <Loader2 className="w-12 h-12 text-[#2563eb] animate-spin mb-4" />
+        <p className="text-[#2563eb] font-jetbrains text-xs tracking-widest font-bold">LOADING USER JOURNEY MAP...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#02050e] text-white selection:bg-[#C9A84C]/25 pb-24 relative overflow-hidden font-dmsans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-[#2563eb]/25 pb-24 relative overflow-hidden font-dmsans">
       {/* Visual lighting background styles */}
-      <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#C9A84C]/5 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#2563eb]/5 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-6xl mx-auto px-6 py-12">
         {/* Navigation row back */}
         <button
           onClick={() => navigateTo('/phase/2/features')}
-          className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-400 hover:text-[#C9A84C] mb-8 transition-colors uppercase gap-2 cursor-pointer"
+          className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-500 hover:text-[#2563eb] mb-8 transition-colors uppercase gap-2 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Features Discovery
         </button>
@@ -152,10 +152,10 @@ export default function JourneyScreen({ onNavigate }: { onNavigate?: (page: stri
 
         {/* Big Bebas title Block */}
         <div className="mb-12 text-center md:text-left">
-          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#C9A84C] leading-none mb-4">
+          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#2563eb] leading-none mb-4">
             USER JOURNEY
           </h2>
-          <p className="font-sans text-slate-350 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
+          <p className="font-sans text-slate-650 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
             This shows how someone will use your product, step by step.
           </p>
         </div>
@@ -175,37 +175,37 @@ export default function JourneyScreen({ onNavigate }: { onNavigate?: (page: stri
                     initial={{ opacity: 0, scale: 0.94 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.1, duration: 0.3 }}
-                    className="w-[320px] sm:w-[350px] bg-slate-950/40 hover:bg-slate-950/60 border border-slate-900 hover:border-[#C9A84C]/30 p-6 rounded-2xl transition-all duration-300 relative flex flex-col justify-between min-h-[300px] h-full group shadow-lg"
+                    className="w-[320px] sm:w-[350px] bg-white/40 hover:bg-white/65 border border-slate-200 hover:border-[#2563eb]/30 p-6 rounded-2xl transition-all duration-300 relative flex flex-col justify-between min-h-[300px] h-full group shadow-lg"
                   >
                     {/* Top status & node index info */}
                     <div className="flex justify-between items-start mb-4">
-                      <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center font-jetbrains text-xs font-black text-[#C9A84C]">
+                      <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center font-jetbrains text-xs font-black text-[#2563eb]">
                         0{step.step_number || idx + 1}
                       </div>
-                      <span className="text-[9px] font-bold font-jetbrains text-slate-500 uppercase tracking-widest px-2.5 py-1 bg-slate-900/60 rounded-md border border-slate-850">
+                      <span className="text-[9px] font-bold font-jetbrains text-slate-500 uppercase tracking-widest px-2.5 py-1 bg-white rounded-md border border-slate-200">
                         STEP {idx + 1}
                       </span>
                     </div>
 
                     {/* Step Name Content */}
                     <div className="space-y-1.5 grow mb-5">
-                      <h4 className="text-base font-bold text-white tracking-wide font-sans group-hover:text-[#C9A84C] transition-colors">
+                      <h4 className="text-base font-bold text-white tracking-wide font-sans group-hover:text-[#2563eb] transition-colors">
                         {step.title}
                       </h4>
-                      <p className="text-xs text-slate-400 leading-relaxed font-sans font-normal">
+                      <p className="text-xs text-slate-500 leading-relaxed font-sans font-normal">
                         {step.description}
                       </p>
                     </div>
 
                     {/* Integrated Key action card block */}
-                    <div className="mt-auto p-4 rounded-xl bg-slate-900/60 border border-slate-850 group-hover:bg-[#C9A84C]/5 group-hover:border-[#C9A84C]/20 transition-all">
+                    <div className="mt-auto p-4 rounded-xl bg-white border border-slate-200 group-hover:bg-[#2563eb]/5 group-hover:border-[#2563eb]/20 transition-all">
                       <div className="flex items-start gap-2.5">
-                        <Sparkles className="w-3.5 h-3.5 text-[#C9A84C] shrink-0 mt-0.5" />
+                        <Sparkles className="w-3.5 h-3.5 text-[#2563eb] shrink-0 mt-0.5" />
                         <div className="space-y-1">
-                          <span className="block text-[9px] font-bold font-jetbrains uppercase tracking-widest text-[#C9A84C]">
+                          <span className="block text-[9px] font-bold font-jetbrains uppercase tracking-widest text-[#2563eb]">
                             Critical Action
                           </span>
-                          <p className="text-[10px] text-slate-350 leading-normal font-sans">
+                          <p className="text-[10px] text-slate-650 leading-normal font-sans">
                             {linkedAction}
                           </p>
                         </div>
@@ -216,7 +216,7 @@ export default function JourneyScreen({ onNavigate }: { onNavigate?: (page: stri
                   {/* Golden connector arrows showing progression flow */}
                   {!isLast && (
                     <div className="px-4 flex items-center justify-center">
-                      <ChevronRight className="w-8 h-8 text-[#C9A84C]/40 animate-pulse stroke-[3px]" />
+                      <ChevronRight className="w-8 h-8 text-[#2563eb]/40 animate-pulse stroke-[3px]" />
                     </div>
                   )}
                 </div>
@@ -226,14 +226,14 @@ export default function JourneyScreen({ onNavigate }: { onNavigate?: (page: stri
         </div>
 
         {/* Gold lock-in callout row */}
-        <div className="bg-slate-950/60 border border-slate-850 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
+        <div className="bg-white/65 border border-slate-200 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
           <div className="flex items-start gap-3.5 max-w-xl">
-            <Compass className="w-5 h-5 text-[#C9A84C] shrink-0 mt-0.5" />
+            <Compass className="w-5 h-5 text-[#2563eb] shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h5 className="text-xs font-bold font-sans text-white uppercase tracking-wide">
                 User Journey Map Complete
               </h5>
-              <p className="text-[11px] sm:text-xs text-slate-400 font-normal leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-slate-500 font-normal leading-relaxed">
                 Review this touchpoint flow carefully. Clicking below prompts the AI to generate high fidelity mockup wireframes outlining how these interactive screens render dynamically.
               </p>
             </div>
@@ -242,7 +242,7 @@ export default function JourneyScreen({ onNavigate }: { onNavigate?: (page: stri
           <button
             onClick={handleApproveJourney}
             disabled={isApproving}
-            className="w-full md:w-auto inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-widest text-xs sm:text-sm px-8 py-4.5 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/5 hover:shadow-[#C9A84C]/25 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer uppercase font-sans font-black whitespace-nowrap"
+            className="w-full md:w-auto inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-widest text-xs sm:text-sm px-8 py-4.5 rounded-xl transition-all shadow-xl shadow-[#2563eb]/5 hover:shadow-[#2563eb]/25 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer uppercase font-sans font-black whitespace-nowrap"
           >
             {isApproving ? (
               <>

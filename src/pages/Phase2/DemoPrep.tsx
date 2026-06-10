@@ -197,17 +197,17 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#02050e] flex flex-col justify-center items-center font-sans text-white">
-        <Loader2 className="w-12 h-12 text-[#C9A84C] animate-spin mb-4" />
-        <p className="text-[#C9A84C] font-jetbrains text-xs tracking-widest font-bold">LOADING DEMO PRESENTATION PACKS...</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center font-sans text-white">
+        <Loader2 className="w-12 h-12 text-[#2563eb] animate-spin mb-4" />
+        <p className="text-[#2563eb] font-jetbrains text-xs tracking-widest font-bold">LOADING DEMO PRESENTATION PACKS...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#02050e] text-white selection:bg-[#C9A84C]/25 pb-24 relative overflow-hidden font-dmsans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-[#2563eb]/25 pb-24 relative overflow-hidden font-dmsans">
       {/* Immersive graphic neon backdrops */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#C9A84C]/5 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#2563eb]/5 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[0%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-400/5 blur-[150px] pointer-events-none" />
 
       <div className="w-full max-w-5xl mx-auto px-6 py-12">
@@ -217,10 +217,10 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
 
         {/* Branding & Header */}
         <div className="text-center md:text-left mb-10 space-y-3">
-          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#C9A84C] leading-none">
+          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#2563eb] leading-none">
             DEMO PREPARATION
           </h2>
-          <p className="text-slate-350 text-base md:text-lg leading-relaxed max-w-3xl">
+          <p className="text-slate-650 text-base md:text-lg leading-relaxed max-w-3xl">
             You are almost ready to present! Use this interactive dashboard guide to prepare with confidence, refine your talking script, and practice.
           </p>
         </div>
@@ -229,15 +229,15 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
         <div className="space-y-12 mb-12">
 
           {/* SECTION 1 - DEMO SCRIPT */}
-          <div className="bg-slate-950/60 border border-slate-850 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6 shadow-xl">
+          <div className="bg-white/65 border border-slate-200 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6 shadow-xl">
             <div>
-              <span className="text-[10px] font-bold font-jetbrains tracking-wider text-[#C9A84C] uppercase">
+              <span className="text-[10px] font-bold font-jetbrains tracking-wider text-[#2563eb] uppercase">
                 SECTION 1
               </span>
               <h3 className="font-bebas text-3xl md:text-4xl tracking-widest mt-1 text-white uppercase">
                 Your Interactive Demo Script
               </h3>
-              <p className="text-xs text-slate-400 font-normal">
+              <p className="text-xs text-slate-500 font-normal">
                 Click any section of your presentation script to edit / tweak it to fit your style.
               </p>
             </div>
@@ -247,27 +247,27 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
               {scriptItems.map((item, index) => (
                 <div key={index} className="group relative">
                   {editingIndex === index ? (
-                    <div className="p-5 rounded-2xl bg-slate-900 border border-[#C9A84C]/50 space-y-3 shadow-lg">
-                      <div className="flex items-center justify-between text-[9px] font-black font-jetbrains text-slate-400">
+                    <div className="p-5 rounded-2xl bg-white border border-[#2563eb]/50 space-y-3 shadow-lg">
+                      <div className="flex items-center justify-between text-[9px] font-black font-jetbrains text-slate-500">
                         <span>EDITING STEP {index + 1}</span>
-                        <span className="text-[#C9A84C]">PRESS SAVE COMPLETED</span>
+                        <span className="text-[#2563eb]">PRESS SAVE COMPLETED</span>
                       </div>
                       <textarea
                         value={editingText}
                         onChange={(e) => setEditingText(e.target.value)}
-                        className="w-full bg-slate-950 text-slate-200 text-sm px-4 py-3 rounded-xl border border-slate-800 focus:border-[#C9A84C] outline-none font-sans leading-relaxed select-text"
+                        className="w-full bg-white text-slate-700 text-sm px-4 py-3 rounded-xl border border-slate-200 focus:border-[#2563eb] outline-none font-sans leading-relaxed select-text"
                         rows={3}
                       />
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => setEditingIndex(null)}
-                          className="px-3 py-1.5 bg-slate-950 hover:bg-slate-900 text-slate-400 text-xs font-semibold rounded-md border border-slate-850 cursor-pointer"
+                          className="px-3 py-1.5 bg-white hover:bg-white text-slate-500 text-xs font-semibold rounded-md border border-slate-200 cursor-pointer"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSaveStep}
-                          className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#C9A84C] hover:bg-[#E3C268] text-black text-xs font-black rounded-md cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#2563eb] hover:bg-[#3b82f6] text-black text-xs font-black rounded-md cursor-pointer"
                         >
                           <Check className="w-3.5 h-3.5" /> Save Section
                         </button>
@@ -276,13 +276,13 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
                   ) : (
                     <div
                       onClick={() => handleStartEditing(index)}
-                      className="p-5 rounded-2xl bg-slate-900/40 hover:bg-slate-900/80 border border-slate-900 group-hover:border-slate-800 transition-all cursor-pointer flex items-start gap-4"
+                      className="p-5 rounded-2xl bg-slate-50/40 hover:bg-white/80 border border-slate-200 group-hover:border-slate-200 transition-all cursor-pointer flex items-start gap-4"
                     >
-                      <div className="w-7 h-7 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/35 flex items-center justify-center font-jetbrains text-xs font-black text-[#C9A84C] shrink-0 mt-0.5 select-none">
+                      <div className="w-7 h-7 rounded-full bg-[#2563eb]/10 border border-[#2563eb]/35 flex items-center justify-center font-jetbrains text-xs font-black text-[#2563eb] shrink-0 mt-0.5 select-none">
                         {index + 1}
                       </div>
                       <div className="flex-1 space-y-1">
-                        <p className="text-slate-250 font-sans text-sm md:text-base leading-relaxed select-text">
+                        <p className="text-slate-600 font-sans text-sm md:text-base leading-relaxed select-text">
                           {item}
                         </p>
                         <span className="inline-flex items-center gap-1 text-[10px] text-slate-550 font-jetbrains font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity select-none pt-1">
@@ -297,15 +297,15 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
           </div>
 
           {/* SECTION 2 - KEY TALKING POINTS */}
-          <div className="bg-slate-950/60 border border-slate-850 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6 shadow-xl">
+          <div className="bg-white/65 border border-slate-200 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6 shadow-xl">
             <div>
-              <span className="text-[10px] font-bold font-jetbrains tracking-wider text-[#C9A84C] uppercase">
+              <span className="text-[10px] font-bold font-jetbrains tracking-wider text-[#2563eb] uppercase">
                 SECTION 2
               </span>
               <h3 className="font-bebas text-3xl md:text-4xl tracking-widest mt-1 text-white uppercase">
                 Key Talking Points
               </h3>
-              <p className="text-xs text-slate-400 font-normal">
+              <p className="text-xs text-slate-500 font-normal">
                 Startup mentors recommend anchoring these central insights during pitches to sound like a professional founder.
               </p>
             </div>
@@ -315,10 +315,10 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
               {talkingPoints.map((point, index) => (
                 <div
                   key={index}
-                  className="p-5 rounded-2xl bg-slate-900/30 border border-[#C9A84C]/20 hover:border-[#C9A84C]/45 transition-colors flex items-start gap-3 shadow-md"
+                  className="p-5 rounded-2xl bg-white/30 border border-[#2563eb]/20 hover:border-[#2563eb]/45 transition-colors flex items-start gap-3 shadow-md"
                 >
-                  <div className="w-2 h-2 rounded-full bg-[#C9A84C] shrink-0 mt-2 animate-pulse" />
-                  <p className="text-xs md:text-sm text-slate-250 font-medium font-sans leading-relaxed select-text">
+                  <div className="w-2 h-2 rounded-full bg-[#2563eb] shrink-0 mt-2 animate-pulse" />
+                  <p className="text-xs md:text-sm text-slate-600 font-medium font-sans leading-relaxed select-text">
                     {point}
                   </p>
                 </div>
@@ -327,7 +327,7 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
           </div>
 
           {/* SECTION 3 - PRACTICE MODE */}
-          <div className="bg-slate-950/60 border border-slate-800 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6 shadow-xl relative overflow-hidden">
+          <div className="bg-white/65 border border-slate-200 rounded-3xl p-6 md:p-8 backdrop-blur-sm space-y-6 shadow-xl relative overflow-hidden">
             {/* Ambient accent light inside card */}
             <div className="absolute right-[-10%] top-[-10%] w-[120px] h-[120px] rounded-full bg-cyan-500/10 blur-xl pointer-events-none" />
 
@@ -336,15 +336,15 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
                 SECTION 3
               </span>
               <h3 className="font-bebas text-3xl md:text-4xl tracking-widest mt-1 text-white uppercase flex items-center gap-2">
-                PRACTICE SPACE <Sparkles className="w-5 h-5 text-[#C9A84C] animate-pulse" />
+                PRACTICE SPACE <Sparkles className="w-5 h-5 text-[#2563eb] animate-pulse" />
               </h3>
-              <p className="text-xs text-slate-400 font-normal">
+              <p className="text-xs text-slate-500 font-normal">
                 Refine your delivery! Play the countdown timer below to simulate presenting your product script to potential customers.
               </p>
             </div>
 
             {/* Timer component layout */}
-            <div className="p-8 rounded-2xl bg-slate-900/70 border border-slate-850 flex flex-col items-center text-center space-y-6 relative z-10 select-none">
+            <div className="p-8 rounded-2xl bg-white/70 border border-slate-200 flex flex-col items-center text-center space-y-6 relative z-10 select-none">
               
               {/* Countdown panel */}
               <div className="space-y-2">
@@ -368,7 +368,7 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
                     <p className="text-sm font-bold text-emerald-400">Great practice! You are ready to go.</p>
                   </motion.div>
                 ) : (
-                  <p className="text-xs text-slate-400 font-normal max-w-md leading-relaxed">
+                  <p className="text-xs text-slate-500 font-normal max-w-md leading-relaxed">
                     Practice presenting your product using the script above. Click Start when you are ready.
                   </p>
                 )}
@@ -381,7 +381,7 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
                   className={`inline-flex items-center justify-center px-6 py-2.5 rounded-lg text-xs font-black font-jetbrains tracking-widest uppercase transition-all shadow-md cursor-pointer ${
                     timerActive
                       ? 'bg-amber-500/10 border border-amber-500 text-amber-500 hover:bg-amber-500/20'
-                      : 'bg-[#C9A84C] hover:bg-[#E3C268] text-black'
+                      : 'bg-[#2563eb] hover:bg-[#3b82f6] text-black'
                   }`}
                 >
                   {timerActive ? (
@@ -397,7 +397,7 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
 
                 <button
                   onClick={resetTimer}
-                  className="px-4 py-2.5 bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-400 hover:text-slate-200 text-xs font-bold font-jetbrains rounded-lg transition-colors cursor-pointer"
+                  className="px-4 py-2.5 bg-white hover:bg-white border border-slate-200 text-slate-500 hover:text-slate-700 text-xs font-bold font-jetbrains rounded-lg transition-colors cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
@@ -410,10 +410,10 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between pt-4 border-t border-slate-900 select-none">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between pt-4 border-t border-slate-200 select-none">
           <button
             onClick={() => navigateTo('/phase/2/explain')}
-            className="px-6 py-4 bg-slate-900 border border-slate-850 hover:border-slate-750 text-slate-450 hover:text-slate-200 text-xs font-black font-jetbrains tracking-widest uppercase rounded-xl transition-all cursor-pointer"
+            className="px-6 py-4 bg-white border border-slate-200 hover:border-slate-200 text-slate-600 hover:text-slate-700 text-xs font-black font-jetbrains tracking-widest uppercase rounded-xl transition-all cursor-pointer"
           >
             Go Back to Features
           </button>
@@ -421,7 +421,7 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
           <button
             onClick={handleSaveComplete}
             disabled={isSaving}
-            className="inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-widest text-xs uppercase px-8 py-4 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/5 hover:shadow-[#C9A84C]/15 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+            className="inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-widest text-xs uppercase px-8 py-4 rounded-xl transition-all shadow-xl shadow-[#2563eb]/5 hover:shadow-[#2563eb]/15 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
           >
             {isSaving ? (
               <>

@@ -270,24 +270,24 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#02050e] flex flex-col justify-center items-center text-white font-sans">
-        <Loader2 className="w-12 h-12 text-[#C9A84C] animate-spin mb-4" />
-        <p className="text-[#C9A84C] font-jetbrains text-xs tracking-widest font-bold">LOADING PILOT CARD SCHEMAS...</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center text-white font-sans">
+        <Loader2 className="w-12 h-12 text-[#2563eb] animate-spin mb-4" />
+        <p className="text-[#2563eb] font-jetbrains text-xs tracking-widest font-bold">LOADING PILOT CARD SCHEMAS...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#02050e] text-white select-none selection:bg-[#C9A84C]/25 pb-24 relative overflow-hidden font-dmsans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 select-none selection:bg-[#2563eb]/25 pb-24 relative overflow-hidden font-dmsans">
       {/* Visual lighting accents */}
-      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[#C9A84C]/5 blur-[150px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[#2563eb]/5 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-6xl mx-auto px-6 py-12">
         {/* Custom Nav Back Row */}
         <button
           onClick={() => navigateTo('/phase/2')}
-          className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-400 hover:text-[#C9A84C] mb-8 transition-colors uppercase gap-2 cursor-pointer"
+          className="inline-flex items-center text-xs font-semibold font-jetbrains text-slate-500 hover:text-[#2563eb] mb-8 transition-colors uppercase gap-2 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" /> Go back to Blueprint
         </button>
@@ -297,10 +297,10 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
 
         {/* Brand Header */}
         <div className="mb-12 text-center md:text-left">
-          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#C9A84C] leading-none mb-4">
+          <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#2563eb] leading-none mb-4">
             FEATURE DISCOVERY
           </h2>
-          <p className="font-sans text-slate-350 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
+          <p className="font-sans text-slate-650 text-sm md:text-base leading-relaxed max-w-2xl font-normal">
             Your AI mentor suggested these features. Decide what goes into your MVP and what can wait for later.
           </p>
         </div>
@@ -308,7 +308,7 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
         {/* Dynamic Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start mb-12">
           {/* COLUMN 1: MUST HAVE */}
-          <div className="p-5 rounded-2xl bg-slate-950/40 border border-slate-900 flex flex-col min-h-[500px]">
+          <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 flex flex-col min-h-[500px]">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-emerald-500/10">
               <span className="px-3 py-1 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
                 MUST HAVE
@@ -337,7 +337,7 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
           </div>
 
           {/* COLUMN 2: NICE TO HAVE */}
-          <div className="p-5 rounded-2xl bg-slate-950/40 border border-slate-900 flex flex-col min-h-[500px]">
+          <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 flex flex-col min-h-[500px]">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-amber-500/10">
               <span className="px-3 py-1 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
                 NICE TO HAVE
@@ -366,9 +366,9 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
           </div>
 
           {/* COLUMN 3: FUTURE */}
-          <div className="p-5 rounded-2xl bg-slate-950/40 border border-slate-900 flex flex-col min-h-[500px]">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-              <span className="px-3 py-1 rounded-md bg-slate-800 text-slate-400 border border-slate-750 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
+          <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 flex flex-col min-h-[500px]">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
+              <span className="px-3 py-1 rounded-md bg-slate-800 text-slate-500 border border-slate-200 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
                 FUTURE
               </span>
               <span className="text-xs font-bold font-jetbrains text-slate-500">
@@ -396,30 +396,30 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
         </div>
 
         {/* Feature Creation Box */}
-        <div className="bg-slate-950/50 rounded-2xl border border-slate-900 p-6 md:p-8 mb-12">
-          <h3 className="font-bebas text-2xl tracking-widest text-[#C9A84C] mb-6 flex items-center gap-2">
-            <Plus className="w-5 h-5 text-[#C9A84C]" /> ADD MY OWN FEATURE
+        <div className="bg-white/50 rounded-2xl border border-slate-200 p-6 md:p-8 mb-12">
+          <h3 className="font-bebas text-2xl tracking-widest text-[#2563eb] mb-6 flex items-center gap-2">
+            <Plus className="w-5 h-5 text-[#2563eb]" /> ADD MY OWN FEATURE
           </h3>
 
           <form onSubmit={handleAddCustomFeature} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1.5 md:col-span-1">
-                <label className="text-[10px] uppercase font-bold font-jetbrains text-slate-400">Feature Name</label>
+                <label className="text-[10px] uppercase font-bold font-jetbrains text-slate-500">Feature Name</label>
                 <input
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   placeholder="e.g. Dark Mode Toggle"
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C]/50 rounded-xl px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-slate-600"
+                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb]/50 rounded-xl px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-slate-600"
                 />
               </div>
 
               <div className="space-y-1.5 md:col-span-1">
-                <label className="text-[10px] uppercase font-bold font-jetbrains text-slate-400">Column Destination</label>
+                <label className="text-[10px] uppercase font-bold font-jetbrains text-slate-500">Column Destination</label>
                 <select
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value as any)}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-[#C9A84C]/50 rounded-xl px-4 py-3 text-sm text-white outline-none transition-all"
+                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb]/50 rounded-xl px-4 py-3 text-sm text-white outline-none transition-all"
                 >
                   <option value="must_have">MUST HAVE (Vital Core)</option>
                   <option value="nice_to_have">NICE TO HAVE (CX Boost)</option>
@@ -428,19 +428,19 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
               </div>
 
               <div className="space-y-1.5 md:col-span-1">
-                <label className="text-[10px] uppercase font-bold font-jetbrains text-slate-400">Explanation Rationale</label>
+                <label className="text-[10px] uppercase font-bold font-jetbrains text-slate-500">Explanation Rationale</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={customDesc}
                     onChange={(e) => setCustomDesc(e.target.value)}
                     placeholder="e.g. Allows user to switch between light/dark..."
-                    className="flex-1 bg-slate-900 border border-slate-800 focus:border-[#C9A84C]/50 rounded-xl px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-slate-650"
+                    className="flex-1 bg-white border border-slate-200 focus:border-[#2563eb]/50 rounded-xl px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-slate-650"
                   />
                   <button
                     type="submit"
                     disabled={isAdding}
-                    className="bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-[#02050e] font-bold text-xs uppercase px-5 rounded-xl transition-all font-jetbrains tracking-wide whitespace-nowrap inline-flex items-center justify-center cursor-pointer"
+                    className="bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-[#02050e] font-bold text-xs uppercase px-5 rounded-xl transition-all font-jetbrains tracking-wide whitespace-nowrap inline-flex items-center justify-center cursor-pointer"
                   >
                     {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add Feature'}
                   </button>
@@ -451,14 +451,14 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
         </div>
 
         {/* Global Action lock/checkpoint CTA */}
-        <div className="bg-slate-950/60 border border-slate-850 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
+        <div className="bg-white/65 border border-slate-200 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 backdrop-blur-md">
           <div className="flex items-start gap-3.5 max-w-xl">
-            <Info className="w-5 h-5 text-[#C9A84C] shrink-0 mt-0.5" />
+            <Info className="w-5 h-5 text-[#2563eb] shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h5 className="text-xs font-bold font-sans text-white uppercase tracking-wide">
                 Ready to Map your User Journey?
               </h5>
-              <p className="text-[11px] sm:text-xs text-slate-400 font-normal leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-slate-500 font-normal leading-relaxed">
                 Make sure you check the features vital to solving your user problem first. Once you click lock below, the AI researcher will draft your high fidelity UI flows based on current columns configuration!
               </p>
             </div>
@@ -468,7 +468,7 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
             <button
               onClick={() => handleSaveFeatures(false)}
               disabled={isSaving || isApproving}
-              className="flex-1 md:flex-none px-6 py-4 rounded-xl border border-slate-800 hover:border-slate-700 font-jetbrains text-xs font-black uppercase text-slate-350 hover:text-white transition-all transition-duration-150 flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 md:flex-none px-6 py-4 rounded-xl border border-slate-200 hover:border-slate-300 font-jetbrains text-xs font-black uppercase text-slate-650 hover:text-white transition-all transition-duration-150 flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save Progress
@@ -477,7 +477,7 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
             <button
               onClick={handleApproveFeatures}
               disabled={isSaving || isApproving}
-              className="flex-[2] md:flex-none inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-widest text-xs sm:text-sm px-8 py-4.5 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/5 hover:shadow-[#C9A84C]/25 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer uppercase font-sans font-black"
+              className="flex-[2] md:flex-none inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-widest text-xs sm:text-sm px-8 py-4.5 rounded-xl transition-all shadow-xl shadow-[#2563eb]/5 hover:shadow-[#2563eb]/25 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer uppercase font-sans font-black"
             >
               {isApproving ? (
                 <>
@@ -514,8 +514,8 @@ function FeatureUIProgressCard({ feature, onToggle, onChangeCategory, onRational
       layout
       className={`p-4 rounded-xl border transition-all relative ${
         isInc 
-          ? 'bg-slate-900/90 border-[#C9A84C]/15 hover:border-[#C9A84C]/30 shadow-indigo-950/20 shadow-md' 
-          : 'bg-slate-950/45 border-slate-900/60 opacity-50 grayscale'
+          ? 'bg-white/90 border-[#2563eb]/15 hover:border-[#2563eb]/30 shadow-indigo-950/20 shadow-md' 
+          : 'bg-white/45 border-slate-200/60 opacity-50 grayscale'
       }`}
     >
       <div className="flex items-start justify-between gap-2.5">
@@ -524,8 +524,8 @@ function FeatureUIProgressCard({ feature, onToggle, onChangeCategory, onRational
           onClick={() => onToggle(feature.id)}
           className={`w-[22px] h-[22px] rounded-md shrink-0 flex items-center justify-center border transition-all mt-0.5 cursor-pointer ${
             isInc 
-              ? 'bg-[#C9A84C] border-[#C9A84C] text-[#02050e]' 
-              : 'border-slate-800 bg-slate-900 text-transparent hover:border-slate-700'
+              ? 'bg-[#2563eb] border-[#2563eb] text-[#02050e]' 
+              : 'border-slate-200 bg-white text-transparent hover:border-slate-300'
           }`}
           title={isInc ? 'Disable feature' : 'Enable feature'}
         >
@@ -537,7 +537,7 @@ function FeatureUIProgressCard({ feature, onToggle, onChangeCategory, onRational
           <h4 className={`text-xs font-bold leading-tight select-text transition-all font-sans ${isInc ? 'text-white' : 'text-slate-500 line-through'}`}>
             {feature.feature_name}
           </h4>
-          <p className="text-[10px] leading-relaxed text-slate-400 select-text font-normal">
+          <p className="text-[10px] leading-relaxed text-slate-500 select-text font-normal">
             {feature.feature_description}
           </p>
         </div>
@@ -548,8 +548,8 @@ function FeatureUIProgressCard({ feature, onToggle, onChangeCategory, onRational
             value={feature.category}
             onChange={(e) => onChangeCategory(feature.id, e.target.value as any)}
             disabled={!isInc}
-            className={`bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-[9px] font-bold font-jetbrains text-[#C9A84C] outline-none transition-all cursor-pointer ${
-              !isInc ? 'opacity-30 pointer-events-none text-slate-600' : 'hover:border-slate-700'
+            className={`bg-white border border-slate-200 rounded px-1.5 py-0.5 text-[9px] font-bold font-jetbrains text-[#2563eb] outline-none transition-all cursor-pointer ${
+              !isInc ? 'opacity-30 pointer-events-none text-slate-600' : 'hover:border-slate-300'
             }`}
           >
             <option value="must_have">Must</option>
@@ -561,13 +561,13 @@ function FeatureUIProgressCard({ feature, onToggle, onChangeCategory, onRational
 
       {/* Embedded rationale comment to add richness */}
       {isInc && (
-        <div className="mt-3.5 pt-3 border-t border-slate-850">
+        <div className="mt-3.5 pt-3 border-t border-slate-200">
           <input
             type="text"
             value={feature.student_rationale || ''}
             onChange={(e) => onRationaleChange(feature.id, e.target.value)}
             placeholder="Add comments / note rationale..."
-            className="w-full bg-slate-950/60 text-[10px] text-slate-350 placeholder:text-slate-650 px-2.5 py-1.5 rounded-lg border border-slate-850 focus:border-[#C9A84C]/40 outline-none transition-all"
+            className="w-full bg-white/65 text-[10px] text-slate-650 placeholder:text-slate-650 px-2.5 py-1.5 rounded-lg border border-slate-200 focus:border-[#2563eb]/40 outline-none transition-all"
           />
         </div>
       )}

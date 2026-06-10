@@ -87,12 +87,12 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
   }, []);
 
   return (
-    <div className="w-full mb-10 p-4 sm:p-5 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md select-none">
+    <div className="w-full mb-10 p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 backdrop-blur-md select-none">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center justify-between w-full sm:w-auto">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#C9A84C]" />
-            <span className="text-xs font-black font-jetbrains text-[#C9A84C] tracking-widest uppercase">
+            <Sparkles className="w-4 h-4 text-[#2563eb]" />
+            <span className="text-xs font-black font-jetbrains text-[#2563eb] tracking-widest uppercase">
               Phase 2 Creator Platform
             </span>
           </div>
@@ -101,14 +101,14 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
         <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
           <button
             onClick={() => navigateTo('/dashboard')}
-            className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black font-jetbrains text-slate-300 hover:text-white bg-slate-950 border border-slate-800 hover:border-slate-750 rounded-xl shadow-lg transition-all uppercase tracking-wider cursor-pointer hover:shadow-[#C9A84C]/5 group"
+            className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black font-jetbrains text-slate-600 hover:text-white bg-white border border-slate-200 hover:border-slate-200 rounded-xl shadow-lg transition-all uppercase tracking-wider cursor-pointer hover:shadow-[#2563eb]/5 group"
           >
-            <ArrowLeft className="w-3.5 h-3.5 text-[#C9A84C] group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft className="w-3.5 h-3.5 text-[#2563eb] group-hover:-translate-x-0.5 transition-transform" />
             Exit to Dashboard
           </button>
           
-          <div className="flex items-center gap-1.5 text-[10px] font-bold font-jetbrains text-slate-400 border-l border-slate-800 pl-4">
-            <span className="text-[#C9A84C]">Step {activeStep} of 10</span>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold font-jetbrains text-slate-500 border-l border-slate-200 pl-4">
+            <span className="text-[#2563eb]">Step {activeStep} of 10</span>
             <span>•</span>
             <span className="uppercase">{STEP_LABELS[activeStep - 1]?.label}</span>
           </div>
@@ -123,7 +123,7 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
         
         {/* Fill line up to maximum unlocked */}
         <div 
-          className="absolute top-[18px] left-[20px] h-0.5 bg-gradient-to-r from-[#C9A84C] to-cyan-500 -z-10 transition-all duration-500 origin-left min-w-[700px]"
+          className="absolute top-[18px] left-[20px] h-0.5 bg-gradient-to-r from-[#2563eb] to-cyan-500 -z-10 transition-all duration-500 origin-left min-w-[700px]"
           style={{ 
             width: `${Math.min(100, Math.max(0, ((maxUnlockedStep - 1) / 9) * 100))}%` 
           }}
@@ -146,12 +146,12 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
                   className={`
                     w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all cursor-pointer shadow-lg
                     ${isActive 
-                      ? 'bg-[#02050e] border-[#C9A84C] text-[#C9A84C] scale-110 shadow-[#C9A84C]/25 ring-4 ring-[#C9A84C]/10' 
+                      ? 'bg-slate-50 border-[#2563eb] text-[#2563eb] scale-110 shadow-[#2563eb]/25 ring-4 ring-[#2563eb]/10' 
                       : isCompleted
-                        ? 'bg-[#C9A84C] border-[#C9A84C] text-slate-950 hover:bg-[#E3C268] hover:border-[#E3C268]'
+                        ? 'bg-[#2563eb] border-[#2563eb] text-slate-950 hover:bg-[#3b82f6] hover:border-[#3b82f6]'
                         : isUnlocked
-                          ? 'bg-slate-950 border-cyan-500/50 text-cyan-400 hover:border-cyan-400'
-                          : 'bg-slate-950 border-slate-800 text-slate-600 cursor-not-allowed'
+                          ? 'bg-white border-cyan-500/50 text-cyan-400 hover:border-cyan-400'
+                          : 'bg-white border-slate-200 text-slate-600 cursor-not-allowed'
                     }
                   `}
                 >
@@ -168,9 +168,9 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
                 <span className={`
                   mt-2 text-[10px] font-bold font-jetbrains tracking-tight uppercase whitespace-nowrap transition-colors
                   ${isActive 
-                    ? 'text-[#C9A84C]' 
+                    ? 'text-[#2563eb]' 
                     : isCompleted
-                      ? 'text-slate-300 hover:text-white'
+                      ? 'text-slate-600 hover:text-white'
                       : isUnlocked
                         ? 'text-cyan-400/80 hover:text-cyan-300'
                         : 'text-slate-600'

@@ -164,17 +164,17 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#02050e] flex flex-col justify-center items-center font-sans text-white">
-        <Trophy className="w-12 h-12 text-[#C9A84C] animate-bounce mb-4" />
-        <p className="text-[#C9A84C] font-jetbrains text-xs tracking-widest font-bold">PREPARING CREDENTIAL MEMORANDUM...</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center font-sans text-white">
+        <Trophy className="w-12 h-12 text-[#2563eb] animate-bounce mb-4" />
+        <p className="text-[#2563eb] font-jetbrains text-xs tracking-widest font-bold">PREPARING CREDENTIAL MEMORANDUM...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#02050e] text-white selection:bg-[#C9A84C]/25 pb-24 relative overflow-hidden font-dmsans flex flex-col justify-center">
+    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-[#2563eb]/25 pb-24 relative overflow-hidden font-dmsans flex flex-col justify-center">
       {/* Immersive radial glows */}
-      <div className="absolute top-[-20%] left-[-25%] w-[800px] h-[800px] rounded-full bg-[#C9A84C]/5 blur-[200px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-25%] w-[800px] h-[800px] rounded-full bg-[#2563eb]/5 blur-[200px] pointer-events-none" />
       <div className="absolute bottom-[-15%] right-[-20%] w-[700px] h-[700px] rounded-full bg-cyan-500/5 blur-[180px] pointer-events-none" />
 
       <div className="w-full max-w-4xl mx-auto px-6 py-12 flex flex-col items-center">
@@ -196,16 +196,16 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
             initial={{ scale: 0, rotate: -25 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 120, damping: 10, delay: 0.2 }}
-            className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#C9A84C]/20 to-amber-500/5 border border-[#C9A84C]/35 flex items-center justify-center shadow-xl shadow-[#C9A84C]/10 mx-auto"
+            className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#2563eb]/20 to-amber-500/5 border border-[#2563eb]/35 flex items-center justify-center shadow-xl shadow-[#2563eb]/10 mx-auto"
           >
-            <Trophy className="w-12 h-12 text-[#C9A84C]" />
+            <Trophy className="w-12 h-12 text-[#2563eb]" />
           </motion.div>
 
           <div className="space-y-2">
-            <h1 className="font-bebas text-6xl md:text-8xl tracking-widest text-[#C9A84C] leading-none select-none">
+            <h1 className="font-bebas text-6xl md:text-8xl tracking-widest text-[#2563eb] leading-none select-none">
               YOUR MVP IS READY
             </h1>
-            <p className="text-slate-350 text-sm md:text-base font-medium font-sans">
+            <p className="text-slate-650 text-sm md:text-base font-medium font-sans">
               You have completed Phase 2 — Product Creation. It's time to celebrate!
             </p>
           </div>
@@ -230,12 +230,12 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.3 + (item.delayCount * 0.08) }}
-                className="p-4 rounded-2xl bg-slate-950/70 border border-slate-900 flex items-center gap-2.5 transition-all hover:border-slate-800 shadow-md select-none group"
+                className="p-4 rounded-2xl bg-white/70 border border-slate-200 flex items-center gap-2.5 transition-all hover:border-slate-200 shadow-md select-none group"
               >
                 <div className="w-5 h-5 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
                 </div>
-                <span className="text-xs font-semibold text-slate-300 font-sans tracking-wide truncate">
+                <span className="text-xs font-semibold text-slate-600 font-sans tracking-wide truncate">
                   {item.label}
                 </span>
               </motion.div>
@@ -254,7 +254,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             READY FOR QA
           </div>
-          <p className="text-slate-400 text-xs font-medium font-sans">
+          <p className="text-slate-500 text-xs font-medium font-sans">
             Your project is logged and ready for the next phase.
           </p>
         </motion.div>
@@ -269,7 +269,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
           {/* Button 1: Gold Primary */}
           <button
             onClick={handleContinue}
-            className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#C9A84C] to-[#E3C268] hover:from-[#E3C268] hover:to-[#C9A84C] text-black font-extrabold tracking-widest text-xs uppercase px-8 py-4 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/5 hover:shadow-[#C9A84C]/15 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-widest text-xs uppercase px-8 py-4 rounded-xl transition-all shadow-xl shadow-[#2563eb]/5 hover:shadow-[#2563eb]/15 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           >
             Continue — Phase 3: Testing & Validation <ArrowRight className="w-4 h-4 ml-2.5" />
           </button>
@@ -277,7 +277,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
           {/* Button 2: Dark Outline */}
           <button
             onClick={() => setShowProjectModal(true)}
-            className="w-full backdrop-blur-sm bg-slate-950/50 border border-slate-850 hover:border-slate-750 text-slate-300 font-extrabold text-xs font-jetbrains tracking-widest uppercase py-4 rounded-xl transition-all hover:bg-slate-900 text-center cursor-pointer flex items-center justify-center gap-2"
+            className="w-full backdrop-blur-sm bg-white/50 border border-slate-200 hover:border-slate-200 text-slate-600 font-extrabold text-xs font-jetbrains tracking-widest uppercase py-4 rounded-xl transition-all hover:bg-white text-center cursor-pointer flex items-center justify-center gap-2"
           >
             <Eye className="w-4 h-4" /> View My Full Project
           </button>
@@ -285,7 +285,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
           {/* Button 3: Ghost Text */}
           <button
             onClick={handleShare}
-            className="w-full flex items-center justify-center gap-2 text-slate-500 hover:text-[#C9A84C] text-xs font-bold uppercase tracking-widest transition-colors py-3 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 text-slate-500 hover:text-[#2563eb] text-xs font-bold uppercase tracking-widest transition-colors py-3 cursor-pointer"
           >
             {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
             {copiedLink ? 'Link Copied!' : 'Share My Project'}
@@ -307,12 +307,12 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="bg-slate-950 border border-slate-850 rounded-[2.5rem] w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+              className="bg-white border border-slate-200 rounded-[2.5rem] w-full max-w-5xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
             >
               {/* Modal Headline */}
-              <div className="flex items-center justify-between p-6 md:p-8 border-b border-slate-900 shrink-0">
+              <div className="flex items-center justify-between p-6 md:p-8 border-b border-slate-200 shrink-0">
                 <div className="flex items-center gap-3">
-                  <Trophy className="w-6 h-6 text-[#C9A84C]" />
+                  <Trophy className="w-6 h-6 text-[#2563eb]" />
                   <div>
                     <h3 className="font-bebas text-2xl tracking-wider text-white">
                       FULL ARCHIVAL DOCUMENT KIT
@@ -324,7 +324,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 </div>
                 <button
                   onClick={() => setShowProjectModal(false)}
-                  className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+                  className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-white hover:border-slate-300 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -335,41 +335,41 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 
                 {/* 1. Blueprint Overview */}
                 <div className="space-y-4">
-                  <h4 className="font-bebas text-xl tracking-widest text-[#C9A84C] flex items-center gap-2">
+                  <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
                     <FileText className="w-5 h-5" /> 1. Project Blueprint
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-900 space-y-1">
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1">
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Project Name</span>
                       <p className="text-sm font-bold text-white">{projectData.blueprint?.project_name}</p>
                     </div>
-                    <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-900 space-y-1">
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1">
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Target Audience</span>
-                      <p className="text-sm text-slate-350">{projectData.blueprint?.target_users}</p>
+                      <p className="text-sm text-slate-650">{projectData.blueprint?.target_users}</p>
                     </div>
-                    <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-900 space-y-1 md:col-span-2">
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1 md:col-span-2">
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Problem Statement</span>
-                      <p className="text-sm text-slate-350 leading-relaxed font-normal">{projectData.blueprint?.problem_statement}</p>
+                      <p className="text-sm text-slate-650 leading-relaxed font-normal">{projectData.blueprint?.problem_statement}</p>
                     </div>
-                    <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-900 space-y-1 md:col-span-2">
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1 md:col-span-2">
                       <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">MVP Definition</span>
-                      <p className="text-sm text-slate-350 leading-relaxed font-normal">{projectData.blueprint?.mvp_scope}</p>
+                      <p className="text-sm text-slate-650 leading-relaxed font-normal">{projectData.blueprint?.mvp_scope}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 2. Feature Stack */}
-                <div className="space-y-4 border-t border-slate-900 pt-8">
-                  <h4 className="font-bebas text-xl tracking-widest text-[#C9A84C] flex items-center gap-2">
+                <div className="space-y-4 border-t border-slate-200 pt-8">
+                  <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
                     <ListTodo className="w-5 h-5" /> 2. Feature Requirements List
                   </h4>
                   <div className="space-y-3">
                     {projectData.features.map((feat) => (
-                      <div key={feat.id} className="p-4 rounded-xl bg-slate-900/40 border border-slate-900 flex items-start gap-3">
-                        <CheckCircle2 className="w-4 h-4 text-[#C9A84C] shrink-0 mt-0.5" />
+                      <div key={feat.id} className="p-4 rounded-xl bg-slate-50/40 border border-slate-200 flex items-start gap-3">
+                        <CheckCircle2 className="w-4 h-4 text-[#2563eb] shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs font-bold text-white">{feat.feature_name}</p>
-                          <p className="text-xs text-slate-400 mt-0.5 leading-relaxed font-normal">{feat.feature_description}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 leading-relaxed font-normal">{feat.feature_description}</p>
                           {feat.student_rationale && (
                             <div className="mt-2 text-[11px] font-sans text-amber-500/90 italic">
                               Rationale: "{feat.student_rationale}"
@@ -383,27 +383,27 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
 
                 {/* 3. User Flow */}
                 {projectData.journey && (
-                  <div className="space-y-4 border-t border-slate-900 pt-8">
-                    <h4 className="font-bebas text-xl tracking-widest text-[#C9A84C] flex items-center gap-2">
+                  <div className="space-y-4 border-t border-slate-200 pt-8">
+                    <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
                       <Compass className="w-5 h-5" /> 3. User Journey Map
                     </h4>
-                    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-900 space-y-6">
+                    <div className="p-6 rounded-2xl bg-white border border-slate-200 space-y-6">
                       <div className="space-y-1">
-                        <span className="text-[9px] font-black text-[#C9A84C] uppercase tracking-widest">End User Objective</span>
-                        <p className="text-sm text-white font-bold">{projectData.journey.user_goal}</p>
+                        <span className="text-[9px] font-black text-[#2563eb] uppercase tracking-widest">End User Objective</span>
+                        <p className="text-sm text-slate-800 font-bold">{projectData.journey.user_goal}</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-900">
+                        <div className="p-4 rounded-xl bg-white/65 border border-slate-200">
                           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Step 1: Start</span>
-                          <p className="text-xs text-slate-350">{projectData.journey.start_step}</p>
+                          <p className="text-xs text-slate-650">{projectData.journey.start_step}</p>
                         </div>
-                        <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-900">
+                        <div className="p-4 rounded-xl bg-white/65 border border-slate-200">
                           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Step 2: Experience</span>
-                          <p className="text-xs text-slate-350">{projectData.journey.middle_step}</p>
+                          <p className="text-xs text-slate-650">{projectData.journey.middle_step}</p>
                         </div>
-                        <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-900">
+                        <div className="p-4 rounded-xl bg-white/65 border border-slate-200">
                           <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Step 3: Outcome</span>
-                          <p className="text-xs text-slate-350">{projectData.journey.final_step}</p>
+                          <p className="text-xs text-slate-650">{projectData.journey.final_step}</p>
                         </div>
                       </div>
                     </div>
@@ -411,18 +411,18 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 )}
 
                 {/* 4. Product Screens */}
-                <div className="space-y-4 border-t border-slate-900 pt-8">
-                  <h4 className="font-bebas text-xl tracking-widest text-[#C9A84C] flex items-center gap-2">
+                <div className="space-y-4 border-t border-slate-200 pt-8">
+                  <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
                     <Monitor className="w-5 h-5" /> 4. High-Fidelity Screens
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {projectData.screens.map((scr) => (
-                      <div key={scr.id} className="p-5 rounded-2xl bg-slate-900/60 border border-slate-900 space-y-1">
+                      <div key={scr.id} className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1">
                         <div className="flex justify-between items-center">
                           <p className="text-xs font-bold text-white mb-1">{scr.screen_name}</p>
-                          <span className="text-[8px] font-bold px-2 py-0.5 bg-slate-950 border border-slate-800 text-[#C9A84C] rounded-full uppercase">{scr.layout_type}</span>
+                          <span className="text-[8px] font-bold px-2 py-0.5 bg-white border border-slate-200 text-[#2563eb] rounded-full uppercase">{scr.layout_type}</span>
                         </div>
-                        <p className="text-xs text-slate-400 font-normal leading-relaxed">{scr.screen_description}</p>
+                        <p className="text-xs text-slate-500 font-normal leading-relaxed">{scr.screen_description}</p>
                       </div>
                     ))}
                   </div>
@@ -430,11 +430,11 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
 
                 {/* 5. Working MVP iframe Preview */}
                 {projectData.mvp?.mvp_html && (
-                  <div className="space-y-4 border-t border-slate-900 pt-8">
-                    <h4 className="font-bebas text-xl tracking-widest text-[#C9A84C] flex items-center gap-2">
+                  <div className="space-y-4 border-t border-slate-200 pt-8">
+                    <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
                       <FileCode2 className="w-5 h-5" /> 5. Sandboxed Interactive Prototype
                     </h4>
-                    <div className="h-[450px] bg-white rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+                    <div className="h-[450px] bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-2xl">
                       <iframe
                         title="MVP Interactive Prototype Preview Modal"
                         sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
@@ -443,9 +443,9 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                       />
                     </div>
                     {projectData.mvp.architecture_explanation && (
-                      <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-900 space-y-4">
+                      <div className="p-5 rounded-2xl bg-slate-50/40 border border-slate-200 space-y-4">
                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block border-b border-slate-950 pb-2">Architecture Spec Summary:</span>
-                        <p className="text-xs text-slate-350 leading-relaxed font-normal whitespace-pre-wrap select-text pl-1">{projectData.mvp.architecture_explanation}</p>
+                        <p className="text-xs text-slate-650 leading-relaxed font-normal whitespace-pre-wrap select-text pl-1">{projectData.mvp.architecture_explanation}</p>
                       </div>
                     )}
                   </div>
@@ -453,11 +453,11 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
 
                 {/* 6. Product Description */}
                 {projectData.mvp?.product_description && (
-                  <div className="space-y-4 border-t border-slate-900 pt-8">
-                    <h4 className="font-bebas text-xl tracking-widest text-[#C9A84C] flex items-center gap-2">
+                  <div className="space-y-4 border-t border-slate-200 pt-8">
+                    <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
                       <FileText className="w-5 h-5" /> 6. Launch pitch & Description
                     </h4>
-                    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-900 font-sans text-sm text-slate-300 leading-relaxed font-normal whitespace-pre-wrap pl-1 bg-[#02050e]/50">
+                    <div className="p-6 rounded-2xl bg-white border border-slate-200 font-sans text-sm text-slate-600 leading-relaxed font-normal whitespace-pre-wrap pl-1 bg-white/50">
                       {projectData.mvp.product_description}
                     </div>
                   </div>
@@ -465,11 +465,11 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
 
                 {/* 7. Practice Script */}
                 {projectData.mvp?.demo_script && (
-                  <div className="space-y-4 border-t border-slate-900 pt-8">
-                    <h4 className="font-bebas text-xl tracking-widest text-[#C9A84C] flex items-center gap-2">
+                  <div className="space-y-4 border-t border-slate-200 pt-8">
+                    <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
                       <HelpCircle className="w-5 h-5" /> 7. Demo script & Presentation
                     </h4>
-                    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-900 space-y-2 select-text font-normal font-sans leading-relaxed text-sm text-slate-300 bg-[#02050e]/50 whitespace-pre-wrap">
+                    <div className="p-6 rounded-2xl bg-white border border-slate-200 space-y-2 select-text font-normal font-sans leading-relaxed text-sm text-slate-600 bg-white/50 whitespace-pre-wrap">
                       {projectData.mvp.demo_script}
                     </div>
                   </div>
@@ -477,11 +477,11 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
 
                 {/* 8. Builder reflection */}
                 {projectData.mvp?.builder_reflection && (
-                  <div className="space-y-4 border-t border-slate-900 pt-8">
-                    <h4 className="font-bebas text-xl tracking-widest text-[#C9A84C] flex items-center gap-2">
+                  <div className="space-y-4 border-t border-slate-200 pt-8">
+                    <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
                       <Users className="w-5 h-5" /> 8. Builder Key Lessons Learned
                     </h4>
-                    <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-900 font-sans italic text-sm text-slate-300 leading-relaxed bg-[#02050e]/50 whitespace-pre-wrap pl-1 font-normal">
+                    <div className="p-6 rounded-2xl bg-white border border-slate-200 font-sans italic text-sm text-slate-600 leading-relaxed bg-white/50 whitespace-pre-wrap pl-1 font-normal">
                       "{projectData.mvp.builder_reflection}"
                     </div>
                   </div>
@@ -490,10 +490,10 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
               </div>
 
               {/* Sticky Footer */}
-              <div className="p-6 border-t border-slate-900 bg-slate-950 flex justify-end shrink-0 select-none">
+              <div className="p-6 border-t border-slate-200 bg-white flex justify-end shrink-0 select-none">
                 <button
                   onClick={() => setShowProjectModal(false)}
-                  className="px-6 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 hover:text-white text-slate-300 text-xs font-bold font-jetbrains tracking-widest uppercase rounded-xl transition-all cursor-pointer"
+                  className="px-6 py-2.5 bg-white border border-slate-200 hover:border-slate-300 hover:text-white text-slate-600 text-xs font-bold font-jetbrains tracking-widest uppercase rounded-xl transition-all cursor-pointer"
                 >
                   Close Document preview
                 </button>

@@ -30,7 +30,7 @@ const OnboardingSuccessToast = ({ t, onRedirect }: { t: any; onRedirect: () => v
       className={`${
         t.visible ? "animate-enter opacity-100 translate-y-0" : "animate-leave opacity-0 -translate-y-4"
       } max-w-md w-full bg-white border border-slate-200/80 shadow-2xl rounded-2xl pointer-events-auto flex flex-col p-5 font-sans text-left relative overflow-hidden transition-all duration-300`}
-      style={{ borderLeft: "4px solid #C9A84C" }}
+      style={{ borderLeft: "4px solid #2563eb" }}
     >
       <div className="flex items-start gap-4">
         {/* Emerald green success indicator icon, polished/consistent with the contact form submission page */}

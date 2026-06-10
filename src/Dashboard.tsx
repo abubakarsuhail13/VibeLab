@@ -561,7 +561,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
           </div>
         </div>
 
-        <nav className="space-y-2 flex-1 overflow-y-auto">
+        <nav className="space-y-2 flex-1 overflow-y-auto custom-scrollbar">
           {user?.role === "teacher" ? (
             <>
               <button 
@@ -707,7 +707,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                       {user?.ideation_completed ? (
                         <BookOpen className="w-5 h-5 shrink-0 text-emerald-500" />
                       ) : (
-                        <BrainCircuit className="w-5 h-5 shrink-0 text-[#C9A84C]" />
+                        <BrainCircuit className="w-5 h-5 shrink-0 text-cyan-600" />
                       )}
                       <span className="truncate">Phase 1 — Discovery & Ideation</span>
                     </div>
@@ -750,8 +750,8 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                         </div>
                         {displayStatus === 'completed' && (
                           <div className="flex items-center gap-1 shrink-0">
-                            <span className="text-[10px] text-[#C9A84C] font-black uppercase tracking-wider">Completed ✓</span>
-                            <ShieldCheck className="w-4 h-4 text-[#C9A84C]" />
+                            <span className="text-[10px] text-emerald-500 font-black uppercase tracking-wider">Completed ✓</span>
+                            <ShieldCheck className="w-4 h-4 text-emerald-500" />
                           </div>
                         )}
                       </button>
@@ -2004,8 +2004,8 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                                 </div>
 
                                 {bp.mvp_note && (
-                                  <div className="bg-[#C9A84C]/5 border-l-4 border-amber-500 p-5 rounded-r-2xl">
-                                    <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">Guiding Scope Reduction Advice</p>
+                                  <div className="bg-blue-50/50 border-l-4 border-blue-500 p-5 rounded-r-2xl">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-1">Guiding Scope Reduction Advice</p>
                                     <p className="text-slate-700 font-medium leading-relaxed">{bp.mvp_note}</p>
                                   </div>
                                 )}
@@ -2115,20 +2115,20 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                 exit={{ opacity: 0 }}
               >
                 {(selectedPhaseId !== 1 && selectedPhaseId !== null) && (user?.ideation_completed === false || user?.ideation_completed === undefined) ? (
-                  <div className="relative bg-[#02050e] border border-[#C9A84C]/20 rounded-[2.5rem] p-12 text-center text-white shadow-2xl overflow-hidden min-h-[500px] flex flex-col justify-center items-center font-dmsans">
+                  <div className="relative bg-white border border-slate-200 rounded-[2.5rem] p-12 text-center text-slate-800 shadow-xl overflow-hidden min-h-[500px] flex flex-col justify-center items-center font-dmsans">
                     {/* Decorative premium lighting glows */}
-                    <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-bl from-[#C9A84C]/5 to-transparent blur-[120px] pointer-events-none" />
+                    <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-bl from-blue-500/5 to-transparent blur-[120px] pointer-events-none" />
                     
                     <div className="relative space-y-6 max-w-lg mx-auto">
-                      <div className="inline-flex p-4 rounded-full border border-[#C9A84C]/20 bg-[#C9A84C]/5 mb-2 hover:scale-105 transition-transform">
-                        <Lock className="w-10 h-10 text-[#C9A84C]" />
+                      <div className="inline-flex p-4 rounded-full border border-blue-200 bg-blue-50/50 mb-2 hover:scale-105 transition-transform">
+                        <Lock className="w-10 h-10 text-blue-600" />
                       </div>
                       
-                      <h2 className="font-bebas text-3xl sm:text-5xl text-white tracking-widest leading-none">
+                      <h2 className="font-bebas text-3xl sm:text-5xl text-slate-900 tracking-widest leading-none">
                         Complete Phase 1 Ideation first
                       </h2>
                       
-                      <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                      <p className="text-slate-500 text-sm leading-relaxed font-medium">
                         Discover your project idea in Phase 1 before you start coding in Phase 2
                       </p>
                       
@@ -2141,7 +2141,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                               window.location.href = '/ideation';
                             }
                           }}
-                          className="w-full sm:w-auto inline-flex items-center justify-center bg-[#C9A84C] hover:bg-[#D9B95C] text-black font-extrabold text-sm px-8 py-4 rounded-xl transition-all shadow-xl shadow-[#C9A84C]/15 active:scale-[0.98] cursor-pointer"
+                          className="w-full sm:w-auto inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm px-8 py-4 rounded-xl transition-all shadow-xl shadow-blue-500/15 active:scale-[0.98] cursor-pointer"
                         >
                           Go to Phase 1 Ideation →
                         </button>
