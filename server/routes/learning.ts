@@ -330,27 +330,28 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
 
     let rows: any = [];
     if (Number(id) === actualPhase2Id) {
-      const [sessions]: any = await p.execute(
-        'SELECT id FROM product_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1',
-        [req.user.userId]
-      );
-      if (sessions && sessions.length > 0) {
-        const sessionId = sessions[0].id;
-        const [existing]: any = await p.execute(
-          'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
-          [actualPhase2Id, sessionId]
+      try {
+        const [sessions]: any = await p.execute(
+          'SELECT id FROM product_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+          [req.user.userId]
         );
-        if (existing && existing.length > 0) {
-          rows = existing;
-        } else {
-          // Auto generate if none exist yet
-          const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [sessionId]);
-          if (bpRows && bpRows.length > 0) {
-            const bp = bpRows[0];
-            const [features]: any = await p.execute('SELECT * FROM product_features WHERE session_id = ?', [sessionId]);
-            const featuresList = features.map((f: any) => `- ${f.feature_name}: ${f.feature_description} [${f.category}]`).join('\n');
+        if (sessions && sessions.length > 0) {
+          const sessionId = sessions[0].id;
+          const [existing]: any = await p.execute(
+            'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
+            [actualPhase2Id, sessionId]
+          );
+          if (existing && existing.length > 0) {
+            rows = existing;
+          } else {
+            // Auto generate if none exist yet
+            const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [sessionId]);
+            if (bpRows && bpRows.length > 0) {
+              const bp = bpRows[0];
+              const [features]: any = await p.execute('SELECT * FROM product_features WHERE session_id = ?', [sessionId]);
+              const featuresList = features.map((f: any) => `- ${f.feature_name}: ${f.feature_description} [${f.category}]`).join('\n');
 
-            const prompt = `
+              const prompt = `
 Generate 10 multiple choice quiz questions for a Grade 9-12 student
 who just built the following product:
 
@@ -377,35 +378,39 @@ Please output as a valid JSON array of objects with this exact structure:
 Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
 `;
 
-            const geminiRes = await getGeminiClient().models.generateContent({
-              model: "gemini-3.5-flash",
-              contents: prompt,
-              config: {
-                responseMimeType: "application/json"
-               }
-            });
+              const geminiRes = await getGeminiClient().models.generateContent({
+                model: "gemini-3.5-flash",
+                contents: prompt,
+                config: {
+                  responseMimeType: "application/json"
+                 }
+              });
 
-            const clean = parseGeminiResponse(geminiRes);
-            const parsedQuestions = JSON.parse(clean);
+              const clean = parseGeminiResponse(geminiRes);
+              const parsedQuestions = JSON.parse(clean);
 
-            if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
-              const generatedList: any[] = [];
-              for (const q of parsedQuestions) {
-                const [insertRes]: any = await p.execute(
-                  `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
-                   VALUES (?, ?, ?, ?, ?, ?)`,
-                  [actualPhase2Id, sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
-                );
-                generatedList.push({
-                  id: insertRes.insertId,
-                  question: q.question,
-                  options: q.options
-                });
+              if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+                const generatedList: any[] = [];
+                for (const q of parsedQuestions) {
+                  const [insertRes]: any = await p.execute(
+                    `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [actualPhase2Id, sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
+                  );
+                  generatedList.push({
+                    id: insertRes.insertId,
+                    question: q.question,
+                    options: q.options
+                  });
+                }
+                rows = generatedList;
               }
-              rows = generatedList;
             }
           }
         }
+      } catch (dynamicError: any) {
+        console.warn('Failed to dynamically generate phase 2 customized quiz, using static questions fallback:', dynamicError);
+        rows = [];
       }
     }
 

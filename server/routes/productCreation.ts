@@ -107,16 +107,35 @@ router.post('/start', authenticateToken, async (req: any, res) => {
       Return ONLY a valid JSON object matching the schema, with no markdown formatting and no preamble.
     `;
 
-    const geminiRes = await getGeminiClient().models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json"
-      }
-    });
+    let blueprintObj = {
+      project_name: pb.product_name || 'Autonomous App',
+      problem_statement: pb.problem_statement || 'A painful manual challenge requiring automation.',
+      target_users: pb.target_user_persona || 'Students and professionals looking to optimize their workflow.',
+      mvp_scope: pb.mvp_definition || 'A lightweight, high-productivity tool targeting core functional outputs.'
+    };
 
-    const clean = parseGeminiResponse(geminiRes);
-    const blueprintObj = JSON.parse(clean);
+    try {
+      const geminiRes = await getGeminiClient().models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const clean = parseGeminiResponse(geminiRes);
+      const parsed = JSON.parse(clean);
+      if (parsed && parsed.project_name) {
+        blueprintObj = {
+          project_name: parsed.project_name || blueprintObj.project_name,
+          problem_statement: parsed.problem_statement || blueprintObj.problem_statement,
+          target_users: parsed.target_users || blueprintObj.target_users,
+          mvp_scope: parsed.mvp_scope || blueprintObj.mvp_scope
+        };
+      }
+    } catch (geminiError) {
+      console.warn('Failed to pre-generate blueprint via Gemini, falling back to smart defaults:', geminiError);
+    }
 
     // Save pre-generated blueprint to product_blueprints
     await p.execute(
@@ -246,16 +265,53 @@ router.post('/blueprint/approve', authenticateToken, async (req: any, res) => {
       ]
     `;
 
-    const geminiRes = await getGeminiClient().models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json"
-      }
-    });
+    let suggestedFeatures = [];
+    try {
+      const geminiRes = await getGeminiClient().models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
 
-    const clean = parseGeminiResponse(geminiRes);
-    const suggestedFeatures = JSON.parse(clean);
+      const clean = parseGeminiResponse(geminiRes);
+      suggestedFeatures = JSON.parse(clean);
+    } catch (geminiError: any) {
+      console.warn('Failed to generate product features via Gemini, falling back to smart defaults:', geminiError.message || geminiError);
+      suggestedFeatures = [
+        {
+          "feature_name": "User Authentication & Access Profiles",
+          "feature_description": "Secure sign-up, registration, and onboarding flows personalized for " + target_users + ".",
+          "category": "must_have"
+        },
+        {
+          "feature_name": `${project_name} Centralized Dashboard`,
+          "feature_description": "The primary dashboard layout showing relevant summaries, visual lists, and key items.",
+          "category": "must_have"
+        },
+        {
+          "feature_name": "Interactive Solver Engine",
+          "feature_description": "Core interface mechanism allowing users to perform actions directly solving the main problem: " + problem_statement + ".",
+          "category": "must_have"
+        },
+        {
+          "feature_name": "Custom Data Export & History",
+          "feature_description": "Enables saving outputs, downloading generated files, and reviewing historical logs.",
+          "category": "nice_to_have"
+        },
+        {
+          "feature_name": "Notifications & Reminders Engine",
+          "feature_description": "Sends smart notifications to target users based on their active items and status.",
+          "category": "nice_to_have"
+        },
+        {
+          "feature_name": "AI Predictive Insights Integration",
+          "feature_description": "Synthesizes data inputs to make long-term future predictions and smart actionable suggestions.",
+          "category": "future"
+        }
+      ];
+    }
 
     // Save suggested features to product_features
     for (const f of suggestedFeatures) {
