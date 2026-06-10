@@ -378,7 +378,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   placeholder="e.g. FitTrack Elite"
-                  className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-[#2563eb] text-sm text-white px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans shadow-inner"
+                  className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-[#2563eb] text-sm text-slate-800 px-5 py-4 rounded-xl outline-none transition-all placeholder:text-slate-600 font-medium font-sans shadow-inner"
                 />
               </div>
 

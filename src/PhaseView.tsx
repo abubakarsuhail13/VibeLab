@@ -967,15 +967,15 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     <Sparkles className="w-6 h-6 animate-pulse" />
                   </div>
                   <div>
-                    <h4 className="text-slate-800 font-bold leading-none mb-1 text-base">Build Your Custom Startup MVP</h4>
-                    <p className="text-slate-500 text-xs font-medium leading-relaxed">
+                    <h4 className="text-white font-bold leading-none mb-1 text-base">Build Your Custom Startup MVP</h4>
+                    <p className="text-indigo-100/80 text-xs font-medium leading-relaxed">
                       Transform the custom product concept and idea you co-created in Phase 1 into a fully-functional MVP with our interactive 10-step builder wizard!
                     </p>
                   </div>
                 </div>
                 <button 
                   onClick={() => navigate('/phase/2')}
-                  className="px-5 py-2.5 bg-[#2563eb] text-slate-950 hover:bg-[#b0903c] rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
                 >
                   Launch Custom Builder <ChevronRight className="w-3.5 h-3.5" />
                 </button>

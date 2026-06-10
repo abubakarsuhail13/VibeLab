@@ -998,7 +998,11 @@ export default function Phase2BuildWalkthrough() {
 
                   <div>
                     <h3 className={`text-base font-bold font-sans flex items-center gap-2 ${
-                      isActive ? 'text-[#2563eb]' : 'text-white'
+                      isActive 
+                        ? 'text-[#2563eb]' 
+                        : isCompleted 
+                          ? 'text-slate-800' 
+                          : 'text-slate-400'
                     }`}>
                       {item.label}
                       {isActive && <span className="inline-block px-2 py-0.5 bg-[#2563eb]/10 text-[#2563eb] text-[9px] uppercase tracking-wider font-mono rounded border border-[#2563eb]/20 animate-pulse">Now Active</span>}
@@ -1045,7 +1049,7 @@ export default function Phase2BuildWalkthrough() {
                                 value={projectName}
                                 onChange={(e) => setProjectName(e.target.value)}
                                 placeholder="Enter project name..."
-                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-white px-4 py-3 rounded-xl outline-none transition-colors"
+                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none transition-colors"
                               />
                             </div>
 
@@ -1057,7 +1061,7 @@ export default function Phase2BuildWalkthrough() {
                                 onChange={(e) => setProblemStatement(e.target.value)}
                                 rows={2}
                                 placeholder="Describe the pain point..."
-                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
                               />
                             </div>
 
@@ -1069,7 +1073,7 @@ export default function Phase2BuildWalkthrough() {
                                 onChange={(e) => setTargetUsers(e.target.value)}
                                 rows={2}
                                 placeholder="Who are your primary target users?"
-                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
                               />
                             </div>
 
@@ -1081,7 +1085,7 @@ export default function Phase2BuildWalkthrough() {
                                 onChange={(e) => setMvpScope(e.target.value)}
                                 rows={3}
                                 placeholder="What core features are inside the MVP?"
-                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-white px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
                               />
                             </div>
                           </div>
@@ -1089,7 +1093,7 @@ export default function Phase2BuildWalkthrough() {
                           <button 
                             disabled={isSubmitting}
                             onClick={handleApproveBlueprint}
-                            className="w-full inline-flex items-center justify-center bg-[#2563eb] hover:bg-[#3b82f6] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
+                            className="w-full inline-flex items-center justify-center bg-[#2563eb] hover:bg-blue-700 text-white font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
                           >
                             {isSubmitting ? (
                               <>

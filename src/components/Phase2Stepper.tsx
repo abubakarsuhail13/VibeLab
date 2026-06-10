@@ -101,7 +101,7 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
         <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
           <button
             onClick={() => navigateTo('/dashboard')}
-            className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black font-jetbrains text-slate-600 hover:text-white bg-white border border-slate-200 hover:border-slate-200 rounded-xl shadow-lg transition-all uppercase tracking-wider cursor-pointer hover:shadow-[#2563eb]/5 group"
+            className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black font-jetbrains text-slate-600 hover:text-blue-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all uppercase tracking-wider cursor-pointer group"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-[#2563eb] group-hover:-translate-x-0.5 transition-transform" />
             Exit to Dashboard
@@ -119,7 +119,7 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
       <div className="relative flex items-center justify-between w-full overflow-x-auto pb-2 pt-1 scrollbar-none">
         
         {/* Background connector line */}
-        <div className="absolute top-[18px] left-[20px] right-[20px] h-0.5 bg-slate-800 -z-10 min-w-[700px]" />
+        <div className="absolute top-[18px] left-[20px] right-[20px] h-0.5 bg-slate-200 -z-10 min-w-[700px]" />
         
         {/* Fill line up to maximum unlocked */}
         <div 
@@ -148,10 +148,10 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
                     ${isActive 
                       ? 'bg-slate-50 border-[#2563eb] text-[#2563eb] scale-110 shadow-[#2563eb]/25 ring-4 ring-[#2563eb]/10' 
                       : isCompleted
-                        ? 'bg-[#2563eb] border-[#2563eb] text-slate-950 hover:bg-[#3b82f6] hover:border-[#3b82f6]'
+                        ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700 hover:border-blue-700'
                         : isUnlocked
-                          ? 'bg-white border-cyan-500/50 text-cyan-400 hover:border-cyan-400'
-                          : 'bg-white border-slate-200 text-slate-600 cursor-not-allowed'
+                          ? 'bg-white border-blue-500 text-blue-600 hover:border-blue-600'
+                          : 'bg-white border-slate-200 text-slate-400 cursor-not-allowed'
                     }
                   `}
                 >
@@ -170,10 +170,10 @@ export default function Phase2Stepper({ activeStep, onNavigate }: Phase2StepperP
                   ${isActive 
                     ? 'text-[#2563eb]' 
                     : isCompleted
-                      ? 'text-slate-600 hover:text-white'
+                      ? 'text-slate-600 hover:text-blue-600'
                       : isUnlocked
-                        ? 'text-cyan-400/80 hover:text-cyan-300'
-                        : 'text-slate-600'
+                        ? 'text-slate-700 hover:text-blue-600'
+                        : 'text-slate-400'
                   }
                 `}>
                   {item.label}
