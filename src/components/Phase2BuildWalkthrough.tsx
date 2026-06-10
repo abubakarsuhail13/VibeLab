@@ -33,6 +33,7 @@ import {
   HelpCircle,
   Star
 } from 'lucide-react';
+import { EducationalAiBackground } from "./EducationalAiBackground";
 
 interface BlueprintData {
   id?: number;
@@ -224,7 +225,7 @@ const STEP_MAP_ORDER: Record<string, number> = {
   'approved': 10
 };
 
-export default function Phase2BuildWalkthrough() {
+export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => void }) {
   const [session, setSession] = useState<ProductSession | null>(null);
   const [activeStep, setActiveStep] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -947,89 +948,100 @@ export default function Phase2BuildWalkthrough() {
     );
   }
 
+  const activeItem = STEP_LABELS[activeStep - 1] || STEP_LABELS[0];
+
   return (
-    <div className="w-full relative py-6">
-      <div className="space-y-6">
-        {STEP_LABELS.map((item) => {
-          const isCompleted = item.step < activeStep;
-          const isActive = item.step === activeStep;
-          const isLocked = item.step > activeStep;
+    <div className="fixed inset-0 z-50 bg-[#f8fafc] flex flex-col font-sans overflow-hidden text-slate-800 animate-fade-in">
+      <EducationalAiBackground isDark={false} />
+      
+      {/* Header Bar */}
+      <header className="px-6 py-4 bg-white/75 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between z-30 shrink-0">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => onClose ? onClose() : (window.location.href = '/dashboard')}
+            className="p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer font-bold text-xs uppercase tracking-widest bg-transparent border-none"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Exit</span>
+          </button>
+          <div className="h-5 w-px bg-slate-200" />
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-[#2563eb]">Phase 2 &bull; Product Builder</h2>
+            <p className="text-[10px] text-slate-500 font-bold uppercase">{projectName || 'Your Custom MVP'}</p>
+          </div>
+        </div>
+        
+        <div>
+           <span className="px-3 py-1 bg-[#2563eb]/10 border border-[#2563eb]/20 text-[#2563eb] text-[10px] uppercase font-bold tracking-widest rounded-full">
+             Step {activeStep} of 10 &bull; {Math.round((activeStep / 10) * 100)}% Complete
+           </span>
+        </div>
+      </header>
 
-          return (
-            <div 
-              key={item.step}
-              id={`step-block-${item.step}`}
-              className={`border rounded-[1.8rem] transition-all overflow-hidden bg-white/40 backdrop-blur-md ${
-                isActive 
-                  ? 'border-[#2563eb]/50 shadow-lg shadow-[#2563eb]/5 ring-1 ring-[#2563eb]/10 bg-white/60' 
-                  : isCompleted 
-                    ? 'border-emerald-500/20 bg-slate-100/10' 
-                    : 'border-slate-200 bg-slate-50/20 opacity-60'
-              }`}
-            >
-              {/* Step Title Header Row */}
-              <div 
-                className={`p-6 flex items-center justify-between gap-4 cursor-pointer select-none ${
-                  isLocked ? 'pointer-events-none' : ''
+      {/* Progression Timeline Tracker */}
+      <div className="bg-slate-50/80 backdrop-blur-sm border-b border-slate-200 px-6 py-2 flex items-center shrink-0 overflow-x-auto scrollbar-none z-20">
+        <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
+          {STEP_LABELS.map((stepItem) => {
+            const isStepCompleted = stepItem.step < activeStep;
+            const isStepActive = stepItem.step === activeStep;
+            const isStepLocked = stepItem.step > activeStep;
+            return (
+              <button
+                key={stepItem.step}
+                disabled={isStepLocked}
+                onClick={() => setActiveStep(stepItem.step)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-[11px] font-bold bg-transparent border-none ${
+                  isStepActive 
+                    ? 'bg-[#2563eb] text-white shadow-md' 
+                    : isStepCompleted 
+                      ? 'text-emerald-700 hover:bg-emerald-50 bg-emerald-500/5 cursor-pointer' 
+                      : 'text-slate-400 cursor-not-allowed'
                 }`}
-                onClick={() => {
-                  if (!isLocked) {
-                    setActiveStep(item.step);
-                  }
-                }}
               >
-                <div className="flex items-center gap-4">
-                  {/* Circle Icon Badge */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-slate-300/50 ${
-                    isCompleted 
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-400/30' 
-                      : isActive 
-                        ? 'bg-[#2563eb]/20 text-[#2563eb] border-[#2563eb]/40 ring-4 ring-[#2563eb]/5' 
-                        : 'bg-white text-slate-500 border-slate-200'
-                  }`}>
-                    {isCompleted ? (
-                      <Check className="w-4.5 h-4.5 stroke-[3]" />
-                    ) : isLocked ? (
-                      <Lock className="w-3.5 h-3.5" />
-                    ) : (
-                      <span className="text-xs font-bold font-mono">{item.step}</span>
-                    )}
-                  </div>
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-mono border ${
+                  isStepActive 
+                    ? 'bg-white border-white text-[#2563eb]' 
+                    : isStepCompleted 
+                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700' 
+                      : 'bg-white border-slate-200 text-slate-400'
+                }`}>
+                  {isStepCompleted ? <Check className="w-2.5 h-2.5" /> : stepItem.step}
+                </span>
+                <span className="hidden lg:inline text-[10px] whitespace-nowrap">{stepItem.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-                  <div>
-                    <h3 className={`text-base font-bold font-sans flex items-center gap-2 ${
-                      isActive 
-                        ? 'text-[#2563eb]' 
-                        : isCompleted 
-                          ? 'text-slate-800' 
-                          : 'text-slate-400'
-                    }`}>
-                      {item.label}
-                      {isActive && <span className="inline-block px-2 py-0.5 bg-[#2563eb]/10 text-[#2563eb] text-[9px] uppercase tracking-wider font-mono rounded border border-[#2563eb]/20 animate-pulse">Now Active</span>}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
-                  </div>
-                </div>
+      {/* Scrollable container for the single active step content */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-12 md:py-8 relative z-10 flex flex-col justify-start">
+        <div className="max-w-7xl mx-auto w-full bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 flex-1 flex flex-col overflow-y-auto">
+          <div className="border-b border-slate-100 pb-4 mb-6">
+            <h1 className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#2563eb]/10 border border-[#2563eb]/20 flex items-center justify-center text-[10px] font-mono text-[#2563eb]">
+                {activeStep}
+              </span>
+              {activeItem.label}
+            </h1>
+            <p className="text-[11px] text-slate-500 mt-0.5">{activeItem.desc}</p>
+          </div>
 
-                {/* Right State Indicator Arrow */}
-                <div className="text-slate-500 hover:text-slate-700 transition-colors p-1">
-                  {!isLocked && (
-                    <ChevronRight className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'rotate-90 text-[#2563eb]' : ''}`} />
-                  )}
-                </div>
-              </div>
+          {STEP_LABELS.map((item) => {
+            const isCompleted = item.step < activeStep;
+            const isActive = item.step === activeStep;
+            const isLocked = item.step > activeStep;
 
-              {/* Collapsible Expanded Component Content Section */}
-              <AnimatePresence initial={false}>
-                {isActive && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="border-t border-slate-200/60"
-                  >
-                    <div className="p-6 md:p-8 space-y-6 bg-slate-100/10">
+            if (!isActive) return null;
+
+            return (
+              <div 
+                key={item.step}
+                id={`step-block-${item.step}`}
+                className="flex-1 flex flex-col"
+              >
+                {/* Collapsible Expanded Component Content Section */}
+                <div className="p-6 md:p-8 space-y-6 bg-slate-100/10 rounded-2xl border border-slate-100/50">
 
                       {/**********************************************************
                        * STEP 1: Blueprint Approver View
@@ -1137,7 +1149,7 @@ export default function Phase2BuildWalkthrough() {
                                     }`}
                                   >
                                     <div className="flex items-start justify-between gap-2 mb-2">
-                                      <h5 className="text-xs font-bold text-white shrink">{feat.feature_name}</h5>
+                                      <h5 className="text-xs font-bold text-slate-800 shrink">{feat.feature_name}</h5>
                                       <input 
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
@@ -1184,7 +1196,7 @@ export default function Phase2BuildWalkthrough() {
                                     }`}
                                   >
                                     <div className="flex items-start justify-between gap-2 mb-2">
-                                      <h5 className="text-xs font-bold text-white shrink">{feat.feature_name}</h5>
+                                      <h5 className="text-xs font-bold text-slate-800 shrink">{feat.feature_name}</h5>
                                       <input 
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
@@ -1231,7 +1243,7 @@ export default function Phase2BuildWalkthrough() {
                                     }`}
                                   >
                                     <div className="flex items-start justify-between gap-2 mb-2">
-                                      <h5 className="text-xs font-bold text-white shrink">{feat.feature_name}</h5>
+                                      <h5 className="text-xs font-bold text-slate-800 shrink">{feat.feature_name}</h5>
                                       <input 
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
@@ -1266,7 +1278,7 @@ export default function Phase2BuildWalkthrough() {
 
                           {/* Add Custom Feature Sub-Form */}
                           <form onSubmit={handleAddCustomFeature} className="p-5 border border-slate-200 bg-white/50 rounded-2xl space-y-4">
-                            <h5 className="text-xs font-bold text-white flex items-center gap-2">
+                            <h5 className="text-xs font-bold text-slate-800 flex items-center gap-2">
                               <Plus className="w-4 h-4 text-[#2563eb]" />
                               Add Custom Feature
                             </h5>
@@ -1276,7 +1288,7 @@ export default function Phase2BuildWalkthrough() {
                                 placeholder="Feature Name (e.g., Live Sync)"
                                 value={customFeatureName}
                                 onChange={(e) => setCustomFeatureName(e.target.value)}
-                                className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-white placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
+                                className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-slate-800 placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
                               />
 
                               <select 
@@ -1295,7 +1307,7 @@ export default function Phase2BuildWalkthrough() {
                               value={customFeatureDesc}
                               onChange={(e) => setCustomFeatureDesc(e.target.value)}
                               rows={2}
-                              className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-white placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
+                              className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-slate-800 placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
                             />
 
                             <button 
@@ -1336,7 +1348,7 @@ export default function Phase2BuildWalkthrough() {
                       {item.step === 3 && (
                         <div className="space-y-6">
                           <p className="text-xs text-slate-500">
-                            This is how someone will use <strong className="text-white">{projectName || 'your app'}</strong> from start to finish.
+                            This is how someone will use <strong className="text-slate-800">{projectName || 'your app'}</strong> from start to finish.
                           </p>
 
                           {/* Horizontal Sequence Flow */}
@@ -1349,7 +1361,7 @@ export default function Phase2BuildWalkthrough() {
                                       <div className="w-6 h-6 rounded-full bg-[#2563eb]/10 text-[#2563eb] border border-[#2563eb]/25 text-[10px] font-black font-mono flex items-center justify-center mb-4 leading-none">
                                         {uStep.step_number}
                                       </div>
-                                      <h5 className="text-xs font-bold text-white mb-2">{uStep.title}</h5>
+                                      <h5 className="text-xs font-bold text-slate-800 mb-2">{uStep.title}</h5>
                                       <p className="text-[11px] text-slate-500 leading-relaxed font-sans">{uStep.description}</p>
                                     </div>
                                     <div className="pt-4 flex justify-end">
@@ -1368,7 +1380,7 @@ export default function Phase2BuildWalkthrough() {
                               {/* SUCCESS OR SUCCESSIVE TAG */}
                               <div className="flex-1 min-w-[140px] p-5 rounded-2xl bg-[#2563eb]/5 border border-[#2563eb]/15 flex flex-col items-center justify-center text-center max-w-[200px]">
                                 <Sparkles className="w-8 h-8 text-[#2563eb] mb-2 animate-bounce" />
-                                <span className="text-xs font-bold text-white">End Goal Met!</span>
+                                <span className="text-xs font-bold text-emerald-700">End Goal Met!</span>
                                 <p className="text-[10px] text-slate-500 mt-1 leading-normal">Solve client pain-point</p>
                               </div>
                             </div>
@@ -1417,7 +1429,7 @@ export default function Phase2BuildWalkthrough() {
                               >
                                 {/* Header */}
                                 <div className="p-4 border-b border-slate-200/60 flex items-center justify-between">
-                                  <h4 className="text-xs font-bold text-white truncate">{scr.screen_name}</h4>
+                                  <h4 className="text-xs font-bold text-slate-800 truncate">{scr.screen_name}</h4>
                                   <button 
                                     onClick={() => setSelectedScreen(scr)}
                                     className="p-1 hover:bg-white rounded text-[#2563eb] hover:text-slate-700 transition-colors"
@@ -1469,7 +1481,7 @@ export default function Phase2BuildWalkthrough() {
                               value={changeRequests}
                               onChange={(e) => setChangeRequests(e.target.value)}
                               rows={2.5}
-                              className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-xs text-white px-4 py-3 rounded-xl outline-none"
+                              className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-xs text-slate-800 px-4 py-3 rounded-xl outline-none"
                             />
                             <p className="text-[10px] text-slate-500">Provide adjustments instructions to re-generate modified visual drafts above.</p>
                           </div>
@@ -1528,7 +1540,7 @@ export default function Phase2BuildWalkthrough() {
                                 <div className="text-[10px] font-bold text-[#2563eb] font-mono tracking-widest uppercase mb-1">
                                   YOUR PRODUCT GUIDE
                                 </div>
-                                <h4 className="text-sm font-bold text-white truncate">
+                                <h4 className="text-sm font-bold text-slate-800 truncate">
                                   {projectName || 'My Product'} — How It Works
                                 </h4>
                               </div>
@@ -1547,7 +1559,7 @@ export default function Phase2BuildWalkthrough() {
                                     onClick={() => handleTaskClick(idx)}
                                     className={`w-full text-left p-3 rounded-xl border flex items-start gap-3 transition-colors ${
                                       selectedTaskIdx === idx 
-                                        ? 'bg-[#2563eb]/10 border-[#2563eb]/45 text-white' 
+                                        ? 'bg-[#2563eb]/10 border-[#2563eb]/45 text-[#2563eb] font-bold' 
                                         : 'bg-slate-50/40 border-slate-200 hover:bg-slate-50/85 text-slate-600'
                                     }`}
                                   >
@@ -1608,7 +1620,7 @@ export default function Phase2BuildWalkthrough() {
                                     setCopied(true);
                                     setTimeout(() => setCopied(false), 2000);
                                   }}
-                                  className="text-slate-500 hover:text-white flex items-center gap-1 uppercase transition-colors font-bold"
+                                  className="text-slate-500 hover:text-slate-800 flex items-center gap-1 uppercase transition-colors font-bold"
                                 >
                                   {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                                   Copy
@@ -1618,7 +1630,7 @@ export default function Phase2BuildWalkthrough() {
                                     handleTaskClick(selectedTaskIdx);
                                     toast.success('Template view reset!');
                                   }}
-                                  className="text-slate-500 hover:text-white flex items-center gap-1 uppercase transition-colors font-bold opacity-80"
+                                  className="text-slate-500 hover:text-slate-800 flex items-center gap-1 uppercase transition-colors font-bold opacity-80"
                                 >
                                   <RotateCw className="w-3 h-3" />
                                   Reset
@@ -1669,19 +1681,19 @@ export default function Phase2BuildWalkthrough() {
                               <div className="flex items-center gap-1 p-0.5 bg-white border border-slate-200 rounded-md">
                                 <button
                                   onClick={() => setPreviewDevice('desktop')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'desktop' ? 'bg-[#2563eb] text-black' : 'text-slate-500 hover:text-white'}`}
+                                  className={`p-1 rounded transition-colors ${previewDevice === 'desktop' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-850'}`}
                                 >
                                   <Monitor className="w-3 h-3" />
                                 </button>
                                 <button
                                   onClick={() => setPreviewDevice('tablet')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'tablet' ? 'bg-[#2563eb] text-black' : 'text-slate-500 hover:text-white'}`}
+                                  className={`p-1 rounded transition-colors ${previewDevice === 'tablet' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-850'}`}
                                 >
                                   <Tablet className="w-3 h-3" />
                                 </button>
                                 <button
                                   onClick={() => setPreviewDevice('mobile')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'mobile' ? 'bg-[#2563eb] text-black' : 'text-slate-500 hover:text-white'}`}
+                                  className={`p-1 rounded transition-colors ${previewDevice === 'mobile' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-850'}`}
                                 >
                                   <Smartphone className="w-3 h-3" />
                                 </button>
@@ -2056,13 +2068,120 @@ export default function Phase2BuildWalkthrough() {
                       )}
 
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
+          </div>
+    
+          {/* Footer Navigation Bar */}
+          <div className="flex items-center justify-between px-6 py-4.5 md:px-12 z-20 border-t border-slate-200 bg-white/75 backdrop-blur-md shrink-0 select-none">
+            <div>
+              <button
+                onClick={() => {
+                  if (activeStep > 1) {
+                    setActiveStep(activeStep - 1);
+                  } else {
+                    if (onClose) onClose();
+                    else window.location.href = '/dashboard';
+                  }
+                }}
+                className="px-5 py-3 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 border border-slate-200 shadow-sm cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> Back
+              </button>
+            </div>
+    
+            {/* Dynamic primary CTA button based on current step */}
+            <div>
+              {activeStep === 1 && (
+                <button
+                  onClick={handleApproveBlueprint}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 border-none"
+                >
+                  {isSubmitting ? 'Saving...' : 'Confirm Blueprint'} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {activeStep === 2 && (
+                <button
+                  onClick={handleApproveFeatures}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 border-none"
+                >
+                  {isSubmitting ? 'Saving...' : 'Confirm Features'} <ArrowRight className="w-3.5 h-3.5 text-white" />
+                </button>
+              )}
+              {activeStep === 3 && (
+                <button
+                  onClick={handleApproveJourney}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 border-none"
+                >
+                  {isSubmitting ? 'Generating...' : 'Approve Journey'} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {activeStep === 4 && (
+                <button
+                  onClick={handleApproveScreensAndBuild}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer border-none"
+                >
+                  {isSubmitting ? 'Compiling...' : 'Approve & Click-to-Build'} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {activeStep === 5 && (
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest font-mono flex items-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" /> Building MVP Package...
+                </div>
+              )}
+              {activeStep === 6 && (
+                <button
+                  onClick={handleCompleteStep6}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 border-none"
+                >
+                  {isSubmitting ? 'Locking...' : 'Lock Walkthrough & Code Review'} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {activeStep === 7 && (
+                <button
+                  onClick={handleSaveDescriptionStep7}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 border-none"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Description & Pitch'} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {activeStep === 8 && (
+                <button
+                  onClick={handleCompleteStep8}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer border-none"
+                >
+                  {isSubmitting ? 'Compiling...' : 'Confirm Feature Explanations'} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {activeStep === 9 && (
+                <button
+                  onClick={handleSaveDemoStep9}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-[#2563eb] hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer disabled:opacity-50 border-none"
+                >
+                  {isSubmitting ? 'Saving...' : 'Lock Demo Script'} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {activeStep === 10 && (
+                <button
+                  onClick={handleCompletePhase2}
+                  disabled={isSubmitting}
+                  className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer border-none"
+                >
+                  🎉 {isSubmitting ? 'Submitting...' : 'Complete Phase 2'} <Check className="w-3.5 h-3.5 animate-bounce" />
+                </button>
+              )}
+            </div>
+          </div>
       {/* Premium Full-Screen Visual Screen Modal Overlay */}
       <AnimatePresence>
         {selectedScreen && (

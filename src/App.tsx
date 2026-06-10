@@ -1788,15 +1788,15 @@ export default function App() {
           <Route path="/ideation/chat" element={<IdeationChat onNavigate={handleNavigate} />} />
           <Route path="/ideation/blueprint" element={<IdeationBlueprint onNavigate={handleNavigate} onUpdateUser={setUser} />} />
           <Route path="/phase/2" element={<Phase2Page onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/features" element={<FeaturesScreen onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/journey" element={<JourneyScreen onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/screens" element={<ScreensPreview onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/building" element={<MVPBuilding onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/review" element={<MVPReview onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/description" element={<ProductDescription onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/explain" element={<FeatureExplain onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/demo" element={<DemoPrep onNavigate={handleNavigate} />} />
-          <Route path="/phase/2/complete" element={<PhaseComplete onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/features" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/journey" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/screens" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/building" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/review" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/description" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/explain" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/demo" element={<Phase2Page onNavigate={handleNavigate} />} />
+          <Route path="/phase/2/complete" element={<Phase2Page onNavigate={handleNavigate} />} />
           <Route path="/phase/:id" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
           
           <Route path="/profile/:id" element={<PublicProfileWrapper currentUser={user} />} />
