@@ -27,7 +27,9 @@ import {
   Linkedin,
   Github,
   Menu,
-  X
+  X,
+  ExternalLink,
+  ArrowUpRight
 } from "lucide-react";
 import { useState, useRef, useEffect, FormEvent } from "react";
 import { Toaster } from "react-hot-toast";
@@ -901,6 +903,11 @@ interface SuccessItem {
   color: string;
   icon: string;
   timeAgo: string;
+  bio: string;
+  techStack: string[];
+  linkUrl: string;
+  linkLabel: string;
+  quote?: string;
 }
 
 const SUCCESS_ITEMS: SuccessItem[] = [
@@ -916,7 +923,12 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     tag: "Beta Launch",
     color: "cyan",
     icon: "Cpu",
-    timeAgo: "2h ago"
+    timeAgo: "2h ago",
+    bio: "Alex Rivera is a medical researcher at Stanford Tech Lab who wanted to bridge the gap between AI and radiology. Utilizing modern pipeline architectures, he spent four days designing and implementing NeuroDoc AI, which parses MRI and CT scans to produce pre-screen diagnostic reports, helping clinics manage extreme patient overload.",
+    techStack: ["React", "Node.js", "Gemini API", "Pinecone Vector Store", "Tailwind CSS"],
+    linkUrl: "https://github.com/alexrivera/neurodoc-ai-demo",
+    linkLabel: "View GitHub Repository",
+    quote: "VibeLab broke open the black box of full-stack AI development. Being able to connect persistent vector stores and design secure APIs directly within one weekend is a game-changer."
   },
   {
     id: 2,
@@ -930,7 +942,12 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     tag: "Certified",
     color: "amber",
     icon: "GraduationCap",
-    timeAgo: "Just now"
+    timeAgo: "Just now",
+    bio: "Sarah is a self-driven junior high-school student with a deep passion for cognitive systems. Over three weeks of rigorous training, she completed the full developer path, maintaining a 98% score on complex architectural validation challenges. She programmed three distinct autonomous agent systems to pass her final faculty review.",
+    techStack: ["System Security", "Prompt Chains", "Vector Embeddings", "Firestore Rules"],
+    linkUrl: "https://certs.vibelab.edu/verify/sarah-jenkins-advanced-ai-98c",
+    linkLabel: "Verify Certificate Credentials",
+    quote: "This platform challenged me beyond simple hello-world templates. The system reviews your rules and forces you to build real, secure, and production-tested data schemas."
   },
   {
     id: 3,
@@ -944,7 +961,12 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     tag: "Greentech MVP",
     color: "emerald",
     icon: "Zap",
-    timeAgo: "15m ago"
+    timeAgo: "15m ago",
+    bio: "Marcus, an electrical engineering undergrad, won first place at our regional MIT Hackathon. His project, EcoSave Agent, monitors real-time carbon intensity indices across major regional power grids and schedules heavy machine learning training jobs or computational Docker containers during optimal renewable energy hours.",
+    techStack: ["IoT Gateways", "D3.js Grid Charts", "Node Cron", "PostgreSQL", "OAuth 2.0"],
+    linkUrl: "https://github.com/marcus-k/ecosave-smart-agent",
+    linkLabel: "View GitHub Repository",
+    quote: "I wanted to build an agent that actually impacts hardware. Coupling VibeLab's server hooks with live power grid APIs was smooth and incredibly rewarding."
   },
   {
     id: 4,
@@ -958,7 +980,12 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     tag: "Acquisition",
     color: "indigo",
     icon: "Globe",
-    timeAgo: "1h ago"
+    timeAgo: "1h ago",
+    bio: "Elena participated in the Caltech AI Bootcamp and built LingoFlow, a premium real-time speech translation proxy. It utilizes speculative audio chunking to achieve latency-budget speech synthesis and instant routing, allowing multi-language voice streams in under 300 milliseconds.",
+    techStack: ["WebSockets", "Vite/React", "Gemini Realtime API", "Whisper TTS"],
+    linkUrl: "https://github.com/elenares/lingoflow-realtime-speech",
+    linkLabel: "View GitHub Repository",
+    quote: "Handling audio chunking over WebSockets is notoriously difficult, but the step-by-step state visualization helped me isolate latency issues immediately. The code was acquired just 2 weeks after launch!"
   },
   {
     id: 5,
@@ -972,7 +999,12 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     tag: "Certified",
     color: "rose",
     icon: "Trophy",
-    timeAgo: "3h ago"
+    timeAgo: "3h ago",
+    bio: "Devon Patel transitioned from a self-taught enthusiast to a certified MVP Architect by building and pushing 5 distinct production-grade applications under strict cloud-native schemas. His final capstone evaluated his database rules, multi-tenant workspace routing, and clean API resilience.",
+    techStack: ["API Resiliency", "Multi-Tenant Architecture", "User Isolation", "Node.js ESM"],
+    linkUrl: "https://certs.vibelab.edu/verify/devon-patel-mvparchitect-202",
+    linkLabel: "Verify Certificate Credentials",
+    quote: "The credentials on VibeLab aren't just badges. They are backed by real, working applications that third-party developers can inspect and verify in real time."
   },
   {
     id: 6,
@@ -986,7 +1018,12 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     tag: "Launch Success",
     color: "violet",
     icon: "Sparkles",
-    timeAgo: "4d ago"
+    timeAgo: "4d ago",
+    bio: "Chloe transformed her visual arts fellowship into a high-growth SaaS business. Artisanal AI automatically scans digital products, matches them with brand style grids, and generates high-converting social media collateral and landing layouts on-demand.",
+    techStack: ["Tailwind UX", "Gemini Image Gen", "Next.js Dev Server", "Stripe API"],
+    linkUrl: "https://github.com/chloe-dupont/artisanal-ai-saas",
+    linkLabel: "View GitHub Repository",
+    quote: "As a designer, I had zero backend experience. VibeLab guided me through writing my first Stripe endpoint and securing user content using Firestore rule isolation."
   },
   {
     id: 7,
@@ -1000,7 +1037,12 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     tag: "Certified",
     color: "blue",
     icon: "ShieldCheck",
-    timeAgo: "5m ago"
+    timeAgo: "5m ago",
+    bio: "Akiro is a cyber-security graduate from Tokyo Tech. To earn this elite certification, he underwent automated vulnerability injection checks, developing custom backend mitigations against script attacks and maintaining perfect security structures across multiple environments.",
+    techStack: ["Firebase Auth", "Firestore Sec Rules", "Data Masking", "CORS Auditing"],
+    linkUrl: "https://certs.vibelab.edu/verify/akiro-sato-security-scale-auditor",
+    linkLabel: "Verify Certificate Credentials",
+    quote: "Securing student profiles while sharing live dashboard states is tricky. The sandbox testbed gave me instant metrics on rules leakage, resulting in bulletproof coverage."
   },
   {
     id: 8,
@@ -1014,14 +1056,21 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     tag: "High Volume",
     color: "teal",
     icon: "BarChart3",
-    timeAgo: "52m ago"
+    timeAgo: "52m ago",
+    bio: "Elena holds a finance degree from Georgetown. She built Apex Fin-LLM to automatically parse structural financial vectors out of quarterly 10-K files and match them against major real-time trade feeds, enabling teams to query complex indexes within milliseconds.",
+    techStack: ["Vector DB", "Recharts Visuals", "Financial Parsing", "Gemini Active Search"],
+    linkUrl: "https://github.com/elenag-fintech/apex-fin-llm",
+    linkLabel: "View GitHub Repository",
+    quote: "Financial texts contain thousands of tables. By building a high-fidelity parsing chunker, our teams can extract visual insights in seconds. The MVP handles over 12,000 live queries now!"
   }
 ];
 
 const StudentTicker = () => {
+  const [selectedItem, setSelectedItem] = useState<SuccessItem | null>(null);
+
   const getIcon = (iconName: string) => {
     switch (iconName) {
-      case "Cpu": return <Cpu className="w-4 h-4 text-cyan-600" />;
+      case "Cpu": return <Cpu className="w-4 h-4 text-cyan-600 animate-pulse" />;
       case "GraduationCap": return <GraduationCap className="w-4 h-4 text-amber-500" />;
       case "Zap": return <Zap className="w-4 h-4 text-emerald-500" />;
       case "Globe": return <Globe className="w-4 h-4 text-indigo-500" />;
@@ -1033,17 +1082,89 @@ const StudentTicker = () => {
     }
   };
 
-  const getBorderColorClass = (color: string) => {
+  const getThemeColors = (color: string) => {
     switch (color) {
-      case "cyan": return "hover:border-cyan-500/30 hover:shadow-cyan-500/5";
-      case "amber": return "hover:border-amber-500/30 hover:shadow-amber-500/5";
-      case "emerald": return "hover:border-emerald-500/30 hover:shadow-emerald-500/5";
-      case "indigo": return "hover:border-indigo-500/30 hover:shadow-indigo-500/5";
-      case "rose": return "hover:border-rose-500/30 hover:shadow-rose-500/5";
-      case "violet": return "hover:border-violet-500/30 hover:shadow-violet-500/5";
-      case "blue": return "hover:border-blue-500/30 hover:shadow-blue-500/5";
-      case "teal": return "hover:border-teal-500/30 hover:shadow-teal-500/5";
-      default: return "hover:border-cyan-500/30 hover:shadow-cyan-500/5";
+      case "cyan":
+        return {
+          glow: "hover:shadow-cyan-500/10 hover:border-cyan-500/30",
+          accentBg: "bg-cyan-50 text-cyan-700 border-cyan-100/60",
+          avatarGlow: "from-cyan-500 to-blue-500 shadow-cyan-200",
+          gradientText: "from-cyan-600 to-blue-600",
+          buttonColor: "bg-cyan-600 hover:bg-cyan-700 shadow-cyan-100",
+          badgeBorder: "border-cyan-200 text-cyan-800 bg-cyan-50/50"
+        };
+      case "amber":
+        return {
+          glow: "hover:shadow-amber-500/10 hover:border-amber-500/30",
+          accentBg: "bg-amber-50 text-amber-700 border-amber-100/60",
+          avatarGlow: "from-amber-400 to-orange-500 shadow-amber-200",
+          gradientText: "from-amber-600 to-orange-600",
+          buttonColor: "bg-amber-600 hover:bg-amber-700 shadow-amber-100",
+          badgeBorder: "border-amber-200 text-amber-800 bg-amber-50/50"
+        };
+      case "emerald":
+        return {
+          glow: "hover:shadow-emerald-500/10 hover:border-emerald-500/30",
+          accentBg: "bg-emerald-50 text-emerald-700 border-emerald-100/60",
+          avatarGlow: "from-emerald-400 to-teal-500 shadow-emerald-200",
+          gradientText: "from-emerald-600 to-teal-600",
+          buttonColor: "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100",
+          badgeBorder: "border-emerald-200 text-emerald-800 bg-emerald-50/50"
+        };
+      case "indigo":
+        return {
+          glow: "hover:shadow-indigo-500/10 hover:border-indigo-500/30",
+          accentBg: "bg-indigo-50 text-indigo-700 border-indigo-100/60",
+          avatarGlow: "from-indigo-400 to-purple-500 shadow-indigo-200",
+          gradientText: "from-indigo-600 to-purple-600",
+          buttonColor: "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100",
+          badgeBorder: "border-indigo-200 text-indigo-800 bg-indigo-50/50"
+        };
+      case "rose":
+        return {
+          glow: "hover:shadow-rose-500/10 hover:border-rose-500/30",
+          accentBg: "bg-rose-50 text-rose-700 border-rose-100/60",
+          avatarGlow: "from-rose-400 to-red-500 shadow-rose-200",
+          gradientText: "from-rose-600 to-red-600",
+          buttonColor: "bg-rose-600 hover:bg-rose-700 shadow-rose-100",
+          badgeBorder: "border-rose-200 text-rose-800 bg-rose-50/50"
+        };
+      case "violet":
+        return {
+          glow: "hover:shadow-violet-500/10 hover:border-violet-500/30",
+          accentBg: "bg-violet-50 text-violet-700 border-violet-100/60",
+          avatarGlow: "from-violet-400 to-fuchsia-500 shadow-violet-200",
+          gradientText: "from-violet-600 to-fuchsia-600",
+          buttonColor: "bg-violet-600 hover:bg-violet-700 shadow-violet-100",
+          badgeBorder: "border-violet-200 text-violet-800 bg-violet-50/50"
+        };
+      case "blue":
+        return {
+          glow: "hover:shadow-blue-500/10 hover:border-blue-500/30",
+          accentBg: "bg-blue-50 text-blue-700 border-blue-100/60",
+          avatarGlow: "from-blue-400 to-indigo-500 shadow-blue-200",
+          gradientText: "from-blue-600 to-indigo-600",
+          buttonColor: "bg-blue-600 hover:bg-blue-700 shadow-blue-100",
+          badgeBorder: "border-blue-200 text-blue-800 bg-blue-50/50"
+        };
+      case "teal":
+        return {
+          glow: "hover:shadow-teal-500/10 hover:border-teal-500/30",
+          accentBg: "bg-teal-50 text-teal-700 border-teal-100/60",
+          avatarGlow: "from-teal-400 to-emerald-500 shadow-teal-200",
+          gradientText: "from-teal-600 to-emerald-600",
+          buttonColor: "bg-teal-600 hover:bg-teal-700 shadow-teal-100",
+          badgeBorder: "border-teal-200 text-teal-800 bg-teal-50/50"
+        };
+      default:
+        return {
+          glow: "hover:shadow-cyan-500/10 hover:border-cyan-500/30",
+          accentBg: "bg-cyan-50 text-cyan-700 border-cyan-100/60",
+          avatarGlow: "from-cyan-500 to-blue-500 shadow-cyan-200",
+          gradientText: "from-cyan-600 to-blue-600",
+          buttonColor: "bg-cyan-600 hover:bg-cyan-700 shadow-cyan-100",
+          badgeBorder: "border-cyan-200 text-cyan-800 bg-cyan-50/50"
+        };
     }
   };
 
@@ -1052,11 +1173,11 @@ const StudentTicker = () => {
       <div className="max-w-7xl mx-auto px-6 mb-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <span className="text-xs font-black uppercase tracking-[0.25em] text-cyan-600">Platform Proof &amp; Velocity</span>
+            <span className="text-xs font-black uppercase tracking-[0.25em] text-[#2563eb]">Platform Proof &amp; Velocity</span>
             <h2 className="text-3xl md:text-4xl font-display font-extrabold text-slate-900 mt-2 tracking-tight">Live Student Launches &amp; Certifications</h2>
           </div>
           <p className="text-slate-500 text-sm max-w-md font-medium leading-relaxed">
-            Real achievements built and validated on VibeLab, showcasing verified MVPs and expert-level AI credentials.
+            Real achievements built and validated on VibeLab, showcasing verified MVPs and expert-level AI credentials. Click any card to expand and review their full stack and codebase.
           </p>
         </div>
       </div>
@@ -1068,65 +1189,199 @@ const StudentTicker = () => {
         <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-[#f8fafc] to-transparent z-10 pointer-events-none" />
 
         <div className="animate-scroll-ticker flex gap-6 px-4">
-          {[...SUCCESS_ITEMS, ...SUCCESS_ITEMS].map((item, index) => (
-            <div 
-              key={`${item.id}-${index}`}
-              className={`w-[400px] h-[220px] bg-white border border-slate-200/80 rounded-[2rem] p-6 flex flex-col justify-between shrink-0 transition-all duration-300 hover:shadow-xl hover:bg-white hover:-translate-y-1 relative group bg-gradient-to-br from-white to-slate-50/50 ${getBorderColorClass(item.color)}`}
-            >
-              <div>
-                {/* Header Information */}
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200/65 flex items-center justify-center font-display font-black text-xs text-slate-700">
-                      {item.name.split(' ').map(n=>n[0]).join('')}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-[13px] leading-tight flex items-center gap-1">
-                        {item.name}
-                      </h4>
-                      <p className="text-slate-400 text-[10.5px] font-medium">{item.role}</p>
-                    </div>
-                  </div>
-                  
-                  <span className={`px-2.5 py-1.5 rounded-full text-[10px] font-bold tracking-wide leading-none border uppercase ${
-                    item.type === 'project' 
-                      ? 'bg-cyan-50/80 text-cyan-700 border-cyan-100/60' 
-                      : 'bg-amber-50/80 text-amber-800 border-amber-100/60'
-                  }`}>
-                    {item.tag}
-                  </span>
+          {[...SUCCESS_ITEMS, ...SUCCESS_ITEMS].map((item, index) => {
+            const colors = getThemeColors(item.color);
+            return (
+              <div 
+                key={`${item.id}-${index}`}
+                onClick={() => setSelectedItem(item)}
+                className={`w-[400px] h-[250px] bg-white border border-slate-200/85 rounded-[2.5rem] p-6 flex flex-col justify-between shrink-0 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1.5 relative group bg-gradient-to-br from-white to-slate-50/50 cursor-pointer ${colors.glow}`}
+                id={`ticker-card-${item.id}-${index}`}
+              >
+                {/* Micro hover interaction overlay */}
+                <div className="absolute bottom-4 right-6 text-[11px] font-extrabold text-[#2563eb] opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center gap-1 bg-blue-50/90 px-3.5 py-2 rounded-full border border-blue-100/50 font-sans tracking-tight">
+                  Expand Story <ArrowUpRight className="w-3.5 h-3.5" />
                 </div>
 
-                {/* Project or Credential Title */}
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    {getIcon(item.icon)}
-                    <h3 className="font-display font-black text-base text-slate-800 tracking-tight leading-tight">{item.title}</h3>
+                <div>
+                  {/* Header Information */}
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${colors.avatarGlow} p-0.5 shadow-sm flex items-center justify-center transition-all duration-300 group-hover:scale-105`}>
+                        <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-display font-black text-[12px] text-slate-800 tracking-tight">
+                          {item.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-[13.5px] leading-tight flex items-center gap-1 group-hover:text-[#2563eb] transition-colors">
+                          {item.name}
+                        </h4>
+                        <p className="text-slate-400 text-[10.5px] font-semibold">{item.role}</p>
+                      </div>
+                    </div>
+                    
+                    <span className={`px-3 py-1.5 rounded-full text-[9px] font-black tracking-widest leading-none border uppercase font-sans ${colors.accentBg}`}>
+                      {item.tag}
+                    </span>
                   </div>
-                  
-                  {/* Performance metric highlight */}
-                  <div className="inline-flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/50 mt-1">
-                    <span className="text-[11px] font-extrabold text-blue-600 tracking-tight">{item.metric}</span>
+
+                  {/* Project or Credential Title */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-lg bg-slate-50 border border-slate-100 group-hover:scale-110 transition-transform">
+                        {getIcon(item.icon)}
+                      </div>
+                      <h3 className="font-display font-black text-base text-slate-800 tracking-tight leading-tight group-hover:text-slate-900">{item.title}</h3>
+                    </div>
+                    
+                    {/* Performance metric highlight */}
+                    <div className="inline-flex items-center gap-1.5 bg-slate-50/90 px-3 py-1 rounded-xl border border-slate-200/50 mt-1">
+                      <span className="text-[11px] font-extrabold text-[#2563eb] tracking-tight">{item.metric}</span>
+                    </div>
                   </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed font-sans mt-3 pr-2">
+                  {item.desc}
+                </p>
+
+                {/* Bottom Info Row */}
+                <div className="border-t border-slate-100 pt-3 mt-3 flex items-center justify-between text-slate-400 font-sans text-[10.5px]">
+                  <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[9.5px] text-slate-500">
+                    <span className="flex items-center gap-1">🏆 {item.badge}</span>
+                  </div>
+                  <span className="font-medium text-slate-400/80 group-hover:opacity-0 transition-opacity duration-200">{item.timeAgo}</span>
                 </div>
               </div>
-
-              {/* Description */}
-              <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed font-sans mt-2.5">
-                {item.desc}
-              </p>
-
-              {/* Bottom Info Row */}
-              <div className="border-t border-slate-100 pt-3 mt-3 flex items-center justify-between text-slate-400 font-mono text-[10.5px]">
-                <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-slate-400 font-sans">
-                  <span>{item.badge}</span>
-                </div>
-                <span className="font-medium text-slate-400 font-sans text-[10.5px]">{item.timeAgo}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
+
+      {/* Renders the Beautiful Expanded Slide-over / Modal popup */}
+      <AnimatePresence>
+        {selectedItem && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto"
+            onClick={() => setSelectedItem(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white border border-slate-200 w-full max-w-2xl rounded-[2.5rem] shadow-2xl relative overflow-hidden"
+              id="student-ticker-modal"
+            >
+              {/* Top Banner accent matching theme */}
+              <div className={`h-2.5 w-full bg-gradient-to-r ${getThemeColors(selectedItem.color).avatarGlow}`} />
+
+              <div className="p-8 sm:p-10">
+                {/* Close Button */}
+                <button 
+                  onClick={() => setSelectedItem(null)}
+                  className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-55 text-slate-400 hover:text-slate-600 transition-colors border border-transparent hover:border-slate-100 cursor-pointer"
+                  id="close-ticker-modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                {/* Profile Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-5 justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${getThemeColors(selectedItem.color).avatarGlow} p-0.5 shadow-md flex items-center justify-center`}>
+                      <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-display font-black text-lg text-slate-800">
+                        {selectedItem.name.split(' ').map(n=>n[0]).join('')}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-display font-black text-slate-900 leading-tight flex items-center gap-1.5">
+                        {selectedItem.name}
+                      </h3>
+                      <p className="text-slate-500 font-semibold text-xs mt-0.5">{selectedItem.role}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest leading-none border uppercase ${getThemeColors(selectedItem.color).accentBg}`}>
+                      {selectedItem.tag}
+                    </span>
+                    <span className="text-xs text-slate-400 font-semibold">{selectedItem.timeAgo}</span>
+                  </div>
+                </div>
+
+                {/* App Content */}
+                <div className="mt-8 pt-8 border-t border-slate-100 space-y-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      {getIcon(selectedItem.icon)}
+                      <h4 className="text-lg font-display font-black text-slate-800 tracking-tight">{selectedItem.title}</h4>
+                      <span className="text-[11px] font-extrabold text-[#2563eb] bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-100">
+                        {selectedItem.metric}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-line font-medium pr-1">
+                      {selectedItem.bio}
+                    </p>
+                  </div>
+
+                  {/* Student Quote Box */}
+                  {selectedItem.quote && (
+                    <blockquote className="bg-slate-50/80 border-l-4 border-slate-300 p-5 rounded-r-3xl my-4">
+                      <p className="text-slate-600 text-xs font-serif italic leading-relaxed pr-2">
+                        "{selectedItem.quote}"
+                      </p>
+                      <cite className="block text-[10.5px] font-bold text-slate-700 mt-2 font-mono uppercase tracking-[0.05em]">
+                        — {selectedItem.name}, {selectedItem.role}
+                      </cite>
+                    </blockquote>
+                  )}
+
+                  {/* Tech Stack List */}
+                  <div>
+                    <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-widest font-mono mb-2">Technologies Used</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedItem.techStack.map((tech, idx) => (
+                        <span 
+                          key={idx}
+                          className="px-2.5 py-1 bg-slate-100 border border-slate-200/60 rounded-lg text-slate-600 font-mono text-[10.5px] font-bold"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Call to action & badge info */}
+                  <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold">
+                      <span className="text-amber-500 text-sm">🏆</span> 
+                      <span className="uppercase tracking-[0.05em] text-slate-500">{selectedItem.badge}</span>
+                    </div>
+
+                    <a
+                      href={selectedItem.linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center justify-center gap-2 px-6 py-3.5 text-white text-xs font-extrabold uppercase tracking-wider rounded-2xl shadow-md cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${getThemeColors(selectedItem.color).buttonColor}`}
+                    >
+                      {selectedItem.type === "project" ? (
+                        <Github className="w-4 h-4 text-white" />
+                      ) : (
+                        <ShieldCheck className="w-4 h-4 text-white" />
+                      )}
+                      {selectedItem.linkLabel}
+                      <ArrowUpRight className="w-3.5 h-3.5 text-white" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
