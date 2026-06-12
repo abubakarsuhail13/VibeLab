@@ -75,3 +75,24 @@
   background-color: rgba(201, 168, 76, 0.4);
 }
 
+@keyframes scroll-ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-ticker {
+  display: flex;
+  width: max-content;
+  animation: scroll-ticker 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-scroll-ticker:hover {
+  animation-play-state: paused;
+}
+
+

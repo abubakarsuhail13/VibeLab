@@ -888,6 +888,250 @@ const TrustedBy = () => {
   );
 };
 
+interface SuccessItem {
+  id: number;
+  type: "project" | "certification";
+  name: string;
+  role: string;
+  title: string;
+  metric: string;
+  desc: string;
+  badge: string;
+  tag: string;
+  color: string;
+  icon: string;
+  timeAgo: string;
+}
+
+const SUCCESS_ITEMS: SuccessItem[] = [
+  {
+    id: 1,
+    type: "project",
+    name: "Alex Rivera",
+    role: "Stanford Tech Lab",
+    title: "NeuroDoc AI",
+    metric: "1,500+ Active Beta Users",
+    desc: "AI assistant for clinicians to pre-screen medical imaging documents safely.",
+    badge: "Built in 4 Days",
+    tag: "Beta Launch",
+    color: "cyan",
+    icon: "Cpu",
+    timeAgo: "2h ago"
+  },
+  {
+    id: 2,
+    type: "certification",
+    name: "Sarah Jenkins",
+    role: "High School Innovator",
+    title: "Advanced AI Architect",
+    metric: "Score: 98% (Phase 3 Completed)",
+    desc: "Validated skill in full-stack cloud architecture and vector database integration.",
+    badge: "Faculty Approved",
+    tag: "Certified",
+    color: "amber",
+    icon: "GraduationCap",
+    timeAgo: "Just now"
+  },
+  {
+    id: 3,
+    type: "project",
+    name: "Marcus K.",
+    role: "MIT Hackathon Winner",
+    title: "EcoSave Agent",
+    metric: "Optimized Carbon Index by 22%",
+    desc: "A smart scheduler using historical power-grid signals to automate high-load compute tasks.",
+    badge: "1st Place Award",
+    tag: "Greentech MVP",
+    color: "emerald",
+    icon: "Zap",
+    timeAgo: "15m ago"
+  },
+  {
+    id: 4,
+    type: "project",
+    name: "Elena Rostova",
+    role: "Caltech Bootcamper",
+    title: "LingoFlow",
+    metric: "Acquired by Language Hub",
+    desc: "Real-time speech translation proxy with state-of-the-art latency-budget routing.",
+    badge: "Acquired MVP",
+    tag: "Acquisition",
+    color: "indigo",
+    icon: "Globe",
+    timeAgo: "1h ago"
+  },
+  {
+    id: 5,
+    type: "certification",
+    name: "Devon Patel",
+    role: "Self-Taught Developer",
+    title: "Full-Stack MVP Architect",
+    metric: "Completed 5 Live Launches",
+    desc: "Credential on rigorous server-side SDK deployment & database security validation.",
+    badge: "Professional Level",
+    tag: "Certified",
+    color: "rose",
+    icon: "Trophy",
+    timeAgo: "3h ago"
+  },
+  {
+    id: 6,
+    type: "project",
+    name: "Chloe Dupont",
+    role: "Sorbonne AI Fellow",
+    title: "Artisanal AI",
+    metric: "$4,200 MRR in first week",
+    desc: "SaaS engine dynamically generating customized marketing storefront graphics on-demand.",
+    badge: "SaaS Launch",
+    tag: "Launch Success",
+    color: "violet",
+    icon: "Sparkles",
+    timeAgo: "4d ago"
+  },
+  {
+    id: 7,
+    type: "certification",
+    name: "Akiro Sato",
+    role: "Tokyo Tech Graduate",
+    title: "Database Security & Scale",
+    metric: "Scored 100% on Rules Audit",
+    desc: "Expertise in secure firestore rules, multi-user isolation patterns and resilient data blueprints.",
+    badge: "Verified Profile",
+    tag: "Certified",
+    color: "blue",
+    icon: "ShieldCheck",
+    timeAgo: "5m ago"
+  },
+  {
+    id: 8,
+    type: "project",
+    name: "Elena G.",
+    role: "Georgetown Innovator",
+    title: "Apex Fin-LLM",
+    metric: "12,000 real-time API queries",
+    desc: "Sub-second summarization engine extracting structural signal vectors from major trade feeds.",
+    badge: "Active Utility",
+    tag: "High Volume",
+    color: "teal",
+    icon: "BarChart3",
+    timeAgo: "52m ago"
+  }
+];
+
+const StudentTicker = () => {
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case "Cpu": return <Cpu className="w-4 h-4 text-cyan-600" />;
+      case "GraduationCap": return <GraduationCap className="w-4 h-4 text-amber-500" />;
+      case "Zap": return <Zap className="w-4 h-4 text-emerald-500" />;
+      case "Globe": return <Globe className="w-4 h-4 text-indigo-500" />;
+      case "Trophy": return <Trophy className="w-4 h-4 text-rose-500" />;
+      case "Sparkles": return <Sparkles className="w-4 h-4 text-violet-500" />;
+      case "ShieldCheck": return <ShieldCheck className="w-4 h-4 text-blue-500" />;
+      case "BarChart3": return <BarChart3 className="w-4 h-4 text-teal-500" />;
+      default: return <Sparkles className="w-4 h-4" />;
+    }
+  };
+
+  const getBorderColorClass = (color: string) => {
+    switch (color) {
+      case "cyan": return "hover:border-cyan-500/30 hover:shadow-cyan-500/5";
+      case "amber": return "hover:border-amber-500/30 hover:shadow-amber-500/5";
+      case "emerald": return "hover:border-emerald-500/30 hover:shadow-emerald-500/5";
+      case "indigo": return "hover:border-indigo-500/30 hover:shadow-indigo-500/5";
+      case "rose": return "hover:border-rose-500/30 hover:shadow-rose-500/5";
+      case "violet": return "hover:border-violet-500/30 hover:shadow-violet-500/5";
+      case "blue": return "hover:border-blue-500/30 hover:shadow-blue-500/5";
+      case "teal": return "hover:border-teal-500/30 hover:shadow-teal-500/5";
+      default: return "hover:border-cyan-500/30 hover:shadow-cyan-500/5";
+    }
+  };
+
+  return (
+    <section className="py-24 bg-[#f8fafc] border-b border-slate-200 overflow-hidden relative">
+      <div className="max-w-7xl mx-auto px-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <span className="text-xs font-black uppercase tracking-[0.25em] text-cyan-600">Platform Proof &amp; Velocity</span>
+            <h2 className="text-3xl md:text-4xl font-display font-extrabold text-slate-900 mt-2 tracking-tight">Live Student Launches &amp; Certifications</h2>
+          </div>
+          <p className="text-slate-500 text-sm max-w-md font-medium leading-relaxed">
+            Real achievements built and validated on VibeLab, showcasing verified MVPs and expert-level AI credentials.
+          </p>
+        </div>
+      </div>
+
+      {/* The scrolling track */}
+      <div className="relative w-full overflow-hidden select-none">
+        {/* Shadow Overlay Faders */}
+        <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-[#f8fafc] to-transparent z-10 pointer-events-none" />
+
+        <div className="animate-scroll-ticker flex gap-6 px-4">
+          {[...SUCCESS_ITEMS, ...SUCCESS_ITEMS].map((item, index) => (
+            <div 
+              key={`${item.id}-${index}`}
+              className={`w-[400px] h-[220px] bg-white border border-slate-200/80 rounded-[2rem] p-6 flex flex-col justify-between shrink-0 transition-all duration-300 hover:shadow-xl hover:bg-white hover:-translate-y-1 relative group bg-gradient-to-br from-white to-slate-50/50 ${getBorderColorClass(item.color)}`}
+            >
+              <div>
+                {/* Header Information */}
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200/65 flex items-center justify-center font-display font-black text-xs text-slate-700">
+                      {item.name.split(' ').map(n=>n[0]).join('')}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-[13px] leading-tight flex items-center gap-1">
+                        {item.name}
+                      </h4>
+                      <p className="text-slate-400 text-[10.5px] font-medium">{item.role}</p>
+                    </div>
+                  </div>
+                  
+                  <span className={`px-2.5 py-1.5 rounded-full text-[10px] font-bold tracking-wide leading-none border uppercase ${
+                    item.type === 'project' 
+                      ? 'bg-cyan-50/80 text-cyan-700 border-cyan-100/60' 
+                      : 'bg-amber-50/80 text-amber-800 border-amber-100/60'
+                  }`}>
+                    {item.tag}
+                  </span>
+                </div>
+
+                {/* Project or Credential Title */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    {getIcon(item.icon)}
+                    <h3 className="font-display font-black text-base text-slate-800 tracking-tight leading-tight">{item.title}</h3>
+                  </div>
+                  
+                  {/* Performance metric highlight */}
+                  <div className="inline-flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/50 mt-1">
+                    <span className="text-[11px] font-extrabold text-blue-600 tracking-tight">{item.metric}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed font-sans mt-2.5">
+                {item.desc}
+              </p>
+
+              {/* Bottom Info Row */}
+              <div className="border-t border-slate-100 pt-3 mt-3 flex items-center justify-between text-slate-400 font-mono text-[10.5px]">
+                <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-slate-400 font-sans">
+                  <span>{item.badge}</span>
+                </div>
+                <span className="font-medium text-slate-400 font-sans text-[10.5px]">{item.timeAgo}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+
 const Problem = () => {
   const gaps = [
     { title: "Theory vs. Practice", desc: "Students consume endless tutorials but rarely build anything from scratch, leading to 'tutorial hell'." },
@@ -1549,6 +1793,7 @@ const LandingPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => 
     <>
       <Hero onNavigate={onNavigate} />
       <TrustedBy />
+      <StudentTicker />
       <LearningPathSection />
       <Problem />
       <Solution />
