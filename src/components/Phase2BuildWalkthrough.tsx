@@ -32,7 +32,15 @@ import {
   CheckCircle,
   HelpCircle,
   Star,
-  Save
+  Save,
+  Folder,
+  FolderOpen,
+  File,
+  Maximize2,
+  Minimize2,
+  Layout,
+  BookOpen,
+  FileText
 } from 'lucide-react';
 import { EducationalAiBackground } from "./EducationalAiBackground";
 
@@ -284,6 +292,348 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
   // STEP 10 State
   const [showFullProductModal, setShowFullProductModal] = useState<boolean>(false);
 
+  // Virtual Code Sandbox States for Step 6
+  const [virtualFiles, setVirtualFiles] = useState<Record<string, string>>({});
+  const [activeFile, setActiveFile] = useState<string>('index.html');
+  const [openTabs, setOpenTabs] = useState<string[]>(['index.html']);
+  const [isSidebarHidden, setIsSidebarHidden] = useState<boolean>(false);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
+    'src/pages': true,
+    'src/components': true,
+    'src/apis': false,
+    'src/db': false,
+    'public': false,
+    'src/styles': false,
+    'config': false
+  });
+  const [showFullScreenPreview, setShowFullScreenPreview] = useState<boolean>(false);
+  const [activeShowcaseTab, setActiveShowcaseTab] = useState<'dashboard' | 'emulator' | 'screens' | 'features' | 'pitch'>('dashboard');
+
+  const getInitialVirtualFiles = (pName: string, mvpCode: string) => {
+    const projName = pName || projectName || 'Campaign Product';
+    return {
+      'index.html': mvpCode || `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0b0f19; color: #fff; padding: 40px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>${projName}</h1>
+  <p>Developer Sandbox Environment Active.</p>
+</body>
+</html>`,
+      'src/pages/Landing.tsx': `import React from 'react';
+import { Sparkles, ArrowRight } from 'lucide-react';
+
+// Landing Page view for ${projName}
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center items-center p-6 font-sans">
+      <div className="max-w-2xl text-center space-y-6">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/35 rounded-full text-blue-400 text-xs font-mono font-bold uppercase tracking-widest leading-none mb-3">
+          <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-spin" style={{ animationDuration: '4s' }} /> Welcome to ${projName}
+        </div>
+        <h1 className="text-5xl font-black tracking-tight leading-tight bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+          Unleash Dynamic Creative Workflows
+        </h1>
+        <p className="text-slate-400 text-sm leading-relaxed max-w-lg mx-auto">
+          Scale your startup idea into reality with beautiful components, interactive workflows, and generative AI mechanics.
+        </p>
+        <div className="pt-4">
+          <button className="px-6 py-3 bg-blue-600 hover:bg-blue-500 hover:scale-105 active:scale-95 rounded-xl font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg shadow-blue-600/20 inline-flex items-center gap-2 cursor-pointer">
+            Explore My Space <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}`,
+      'src/pages/Dashboard.tsx': `import React, { useState } from 'react';
+import { BarChart3, Users, Settings, Plus, Sparkles } from 'lucide-react';
+
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState<'analytics' | 'audience'>('analytics');
+
+  return (
+    <div className="p-6 md:p-8 space-y-6 min-h-screen bg-slate-50 text-slate-800 font-sans">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-5 border-b border-slate-200 gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-950 tracking-tight">${projName}</h1>
+          <p className="text-[11px] text-slate-500 font-bold uppercase mt-1 tracking-wider">Campaign Portfolio Dashboard</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-full text-[10px] font-bold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Sandbox Active
+          </span>
+        </div>
+      </header>
+
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="p-5 bg-white rounded-2xl border border-slate-200 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-center text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono">Conversion rate</span>
+            <Sparkles className="w-4 h-4 text-blue-500" />
+          </div>
+          <p className="text-3xl font-black text-slate-950 mt-2">12.48%</p>
+          <span className="text-[10px] text-emerald-500 font-bold font-mono">+1.85% vs yesterday</span>
+        </div>
+        <div className="p-5 bg-white rounded-2xl border border-slate-200 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-center text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono">Simulated visits</span>
+            <Users className="w-4 h-4 text-blue-500" />
+          </div>
+          <p className="text-3xl font-black text-slate-950 mt-2">1,540</p>
+          <span className="text-[10px] text-emerald-500 font-bold font-mono">+12.4% this week</span>
+        </div>
+        <div className="p-5 bg-white rounded-2xl border border-slate-200 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-center text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider font-mono">Completion Score</span>
+            <BarChart3 className="w-4 h-4 text-slate-400" />
+          </div>
+          <p className="text-3xl font-black text-slate-950 mt-2">94 / 100</p>
+          <span className="text-[10px] text-blue-500 font-bold font-mono">Passing requirements met</span>
+        </div>
+      </div>
+    </div>
+  );
+}`,
+      'src/components/Navigation.tsx': `import React from 'react';
+
+export default function Navigation() {
+  return (
+    <nav className="flex justify-between items-center px-6 py-4.5 bg-white border-b border-slate-150 shadow-sm font-sans">
+      <div className="flex items-center gap-2">
+        <span className="font-extrabold text-[#2563eb] tracking-widest text-sm font-mono uppercase">${projName.toUpperCase()}</span>
+        <span className="px-1.5 py-0.5 rounded bg-blue-50 border border-blue-100 text-[9px] text-[#2563eb] font-bold">MVP</span>
+      </div>
+      <div className="flex items-center gap-5 text-xs font-bold text-slate-500">
+        <a href="#overview" className="hover:text-[#2563eb] transition-colors font-sans">Overview</a>
+        <a href="#features" className="hover:text-[#2563eb] transition-colors font-sans">Features</a>
+        <a href="#code" className="hover:text-[#2563eb] transition-colors font-sans">Source Code</a>
+      </div>
+    </nav>
+  );
+}`,
+      'src/components/InteractiveWidget.tsx': `import React, { useState } from 'react';
+import { Play, RotateCw, HelpCircle, Activity } from 'lucide-react';
+
+export default function InteractiveWidget() {
+  const [telemetry, setTelemetry] = useState<string[]>([]);
+  const [clickCount, setClickCount] = useState(0);
+
+  const handleTrigger = (flowName: string) => {
+    setClickCount(prev => prev + 1);
+    setTelemetry(prev => [\`\${new Date().toLocaleTimeString()} - Triggered \${flowName} (\${clickCount + 1})\`, ...prev]);
+  };
+
+  return (
+    <div className="p-6 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-900/5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-widest font-mono flex items-center gap-1.5">
+          <Activity className="w-4 h-4 text-[#2563eb]" /> Sandbox Client Simulation
+        </h4>
+        <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-500 text-[10px] font-mono">v1.0</span>
+      </div>
+      <p className="text-xs text-slate-600 leading-relaxed">
+        Test interactive campaign states in this safe environment. Clicking triggers updates and live log events.
+      </p>
+      <div className="flex flex-wrap gap-2.5">
+        <button 
+          onClick={() => handleTrigger('Feature Execution')}
+          className="px-4 py-2 bg-[#2563eb] hover:bg-[#3b82f6] text-white rounded-xl text-xs font-extrabold uppercase tracking-wide transition-all"
+        >
+          Execute Feature State
+        </button>
+        <button 
+          onClick={() => handleTrigger('Fallback Trigger')}
+          className="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all"
+        >
+          Dispatch Fallback
+        </button>
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-center text-[10px] font-mono uppercase text-[#2563eb]">
+          <span>Telemetry Logs</span>
+          <button 
+            disabled={telemetry.length === 0}
+            onClick={() => setTelemetry([])} 
+            className="text-[9px] text-slate-400 hover:text-slate-500 uppercase flex items-center gap-1 font-bold border-none bg-transparent cursor-pointer"
+          >
+            <RotateCw className="w-2.5 h-2.5" /> Clear Logs
+          </button>
+        </div>
+        <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl h-28 overflow-y-auto font-mono text-[10px] text-emerald-400 space-y-1 scrollbar-thin">
+          {telemetry.length === 0 ? (
+            <p className="text-slate-500 italic">Listening for trigger actions...</p>
+          ) : (
+            telemetry.map((log, idx) => <p key={idx} className="animate-fade-in">&bull; {log}</p>)
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}`,
+      'public/logo-accent.svg': `<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="45" fill="url(#gradient)" fill-opacity="0.15" stroke="url(#gradient)" stroke-width="4"/>
+  <circle cx="50" cy="50" r="23" fill="url(#gradient)"/>
+  <path d="M45 40 L58 50 L45 60 Z" fill="#ffffff" />
+</svg>`,
+      'public/banner.png': `[Asset: Large responsive binary mock template placeholder image. Refers to visual assets in Phase 2 builder screen.]`,
+      'src/styles/theme.css': `@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #2563eb;
+  --color-brand-light: #eff6ff;
+  --font-bebas: "Bebas Neue", sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+}`,
+      'tailwind.config.js': `module.exports = {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        vibelab: {
+          blue: "#2563eb",
+          slate: "#0f172a"
+        }
+      }
+    }
+  },
+  plugins: []
+};`,
+      'src/apis/geminiProxy.ts': `import { GoogleGenAI } from "@google/genai";
+
+// Dynamic Prompt and Generation Endpoint using @google/genai
+export default async function generateMvpResponse(promptText: string) {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY must be supplied in .env configuration variables.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: promptText,
+    config: {
+      temperature: 0.7,
+      maxOutputTokens: 1000
+    }
+  });
+
+  return response.text;
+}`,
+      'src/apis/analytics.ts': `// Telementry and conversion trackers
+export const analytics = {
+  trackPageview: (pageName: string) => {
+    console.log("[Analytical Log] Pageview -> " + pageName);
+  },
+  trackAction: (actionLabel: string, value?: number) => {
+    console.log("[Analytical Log] Action Trigger -> " + actionLabel, value !== undefined ? { value } : {});
+  }
+};`,
+      'src/db/schema.sql': `-- PostgreSQL DDL configuration template for persistent student session stores
+CREATE TABLE IF NOT EXISTS student_projects (
+  id SERIAL PRIMARY KEY,
+  project_name VARCHAR(120) NOT NULL,
+  founder_email VARCHAR(255) NOT NULL,
+  mvp_description TEXT,
+  rehearsed_seconds INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS project_features (
+  id SERIAL PRIMARY KEY,
+  project_id INT REFERENCES student_projects(id) ON DELETE CASCADE,
+  name VARCHAR(150) NOT NULL,
+  description TEXT,
+  is_approved BOOLEAN DEFAULT TRUE
+);`,
+      'src/db/localStore.ts': `// Robust mock database storage proxying browser-side persistence securely
+export const localStore = {
+  get: <T>(key: string): T | null => {
+    try {
+      const data = localStorage.getItem(\`vibelab_store_\${key}\`);
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  },
+  save: (key: string, val: any): void => {
+    localStorage.setItem(\`vibelab_store_\${key}\`, JSON.stringify(val));
+  }
+};`,
+      'package.json': `{
+  "name": "vibelab-generated-mvp",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.300.0",
+    "motion": "^10.16.2"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "typescript": "^5.2.2"
+  }
+}`,
+      'readme.md': `# Campaign Launch Portfolio — Source Code Build
+This codebase is compiled dynamically with **VibeLab Product Builder Tools**.
+
+## Prerequisites
+- Node.js LTS version
+
+## Getting Started
+To boot this locally, execute command stack:
+\`\`\`bash
+npm install
+npm run dev
+\`\`\`
+
+## Architecture & Integration
+Handles routing via custom React layouts, templates, and server-side model grounding coordinates.`,
+      'metadata.json': `{
+  "name": "${projName} Blueprint",
+  "description": "Student campaign portfolio generated with VibeLab Product Builder.",
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}`
+    };
+  };
+
+  useEffect(() => {
+    if (session?.id) {
+      localStorage.setItem(`vibelab_workspace_${session.id}_active_file`, activeFile);
+      localStorage.setItem(`vibelab_workspace_${session.id}_open_tabs`, JSON.stringify(openTabs));
+      localStorage.setItem(`vibelab_workspace_${session.id}_preview_device`, previewDevice);
+      localStorage.setItem(`vibelab_workspace_${session.id}_sidebar_hidden`, String(isSidebarHidden));
+      localStorage.setItem(`vibelab_workspace_${session.id}_expanded_folders`, JSON.stringify(expandedFolders));
+      if (Object.keys(virtualFiles).length > 0) {
+        localStorage.setItem(`vibelab_workspace_${session.id}_code_changes`, JSON.stringify(virtualFiles));
+      }
+    }
+  }, [activeFile, openTabs, previewDevice, isSidebarHidden, expandedFolders, virtualFiles, session?.id]);
+
   const cyclingMessages = [
     'Turning your idea into reality...',
     projectName ? `Building ${projectName}...` : 'Building your project...',
@@ -358,6 +708,55 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
             });
             setFeatureRationales(initialRationales);
             setFeatureFeedback(initialFeedback);
+
+            // Restore virtual sandbox workspace and code edits
+            const finalMvpCode = data.mvp.mvp_html || '';
+            const pName = data.blueprint?.project_name || '';
+            const initialFiles = getInitialVirtualFiles(pName, finalMvpCode);
+
+            const storedCodeChanges = localStorage.getItem(`vibelab_workspace_${data.session.id}_code_changes`);
+            const storedActiveFile = localStorage.getItem(`vibelab_workspace_${data.session.id}_active_file`);
+            const storedOpenTabs = localStorage.getItem(`vibelab_workspace_${data.session.id}_open_tabs`);
+            const storedPreviewDevice = localStorage.getItem(`vibelab_workspace_${data.session.id}_preview_device`);
+            const storedSidebarHidden = localStorage.getItem(`vibelab_workspace_${data.session.id}_sidebar_hidden`);
+            const storedExpandedFolders = localStorage.getItem(`vibelab_workspace_${data.session.id}_expanded_folders`);
+
+            if (storedCodeChanges) {
+              try {
+                const parsed = JSON.parse(storedCodeChanges);
+                setVirtualFiles({ ...initialFiles, ...parsed });
+              } catch (e) {
+                setVirtualFiles(initialFiles);
+              }
+            } else {
+              setVirtualFiles(initialFiles);
+            }
+
+            if (storedActiveFile) {
+              setActiveFile(storedActiveFile);
+            }
+            if (storedOpenTabs) {
+              try {
+                setOpenTabs(JSON.parse(storedOpenTabs));
+              } catch (e) {
+                setOpenTabs(['index.html']);
+              }
+            }
+            if (storedPreviewDevice) {
+              setPreviewDevice(storedPreviewDevice as any || 'desktop');
+            }
+            if (storedSidebarHidden) {
+              setIsSidebarHidden(storedSidebarHidden === 'true');
+            }
+            if (storedExpandedFolders) {
+              try {
+                setExpandedFolders(JSON.parse(storedExpandedFolders));
+              } catch (e) {}
+            }
+          } else {
+            // Setup fallback default empty workspace if MVP is not loaded
+            const pName = data.blueprint?.project_name || '';
+            setVirtualFiles(getInitialVirtualFiles(pName, ''));
           }
         } else {
           // No active session in database. Prefill Step 1 from latest discovery blueprint
@@ -1154,17 +1553,19 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
       </div>
 
       {/* Scrollable container for the single active step content */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-12 md:py-8 relative z-10 flex flex-col justify-start">
-        <div className="w-full bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 flex-1 flex flex-col overflow-y-auto">
-          <div className="border-b border-slate-100 pb-4 mb-6">
-            <h1 className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#2563eb]/10 border border-[#2563eb]/20 flex items-center justify-center text-[10px] font-mono text-[#2563eb]">
-                {activeStep}
-              </span>
-              {activeItem.label}
-            </h1>
-            <p className="text-[11px] text-slate-500 mt-0.5">{activeItem.desc}</p>
-          </div>
+      <div className={`flex-1 ${activeStep === 6 ? 'p-0 overflow-hidden h-[calc(100vh-140px)]' : 'overflow-y-auto px-4 py-6 md:px-12 md:py-8'} relative z-10 flex flex-col justify-start`}>
+        <div className={`w-full bg-white/70 backdrop-blur-md ${activeStep === 6 ? 'rounded-none border-none p-0 flex-1 flex flex-col h-full overflow-hidden' : 'rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 flex-1 flex flex-col overflow-y-auto'}`}>
+          {activeStep !== 6 && (
+            <div className="border-b border-slate-100 pb-4 mb-6">
+              <h1 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#2563eb]/10 border border-[#2563eb]/20 flex items-center justify-center text-[10px] font-mono text-[#2563eb]">
+                  {activeStep}
+                </span>
+                {activeItem.label}
+              </h1>
+              <p className="text-[11px] text-slate-500 mt-0.5">{activeItem.desc}</p>
+            </div>
+          )}
 
           {STEP_LABELS.map((item) => {
             const isCompleted = item.step < activeStep;
@@ -1625,9 +2026,148 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                        * STEP 6: Understand Your Code (Interactive 3-Panel Walkthrough)
                        ***********************************************************/}
                       {item.step === 6 && (
-                        <div className="flex flex-col lg:flex-row min-h-[580px] bg-slate-50/65 rounded-2xl border border-slate-200 overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
-                          {/* Left Panel: Guide (33% width) */}
-                          <div className="w-full lg:w-[33%] p-5 flex flex-col justify-between space-y-5 bg-white/40">
+                        <div className="flex-1 flex flex-col lg:flex-row h-full w-full bg-white overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+                          
+                          {/* Left Panel 0: Collapsible File Tree Sidebar (Pages, Components, Assets, etc.) */}
+                          {!isSidebarHidden && (
+                            <div className="w-full lg:w-[230px] border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0 font-sans transition-all duration-300 select-none">
+                              <div className="p-3 border-b border-slate-200 bg-[#f8fafc] flex justify-between items-center text-[10px] text-slate-500 font-mono shrink-0 uppercase tracking-widest font-black">
+                                <span className="flex items-center gap-1.5"><Columns className="w-3.5 h-3.5 text-[#2563eb]" /> Sandbox Files</span>
+                                <button
+                                  onClick={() => setIsSidebarHidden(true)}
+                                  className="text-[10px] text-slate-400 hover:text-[#2563eb] font-mono border-none bg-transparent cursor-pointer font-bold"
+                                  title="Collapse sidebar workspace files"
+                                >
+                                  [hide]
+                                </button>
+                              </div>
+
+                              <div className="flex-1 overflow-y-auto p-2.5 space-y-1 scrollbar-thin">
+                                {[
+                                  {
+                                    name: 'Pages',
+                                    isFolder: true,
+                                    folderKey: 'src/pages',
+                                    children: [
+                                      { name: 'Landing.tsx', path: 'src/pages/Landing.tsx' },
+                                      { name: 'Dashboard.tsx', path: 'src/pages/Dashboard.tsx' }
+                                    ]
+                                  },
+                                  {
+                                    name: 'Components',
+                                    isFolder: true,
+                                    folderKey: 'src/components',
+                                    children: [
+                                      { name: 'Navigation.tsx', path: 'src/components/Navigation.tsx' },
+                                      { name: 'InteractiveWidget.tsx', path: 'src/components/InteractiveWidget.tsx' }
+                                    ]
+                                  },
+                                  {
+                                    name: 'Assets',
+                                    isFolder: true,
+                                    folderKey: 'public',
+                                    children: [
+                                      { name: 'logo-accent.svg', path: 'public/logo-accent.svg' },
+                                      { name: 'banner.png', path: 'public/banner.png' }
+                                    ]
+                                  },
+                                  {
+                                    name: 'Styles',
+                                    isFolder: true,
+                                    folderKey: 'src/styles',
+                                    children: [
+                                      { name: 'theme.css', path: 'src/styles/theme.css' },
+                                      { name: 'tailwind.config.js', path: 'tailwind.config.js' }
+                                    ]
+                                  },
+                                  {
+                                    name: 'APIs',
+                                    isFolder: true,
+                                    folderKey: 'src/apis',
+                                    children: [
+                                      { name: 'geminiProxy.ts', path: 'src/apis/geminiProxy.ts' },
+                                      { name: 'analytics.ts', path: 'src/apis/analytics.ts' }
+                                    ]
+                                  },
+                                  {
+                                    name: 'Database Models',
+                                    isFolder: true,
+                                    folderKey: 'src/db',
+                                    children: [
+                                      { name: 'schema.sql', path: 'src/db/schema.sql' },
+                                      { name: 'localStore.ts', path: 'src/db/localStore.ts' }
+                                    ]
+                                  },
+                                  {
+                                    name: 'Configuration Files',
+                                    isFolder: true,
+                                    folderKey: 'config',
+                                    children: [
+                                      { name: 'package.json', path: 'package.json' },
+                                      { name: 'readme.md', path: 'readme.md' },
+                                      { name: 'metadata.json', path: 'metadata.json' },
+                                      { name: 'index.html', path: 'index.html' }
+                                    ]
+                                  }
+                                ].map((node) => {
+                                  const isExpanded = expandedFolders[node.folderKey] !== false;
+                                  return (
+                                    <div key={node.name} className="space-y-0.5">
+                                      {/* Folder Header */}
+                                      <div
+                                        onClick={() => {
+                                          setExpandedFolders(prev => ({
+                                            ...prev,
+                                            [node.folderKey]: !isExpanded
+                                          }));
+                                        }}
+                                        className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-slate-100 rounded-lg text-xs font-bold text-slate-600 cursor-pointer transition-colors"
+                                      >
+                                        <span className="text-slate-400">
+                                          {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                        </span>
+                                        <span className="text-[#2563eb]">
+                                          {isExpanded ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
+                                        </span>
+                                        <span className="truncate">{node.name}</span>
+                                      </div>
+
+                                      {/* Folder Children */}
+                                      {isExpanded && node.children && (
+                                        <div className="pl-6 space-y-0.5 border-l border-slate-200 ml-3.5">
+                                          {node.children.map((child) => {
+                                            const isSelected = activeFile === child.path;
+                                            return (
+                                              <div
+                                                key={child.path}
+                                                onClick={() => {
+                                                  if (!openTabs.includes(child.path)) {
+                                                    setOpenTabs(prev => [...prev, child.path]);
+                                                  }
+                                                  setActiveFile(child.path);
+                                                }}
+                                                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] cursor-pointer transition-all ${
+                                                  isSelected 
+                                                    ? 'bg-[#2563eb]/10 text-[#2563eb] font-extrabold border-l-2 border-l-[#2563eb] pl-1.5' 
+                                                    : 'hover:bg-slate-100 text-slate-500'
+                                                }`}
+                                              >
+                                                <File className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-[#2563eb]' : 'text-slate-400'}`} />
+                                                <span className="truncate">{child.name}</span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Left Panel 1: Guide (300px width, scrollable description guides) */}
+                          <div className="w-full lg:w-[300px] p-5 flex flex-col justify-between bg-white shrink-0 overflow-y-auto scrollbar-thin">
                             <div className="space-y-4">
                               <div>
                                 <div className="text-[10px] font-bold text-[#2563eb] font-mono tracking-widest uppercase mb-1">
@@ -1639,7 +2179,7 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                               </div>
 
                               {/* Numbered tasks */}
-                              <div className="space-y-2.5">
+                              <div className="space-y-2">
                                 {[
                                   { title: 'The Structure', desc: 'How your product is organised' },
                                   { title: 'The Navigation', desc: 'How users move between screens' },
@@ -1672,7 +2212,7 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                               </div>
 
                               {/* Explanation block */}
-                              <div className="p-4 bg-white border border-slate-200 rounded-xl space-y-2">
+                              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                                 <p className="text-[10px] font-bold text-[#2563eb] tracking-wide uppercase font-mono">
                                   What this code does
                                 </p>
@@ -1682,67 +2222,118 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                                     <span className="text-[11px] text-slate-500 animate-pulse font-mono uppercase tracking-wider">Compiling expert review...</span>
                                   </div>
                                 ) : (
-                                  <p className="text-[11px] text-slate-600 leading-normal pl-0.5">
+                                  <p className="text-[11px] text-slate-600 leading-relaxed pl-0.5 font-sans">
                                     {taskExplanations[selectedTaskIdx] || 'Think of this like your app\'s foundation. It defines the central shell that ensures your text, inputs, and screens have space to exist and flow perfectly!'}
                                   </p>
                                 )}
                               </div>
                             </div>
 
-                            <div className="pt-2">
-                              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-[10px] leading-relaxed flex items-start gap-1.5 font-sans">
+                            <div className="pt-4 border-t border-slate-100">
+                              <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl text-slate-500 text-[10px] leading-relaxed flex items-start gap-1.5 font-sans">
                                 <Info className="w-3.5 h-3.5 text-[#2563eb] mt-0.5 shrink-0" />
-                                <span>Study the code panel structure. When you understand how it fits together, click <strong>Lock Walkthrough & Code Review</strong> in the footer below to lock this section!</span>
+                                <span>Study the project structure panel. You can double-click folders and select files to edit code. Click <strong>Lock Walkthrough & Code Review</strong> below to check progress!</span>
                               </div>
                             </div>
                           </div>
 
-                          {/* Center Panel: Monaco Editor (34% width) */}
-                          <div className="w-full lg:w-[34%] flex flex-col bg-white">
-                            {/* Editor Utilities header */}
-                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white font-mono text-[10px]">
-                              <span className="text-cyan-400 font-bold uppercase tracking-wide">index.html</span>
-                              <div className="flex items-center gap-3">
+                          {/* Center Panel 2: Code Editor (flex-1 to expand beautifully) */}
+                          <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden h-full">
+                            {/* Tab Bar Utilities header */}
+                            <div className="flex items-center justify-between px-2 bg-slate-900 border-b border-slate-800 font-mono text-[10px] shrink-0 select-none overflow-x-auto scrollbar-none h-[38px] w-full">
+                              <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-none h-full">
+                                {openTabs.map((tab) => {
+                                  const isActive = activeFile === tab;
+                                  const parts = tab.split('/');
+                                  const displayName = parts[parts.length - 1];
+                                  return (
+                                    <div
+                                      key={tab}
+                                      onClick={() => setActiveFile(tab)}
+                                      className={`flex items-center gap-2 px-3 h-full cursor-pointer transition-colors border-r border-slate-800 relative group truncate max-w-[130px] ${
+                                        isActive 
+                                          ? 'bg-slate-950 text-[#2563eb] font-bold border-t-2 border-t-[#2563eb]' 
+                                          : 'bg-slate-900 hover:bg-slate-850 text-slate-400'
+                                      }`}
+                                    >
+                                      <File className={`w-3 h-3 shrink-0 ${isActive ? 'text-[#2563eb]' : 'text-slate-500'}`} />
+                                      <span className="truncate">{displayName}</span>
+                                      
+                                      {tab !== 'index.html' && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const nextTabs = openTabs.filter(t => t !== tab);
+                                            setOpenTabs(nextTabs);
+                                            if (activeFile === tab) {
+                                              setActiveFile(nextTabs[nextTabs.length - 1] || 'index.html');
+                                            }
+                                          }}
+                                          className="p-0.5 rounded-full hover:bg-slate-800 text-slate-500 hover:text-white transition-all ml-1 bg-transparent border-none text-[8px] line-none"
+                                        >
+                                          ×
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              <div className="flex items-center gap-3.5 px-2">
                                 <button
                                   onClick={() => {
-                                    navigator.clipboard.writeText(mvp?.mvp_html || '');
-                                    toast.success('Starter code copied to clipboard!');
+                                    navigator.clipboard.writeText(virtualFiles[activeFile] || '');
+                                    toast.success(`${activeFile} copied to clipboard!`);
                                     setCopied(true);
                                     setTimeout(() => setCopied(false), 2000);
                                   }}
-                                  className="text-slate-500 hover:text-slate-800 flex items-center gap-1 uppercase transition-colors font-bold"
+                                  className="text-slate-400 hover:text-white flex items-center gap-1 uppercase transition-colors font-bold bg-transparent border-none cursor-pointer"
+                                  title="Copy active code"
                                 >
                                   {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                                  Copy
+                                  <span className="hidden sm:inline">Copy</span>
                                 </button>
                                 <button
                                   onClick={() => {
-                                    handleTaskClick(selectedTaskIdx);
-                                    toast.success('Template view reset!');
+                                    const initial = getInitialVirtualFiles(projectName, mvp?.mvp_html || '');
+                                    setVirtualFiles(prev => ({
+                                      ...prev,
+                                      [activeFile]: (initial as any)[activeFile] || ''
+                                    }));
+                                    toast.success(`${activeFile} reset to default template version!`);
                                   }}
-                                  className="text-slate-500 hover:text-slate-800 flex items-center gap-1 uppercase transition-colors font-bold opacity-80"
+                                  className="text-slate-400 hover:text-white flex items-center gap-1 uppercase transition-colors font-bold bg-transparent border-none cursor-pointer"
+                                  title="Reset code"
                                 >
                                   <RotateCw className="w-3 h-3" />
-                                  Reset
+                                  <span className="hidden sm:inline">Reset</span>
                                 </button>
                               </div>
                             </div>
 
                             {/* Monaco Editor React Container */}
-                            <div className="flex-1 min-h-[350px] relative overflow-hidden flex flex-col">
-                              {mvp?.mvp_html ? (
+                            <div className="flex-1 relative overflow-hidden flex flex-col bg-slate-950">
+                              {Object.keys(virtualFiles).length > 0 ? (
                                 <MonacoEditor
                                   height="100%"
-                                  language="html"
+                                  language={activeFile.endsWith('.ts') ? 'typescript' : activeFile.endsWith('.tsx') ? 'typescript' : activeFile.endsWith('.sql') ? 'sql' : activeFile.endsWith('.md') ? 'markdown' : activeFile.endsWith('.css') ? 'css' : 'html'}
                                   theme="vs-dark"
-                                  value={mvp.mvp_html}
+                                  value={virtualFiles[activeFile] || ''}
+                                  onChange={(val) => {
+                                    if (val !== undefined) {
+                                      setVirtualFiles(prev => ({
+                                        ...prev,
+                                        [activeFile]: val
+                                      }));
+                                    }
+                                  }}
                                   onMount={(editor, monaco) => {
                                     editorRef.current = editor;
                                     monacoRef.current = monaco;
                                     handleTaskClick(selectedTaskIdx);
                                   }}
                                   options={{
-                                    readOnly: true,
+                                    readOnly: false,
                                     minimap: { enabled: false },
                                     fontSize: 11,
                                     lineNumbers: "on",
@@ -1753,54 +2344,98 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                                   }}
                                 />
                               ) : (
-                                <div className="absolute inset-0 bg-white flex flex-col justify-center items-center text-slate-500 gap-2">
+                                <div className="absolute inset-0 bg-slate-950 flex flex-col justify-center items-center text-slate-500 gap-2">
                                   <Loader2 className="w-6 h-6 animate-spin text-[#2563eb]" />
                                   <span className="text-[10px] uppercase font-mono tracking-widest text-[#2563eb]">LOADING SOURCE...</span>
                                 </div>
                               )}
                             </div>
+
+                            {/* Editor Status Bar */}
+                            <div className="h-[24px] bg-[#0b0f19] border-t border-slate-900 flex justify-between items-center px-4 font-mono text-[9px] text-slate-500 select-none uppercase tracking-wider shrink-0">
+                              <span>Writable Sandbox Compiler</span>
+                              <span className="flex items-center gap-1"><Check className="w-3 h-3 text-emerald-500" /> Auto-Saved</span>
+                            </div>
                           </div>
 
-                          {/* Right Panel: Live Interactive Preview Simulated (33% width) */}
-                          <div className="w-full lg:w-[33%] flex flex-col bg-white">
+                          {/* Right Panel 3: Live Interactive Preview (flex-1 to expand beautifully) */}
+                          <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden h-full">
                             {/* Device controls header */}
-                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase font-mono tracking-widest">FLUID PREVIEW</span>
+                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white shrink-0 select-none">
+                              <div className="flex items-center gap-2">
+                                {isSidebarHidden && (
+                                  <button
+                                    onClick={() => setIsSidebarHidden(false)}
+                                    className="p-1 px-1.5 rounded hover:bg-slate-100 text-[#2563eb] text-[10px] uppercase font-mono font-bold flex items-center gap-1 cursor-pointer border border-[#2563eb]/25 bg-transparent shrink-0"
+                                    title="Show Project Source files explorer"
+                                  >
+                                    <Layout className="w-3 h-3 text-[#2563eb]" /> Show Files
+                                  </button>
+                                )}
+                                <span className="text-[10px] font-black text-slate-500 uppercase font-mono tracking-widest">FLUID PREVIEW</span>
+                              </div>
                               
-                              {/* Device Toggles */}
-                              <div className="flex items-center gap-1 p-0.5 bg-white border border-slate-200 rounded-md">
+                              {/* Device Toggles & Full Screen Mode Launcher */}
+                              <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1 p-0.5 bg-white border border-slate-200 rounded-md">
+                                  <button
+                                    onClick={() => setPreviewDevice('desktop')}
+                                    className={`p-1 rounded transition-colors cursor-pointer border-none bg-transparent ${previewDevice === 'desktop' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                                    title="Desktop preview"
+                                  >
+                                    <Monitor className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => setPreviewDevice('tablet')}
+                                    className={`p-1 rounded transition-colors cursor-pointer border-none bg-transparent ${previewDevice === 'tablet' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                                    title="Tablet preview"
+                                  >
+                                    <Tablet className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => setPreviewDevice('mobile')}
+                                    className={`p-1 rounded transition-colors cursor-pointer border-none bg-transparent ${previewDevice === 'mobile' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                                    title="Mobile preview"
+                                  >
+                                    <Smartphone className="w-3 h-3" />
+                                  </button>
+                                </div>
+
+                                <div className="w-px h-4 bg-slate-200 mx-1" />
+
                                 <button
-                                  onClick={() => setPreviewDevice('desktop')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'desktop' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-850'}`}
+                                  onClick={() => {
+                                    const el = document.getElementById('walkthrough-preview-iframe') as HTMLIFrameElement;
+                                    if (el) el.setAttribute('srcdoc', getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || ''));
+                                    toast.success('Live preview recompiled successfully!', { icon: '🔄' });
+                                  }}
+                                  className="p-1 hover:bg-slate-100 rounded transition-colors text-slate-500 hover:text-slate-800 cursor-pointer border-none bg-transparent"
+                                  title="Hot Reload Preview"
                                 >
-                                  <Monitor className="w-3 h-3" />
+                                  <RefreshCw className="w-3 h-3" />
                                 </button>
+
                                 <button
-                                  onClick={() => setPreviewDevice('tablet')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'tablet' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-850'}`}
+                                  onClick={() => setShowFullScreenPreview(true)}
+                                  className="p-1 hover:bg-slate-100 text-slate-500 hover:text-[#2563eb] transition-colors rounded cursor-pointer border-none bg-transparent"
+                                  title="Expand Full Screen Preview Mode"
                                 >
-                                  <Tablet className="w-3 h-3" />
-                                </button>
-                                <button
-                                  onClick={() => setPreviewDevice('mobile')}
-                                  className={`p-1 rounded transition-colors ${previewDevice === 'mobile' ? 'bg-[#2563eb] text-white' : 'text-slate-500 hover:text-slate-850'}`}
-                                >
-                                  <Smartphone className="w-3 h-3" />
+                                  <Maximize2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             </div>
 
                             {/* Iframe stage rendering container */}
-                            <div className="flex-1 bg-slate-50 flex flex-col justify-center items-center p-3 relative overflow-hidden">
-                              <div className={`transition-all duration-300 shadow-2xl h-full border border-slate-200 rounded-xl overflow-hidden bg-slate-50 ${
-                                previewDevice === 'mobile' ? 'w-[280px]' : previewDevice === 'tablet' ? 'w-[420px]' : 'w-full'
+                            <div className="flex-1 bg-slate-100 flex flex-col justify-center items-center p-4 relative overflow-hidden">
+                              <div className={`transition-all duration-300 shadow-2xl h-full border border-slate-200/60 rounded-2xl overflow-hidden bg-white ${
+                                previewDevice === 'mobile' ? 'w-[290px]' : previewDevice === 'tablet' ? 'w-[440px]' : 'w-full'
                               }`}>
-                                {mvp?.mvp_html ? (
+                                {virtualFiles['index.html'] !== undefined ? (
                                   <iframe
                                     id="walkthrough-preview-iframe"
                                     title="Campaign MVP code interactive walkthrough and emulator"
                                     sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
-                                    srcDoc={getInjectedMvpCode(mvp.mvp_html)}
+                                    srcDoc={getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || '')}
                                     className="w-full h-full border-none"
                                   />
                                 ) : (
@@ -2332,112 +2967,454 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
         )}
       </AnimatePresence>
 
-      {/* Premium Full-Screen Deliverables Board Modal Overlay */}
+      {/* Premium Full-Screen Showcase Modal Overview Overlay */}
       <AnimatePresence>
         {showFullProductModal && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-white/85 backdrop-blur-md flex items-center justify-center p-4 selection:bg-[#2563eb]/30"
+            className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 selection:bg-[#2563eb]/30"
           >
             <motion.div 
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="bg-white border border-slate-200 rounded-3xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl text-left"
+              className="bg-white border border-slate-200 rounded-3xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col shadow-2xl text-left"
             >
-              <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-white/65 shrink-0">
+              {/* Header block with elegant dark styling for extreme readability contrast */}
+              <div className="p-6 border-b border-slate-800 bg-slate-950 flex justify-between items-center shrink-0">
                 <div>
-                  <h4 className="text-[10px] font-black uppercase text-[#2563eb] tracking-widest font-mono">Launch Kit Board</h4>
-                  <h3 className="text-lg font-bold text-white mt-1">Campaign Deliverables: {projectName}</h3>
+                  <h4 className="text-[10px] font-black uppercase text-[#2563eb] tracking-widest font-mono flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-[#2563eb]" /> VIBELAB FINAL PRODUCT DEMO SHOWCASE
+                  </h4>
+                  <h3 className="text-lg font-bold text-white mt-1">
+                    Live Launch Exhibit: {projectName || 'My Campaign MVP'}
+                  </h3>
                 </div>
                 <button 
                   onClick={() => setShowFullProductModal(false)}
-                  className="px-4 py-2 border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-white rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
+                  className="px-4 py-2 border border-slate-800 hover:border-slate-700 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
                 >
-                  Close ×
+                  Return to Dashboard ×
                 </button>
               </div>
 
-              {/* Scrollable deliverables overview content */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Horizontal Showcase Navigation Tabs */}
+              <div className="flex border-b border-slate-200 bg-slate-50 select-none overflow-x-auto shrink-0 scrollbar-none">
+                {[
+                  { id: 'overview', label: 'Product Narrative', icon: FileText },
+                  { id: 'screens', label: 'Interactive Blueprint Screens', icon: Layout },
+                  { id: 'preview', label: 'Live Executable App', icon: Monitor },
+                  { id: 'milestones', label: 'Timeline & Evidence Credentials', icon: Award }
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeShowcaseTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveShowcaseTab(tab.id as any)}
+                      className={`flex items-center gap-2 px-5 py-3 text-xs font-bold border-r border-slate-200 transition-colors shrink-0 bg-transparent cursor-pointer h-11 ${
+                        isActive 
+                          ? 'bg-white text-[#2563eb] border-b-2 border-b-[#2563eb]' 
+                          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Scrollable deliverables tab content area */}
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-55/50">
                 
-                {/* 1. Project Blueprint */}
-                <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 space-y-3">
-                  <h4 className="text-xs font-bold text-[#2563eb] font-mono uppercase tracking-wider">
-                    I. Foundational Project Blueprint
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                    <div>
-                      <p className="text-slate-500 uppercase font-mono text-[9px] font-bold">Project Name</p>
-                      <p className="text-slate-700 font-bold mt-0.5">{projectName}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500 uppercase font-mono text-[9px] font-bold">Target User Base</p>
-                      <p className="text-slate-700 mt-0.5">{targetUsers}</p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-slate-500 uppercase font-mono text-[9px] font-bold">Problem Statement</p>
-                      <p className="text-slate-700 mt-0.5 leading-relaxed">{problemStatement}</p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-slate-500 uppercase font-mono text-[9px] font-bold">Minimum Viable Scope</p>
-                      <p className="text-slate-700 mt-0.5 leading-relaxed">{mvpScope}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. Campaign Description */}
-                <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 space-y-2">
-                  <h4 className="text-xs font-bold text-[#2563eb] font-mono uppercase tracking-wider">
-                    II. Campaign Product Pitch
-                  </h4>
-                  <p className="text-xs text-slate-700 leading-relaxed font-sans whitespace-pre-wrap select-text pl-1 border-l-2 border-[#2563eb]/35">
-                    {productDescription || 'Describe details locked in Step 7 pitch board.'}
-                  </p>
-                </div>
-
-                {/* 3. Features & Rationales */}
-                <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 space-y-3">
-                  <h4 className="text-xs font-bold text-[#2563eb] font-mono uppercase tracking-wider">
-                    III. Core MVP System Features
-                  </h4>
-                  <div className="space-y-3">
-                    {features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true)).map((feat) => (
-                      <div key={feat.id} className="p-3.5 rounded-xl bg-white/50 border border-slate-200 text-xs space-y-2">
-                        <div className="flex items-center gap-1.5 font-bold text-slate-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
-                          {feat.feature_name}
+                {/* 1. OVERVIEW TAB PANEL */}
+                {activeShowcaseTab === 'overview' && (
+                  <div className="space-y-6">
+                    {/* Project Blueprint */}
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 className="text-xs font-black text-[#2563eb] font-mono uppercase tracking-wider">
+                          I. FOUNDATION BLUEPRINT SPECIFICATION
+                        </h4>
+                        <span className="text-[10px] bg-[#2563eb]/10 text-[#2563eb] px-2 py-0.5 rounded-full font-mono font-bold">100% SPEC LOCKED</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div>
+                          <p className="text-slate-400 uppercase font-mono text-[9px] font-bold">Project Name</p>
+                          <p className="text-slate-800 font-bold mt-1">{projectName || 'My Campaign'}</p>
                         </div>
-                        <p className="text-slate-500 text-[11px] leading-relaxed">{feat.feature_description}</p>
-                        <div className="p-2.5 rounded bg-white border border-slate-855 text-slate-600">
-                          <strong className="text-[#2563eb] font-mono text-[9px] uppercase tracking-wide block mb-1">Founder's Rationale:</strong>
-                          <p className="italic text-[11px] leading-normal select-text">"{featureRationales[feat.id] || 'Under development.'}"</p>
+                        <div>
+                          <p className="text-slate-400 uppercase font-mono text-[9px] font-bold">Target User Base</p>
+                          <p className="text-slate-800 font-medium mt-1">{targetUsers || 'General Public/Teens'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-slate-400 uppercase font-mono text-[9px] font-bold">Problem Statement</p>
+                          <p className="text-slate-700 mt-1 leading-relaxed">{problemStatement || 'Undefined.'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-slate-400 uppercase font-mono text-[9px] font-bold">Minimum Viable Scope</p>
+                          <p className="text-slate-700 mt-1 leading-relaxed">{mvpScope || 'No scope definition assigned.'}</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                {/* 4. Demo script */}
-                <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 space-y-2">
-                  <h4 className="text-xs font-bold text-[#2563eb] font-mono uppercase tracking-wider">
-                    IV. Step-by-Step Demo Script
-                  </h4>
-                  <p className="text-xs text-slate-600 leading-relaxed font-sans whitespace-pre-wrap select-text pl-1 border-l-2 border-[#2563eb]/35">
-                    {demoScript || 'Script details locked in Step 9 presentation rehearsal.'}
-                  </p>
-                </div>
+                    {/* Campaign Description & Pitch */}
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-3">
+                      <h4 className="text-xs font-black text-[#2563eb] font-mono uppercase tracking-wider">
+                        II. MARKETING CAMPAIGN PRODUCT PITCH
+                      </h4>
+                      <div className="p-4 rounded-xl bg-slate-55/40 border border-slate-100 font-sans text-xs leading-relaxed text-slate-700 whitespace-pre-wrap select-text pl-3.5 border-l-2 border-l-[#2563eb]">
+                        {productDescription || 'Explain details locked in Step 7 pitch board.'}
+                      </div>
+                    </div>
+
+                    {/* Features & Rationales */}
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-4">
+                      <h4 className="text-xs font-black text-[#2563eb] font-mono uppercase tracking-wider">
+                        III. HIGH-PRIORITY MVP SYSTEM FEATURES & STUDENT INTENT
+                      </h4>
+                      <div className="grid grid-cols-1 gap-3.5">
+                        {features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true)).map((feat) => (
+                          <div key={feat.id} className="p-4 rounded-xl bg-white border border-slate-200 text-xs hover:shadow-sm transition-all">
+                            <div className="flex items-center gap-1.5 font-bold text-slate-800">
+                              <span className="w-2 h-2 rounded-full bg-[#2563eb]"></span>
+                              {feat.feature_name}
+                              <span className="text-[9px] font-mono bg-blue-50 text-[#2563eb] px-1.5 py-0.2 rounded shrink-0 font-bold">MUST_HAVE</span>
+                            </div>
+                            <p className="text-slate-500 text-[11px] mt-1 pl-3.5 leading-relaxed">{feat.feature_description}</p>
+                            <div className="mt-3 p-3 rounded-lg bg-slate-50/50 border border-slate-100 text-slate-600">
+                              <span className="text-[#2563eb] font-mono text-[9px] font-bold uppercase tracking-wide block mb-1">Founder's Design Intent Rationale:</span>
+                              <p className="italic text-[11px] leading-relaxed select-text pl-1.5 border-l-2 border-slate-300">"{featureRationales[feat.id] || 'Under development.'}"</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Demo script */}
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-3">
+                      <h4 className="text-xs font-black text-[#2563eb] font-mono uppercase tracking-wider">
+                        IV. THE PRESENTATION REHEARSAL INSTRUCTIONS
+                      </h4>
+                      <div className="p-4 rounded-xl bg-slate-55/40 border border-slate-100 text-xs font-serif leading-relaxed text-slate-600 whitespace-pre-wrap select-text pl-3 border-l-2 border-l-[#2563eb]">
+                        {demoScript || 'Script details locked in Step 9 presentation rehearsal.'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. PRODUCT SCREENS TAB PANEL */}
+                {activeShowcaseTab === 'screens' && (
+                  <div className="space-y-6">
+                    <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-2">
+                      <h3 className="text-xs font-bold text-slate-800">Mockup Layout Specifications</h3>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        These are the individual client interface panels generated to guide your MVP development flow. Click any screen component below to inspect the UI layout parameters.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {screens.length > 0 ? (
+                        screens.map((screen, sIdx) => (
+                          <div 
+                            key={screen.id || sIdx}
+                            className="bg-white border border-slate-200 rounded-2xl p-5 hover:border-[#2563eb]/45 transition-all flex flex-col justify-between shadow-sm relative group"
+                          >
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono text-[9px] font-bold text-[#2563eb] bg-[#2563eb]/10 px-2 py-0.5 rounded-md">
+                                  Screen {sIdx + 1}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  COMPLIANT
+                                </span>
+                              </div>
+                              <h4 className="text-xs font-black text-slate-850 truncate uppercase mt-1">
+                                {screen.screen_name}
+                              </h4>
+                              <p className="text-[11px] text-slate-500 leading-relaxed min-h-[38px] line-clamp-2">
+                                {screen.screen_purpose || 'No description designated for this mockup card.'}
+                              </p>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setSelectedScreen(screen);
+                              }}
+                              className="mt-4 w-full py-2 border border-[#2563eb]/30 hover:border-[#2563eb] text-[#2563eb] text-[10px] font-mono tracking-wider uppercase font-bold rounded-lg transition-colors bg-white flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" /> Inspect UI Blueprint
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="col-span-2 p-12 text-center rounded-2xl bg-white border border-dashed border-slate-205 text-slate-400 space-y-2">
+                          <Layout className="w-10 h-10 mx-auto text-slate-300" />
+                          <p className="text-xs font-medium">No sandbox viewport prototype screens have been compiled yet.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. LIVE INTERACTIVE PREVIEW TAB PANEL */}
+                {activeShowcaseTab === 'preview' && (
+                  <div className="h-full flex flex-col space-y-4">
+                    <div className="p-4 rounded-xl bg-[#2563eb]/5 border border-[#2563eb]/15 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-[#2563eb] flex items-center gap-1.5">
+                          <Monitor className="w-4 h-4" /> Live Executable Interactive Simulator
+                        </h4>
+                        <p className="text-[10px] text-slate-500 mt-0.5 leading-normal">
+                          Test features instantly like an end user! The simulator runs the exact code from your active work draft sandbox.
+                        </p>
+                      </div>
+
+                      {/* Launch external */}
+                      <button
+                        onClick={() => {
+                          const htmlCode = virtualFiles['index.html'] || mvp?.mvp_html || '';
+                          const blob = new Blob([htmlCode], { type: 'text/html' });
+                          const url = URL.createObjectURL(blob);
+                          window.open(url, '_blank');
+                          toast.success('App launched in full viewport browser screen!');
+                        }}
+                        className="px-3 py-1.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-lg text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shrink-0 cursor-pointer border-none"
+                        title="Launch app in a secondary window"
+                      >
+                        <ExternalLink className="w-3 h-3" /> External Launch
+                      </button>
+                    </div>
+
+                    {/* Simulated Stage Device controls */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex-1 flex flex-col min-h-[500px]">
+                      <div className="flex justify-between items-center bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 mb-4 text-[10px]">
+                        <span className="text-green-400 font-mono uppercase tracking-widest font-black flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping" /> App Running (PORT: 3000)
+                        </span>
+
+                        <div className="flex items-center gap-1 p-0.5 bg-slate-900 border border-slate-800 rounded-md">
+                          <button
+                            onClick={() => setPreviewDevice('desktop')}
+                            className={`p-1 rounded transition-colors cursor-pointer border-none bg-transparent ${previewDevice === 'desktop' ? 'bg-[#2563eb] text-white' : 'text-slate-400 hover:text-white'}`}
+                            title="Desktop layout"
+                          >
+                            <Monitor className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setPreviewDevice('tablet')}
+                            className={`p-1 rounded transition-colors cursor-pointer border-none bg-transparent ${previewDevice === 'tablet' ? 'bg-[#2563eb] text-white' : 'text-slate-400 hover:text-white'}`}
+                            title="Tablet layout"
+                          >
+                            <Tablet className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setPreviewDevice('mobile')}
+                            className={`p-1 rounded transition-colors cursor-pointer border-none bg-transparent ${previewDevice === 'mobile' ? 'bg-[#2563eb] text-white' : 'text-slate-400 hover:text-white'}`}
+                            title="Mobile layout"
+                          >
+                            <Smartphone className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dynamic Sized Stage Screen Frame Container */}
+                      <div className="flex-1 bg-slate-850 rounded-xl p-3 flex justify-center items-center overflow-hidden">
+                        <div className={`transition-all duration-300 shadow-2xl h-full border border-slate-200 bg-white overflow-hidden ${
+                          previewDevice === 'mobile' ? 'w-[290px]' : previewDevice === 'tablet' ? 'w-[450px]' : 'w-full'
+                        } rounded-xl`}>
+                          <iframe
+                            id="showcase-simulator-iframe"
+                            title="Mockup Emulator Interactive Exhibit Playground"
+                            sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
+                            srcDoc={getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || '')}
+                            className="w-full h-full border-none bg-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Timeline & BADGE TAB PANEL */}
+                {activeShowcaseTab === 'milestones' && (
+                  <div className="space-y-6">
+                    {/* Badge and certification cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                      
+                      {/* Left: Credential Certificate Frame */}
+                      <div className="md:col-span-2 bg-[#090d16] border border-slate-800 text-white rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+                        {/* watermark */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.03] select-none pointer-events-none">
+                          <Trophy className="w-60 h-60 text-white" />
+                        </div>
+
+                        <div className="z-10 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h5 className="text-[9px] font-bold font-mono uppercase tracking-widest text-amber-400">CREDENTIAL DESIGNATION</h5>
+                              <h4 className="text-sm font-bold tracking-tight text-white mt-1">VibeLab Campaign MVP Architect</h4>
+                            </div>
+                            <Award className="w-8 h-8 text-amber-400" />
+                          </div>
+
+                          <div className="pt-4 space-y-1">
+                            <p className="text-[10px] uppercase font-mono text-slate-400 tracking-wider">PROJECT FOUNDER</p>
+                            <p className="text-lg font-serif italic text-amber-200 font-bold">Certified Innovator Developer</p>
+                          </div>
+
+                          <div className="pt-2 text-xs text-slate-300 font-sans leading-relaxed">
+                            Has compiled, tested, and structurally certified a functional campaign product pitch MVP for <strong>{projectName || 'Unnamed Campaign App'}</strong>, satisfying the exact standards of iterative user research, screen prototyping, code structural walkthroughs, and executive rehearsal pitch logs.
+                          </div>
+                        </div>
+
+                        <div className="z-10 border-t border-slate-800/80 pt-4 flex justify-between items-center text-[10px] font-mono text-slate-500">
+                          <span>ISSUE REF CODE: {session?.id || 'Ref-Phase2'}</span>
+                          <span>ISSUED BY: G-SYSTEMS VIBELAB</span>
+                        </div>
+                      </div>
+
+                      {/* Right: Milestone checklists */}
+                      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+                        <div className="space-y-3">
+                          <h4 className="text-[10px] font-black uppercase text-slate-500 font-mono tracking-widest">
+                            Milestones Met (10/10)
+                          </h4>
+
+                          <div className="space-y-1.5 overflow-y-auto max-h-[220px]">
+                            {[
+                              'Idea Discovery',
+                              'Feature Matrix Selection',
+                              'Customer User Journeys',
+                              'Refining UX Scopes',
+                              'Wireframing Screens',
+                              'Sandbox Walkthrough',
+                              'Launching Pitch Narrative',
+                              'Milestone Summaries',
+                              'Executive Demo Script',
+                              'Certification & Evidence'
+                            ].map((mil, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-[10px] text-slate-600 font-bold font-sans">
+                                <div className="w-4 h-4 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 font-black">
+                                  ✓
+                                </div>
+                                <span className="truncate">{mil}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-100">
+                          <button
+                            onClick={() => {
+                              const cite = `[VID: ${session?.id || 'Ref-Phase2'}] Portfolio Evidence citation compiled on UTC ${new Date().toISOString().substring(0, 10)} for Campaign MVP projectName: "${projectName || 'My App'}". Verified on VibeLab Sandbox v1.0.`;
+                              navigator.clipboard.writeText(cite);
+                              toast.success('Citation evidence citation copied for sandbox portfolio record!');
+                            }}
+                            className="w-full text-center py-2 border border-slate-200 hover:border-[#2563eb] text-[#2563eb] text-[10px] tracking-widest uppercase font-mono font-bold rounded-lg transition-colors bg-transparent cursor-pointer"
+                          >
+                            Copy Portfolio Evidence Code
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                )}
 
               </div>
 
-              {/* Footer */}
-              <div className="p-5 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-slate-500 font-mono text-[10px] shrink-0">
+              {/* Showcase Footer panel */}
+              <div className="p-5 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-slate-500 font-mono text-[10px] shrink-0 select-none">
                 <span className="flex items-center gap-1.5"><Award className="w-4 h-4 text-[#2563eb]" /> VibeLab Campaign Launch Board</span>
                 <span>ID: {session?.id || '200'}</span>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Dynamic Full Screen Emulator Workspace Overlay */}
+      <AnimatePresence>
+        {showFullScreenPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-md flex flex-col selection:bg-[#2563eb]/20"
+          >
+            {/* Top bar control menu */}
+            <div className="h-[56px] px-6 bg-slate-950 border-b border-slate-800 flex justify-between items-center text-white select-none shrink-0">
+              <div className="flex items-center gap-3 justify-start max-w-[40%]">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+                <h3 className="text-[10px] font-bold font-mono uppercase tracking-widest text-[#2563eb] truncate">
+                  Full Screen Preview: {projectName || 'My Campaign'}
+                </h3>
+              </div>
+
+              {/* Layout controls */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-lg">
+                  <button
+                    onClick={() => setPreviewDevice('desktop')}
+                    className={`px-3 py-1.5 rounded text-[11px] font-mono font-bold transition-all flex items-center gap-1.5 border-none bg-transparent ${previewDevice === 'desktop' ? 'bg-[#2563eb] text-white' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    <Monitor className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Desktop</span>
+                  </button>
+                  <button
+                    onClick={() => setPreviewDevice('tablet')}
+                    className={`px-3 py-1.5 rounded text-[11px] font-mono font-bold transition-all flex items-center gap-1.5 border-none bg-transparent ${previewDevice === 'tablet' ? 'bg-[#2563eb] text-white' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    <Tablet className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Tablet</span>
+                  </button>
+                  <button
+                    onClick={() => setPreviewDevice('mobile')}
+                    className={`px-3 py-1.5 rounded text-[11px] font-mono font-bold transition-all flex items-center gap-1.5 border-none bg-transparent ${previewDevice === 'mobile' ? 'bg-[#2563eb] text-white' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Mobile</span>
+                  </button>
+                </div>
+
+                <div className="w-px h-5 bg-slate-800 mx-1" />
+
+                <button
+                  onClick={() => {
+                    const el = document.getElementById('full-screen-preview-iframe') as HTMLIFrameElement;
+                    if (el) el.setAttribute('srcdoc', getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || ''));
+                    toast.success('Live Emulator Hot Reload Refreshed!');
+                  }}
+                  className="p-2 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-white transition-all cursor-pointer border-none bg-transparent flex items-center justify-center shrink-0"
+                  title="Force Hot Reload Simulator Code"
+                >
+                  <RefreshCw className="w-4 h-4 animate-spin-once" />
+                </button>
+
+                <button
+                  onClick={() => setShowFullScreenPreview(false)}
+                  className="px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white rounded-xl text-xs font-bold transition-all cursor-pointer border-none"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+
+            {/* Simulated Frame Canvas Container */}
+            <div className="flex-1 bg-slate-900 p-6 flex justify-center items-center overflow-hidden">
+              <div className={`transition-all duration-300 shadow-2xl h-full border border-slate-800 bg-white overflow-hidden ${
+                previewDevice === 'mobile' ? 'w-[325px]' : previewDevice === 'tablet' ? 'w-[640px]' : 'w-full'
+              } rounded-2xl`}>
+                <iframe
+                  id="full-screen-preview-iframe"
+                  title="Full Screen Prototype Sizing Emulator Layout"
+                  sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
+                  srcDoc={getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || '')}
+                  className="w-full h-full border-none bg-white"
+                />
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
