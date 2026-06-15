@@ -173,11 +173,8 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
         const phaseId = parseInt(match[1], 10);
         if (phaseId === 1) {
           if (user?.ideation_completed) {
-            if (onNavigate) {
-              onNavigate('ideation-blueprint');
-            } else {
-              navigate('/ideation/blueprint');
-            }
+            setSelectedPhaseId(1);
+            setActiveView('phase');
           } else {
             if (onNavigate) {
               onNavigate('ideation');
@@ -691,14 +688,20 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                   {/* Phase 1: Discovery & Ideation */}
                   <button
                     onClick={() => {
-                      if (onNavigate) {
-                        onNavigate(user?.ideation_completed ? 'ideation-blueprint' : 'ideation');
+                      if (user?.ideation_completed) {
+                        setSelectedPhaseId(1);
+                        setActiveView('phase');
+                        navigate('/phase/1');
                       } else {
-                        navigate(user?.ideation_completed ? '/ideation/blueprint' : '/ideation');
+                        if (onNavigate) {
+                          onNavigate('ideation');
+                        } else {
+                          navigate('/ideation');
+                        }
                       }
                     }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
-                      activeView === 'ideation' 
+                      (activeView === 'ideation' || (activeView === 'phase' && selectedPhaseId === 1))
                         ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' 
                         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                     }`}

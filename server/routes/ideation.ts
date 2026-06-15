@@ -618,4 +618,39 @@ router.get('/blueprint/:vl_id', async (req: any, res) => {
   }
 });
 
+// 4e. PUT /api/ideation/blueprint
+router.put('/blueprint', authenticateToken, async (req: any, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const userId = req.user.userId;
+    const { product_name, problem_statement, target_user_persona, solution_concept } = req.body;
+
+    // First check if there is an existing blueprint
+    const [existing]: any = await p.execute(
+      'SELECT id FROM project_blueprints WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+      [userId]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'No blueprint found to update' });
+    }
+
+    const bpId = existing[0].id;
+
+    await p.execute(
+      `UPDATE project_blueprints 
+       SET product_name = ?, problem_statement = ?, target_user_persona = ?, solution_concept = ?
+       WHERE id = ? AND user_id = ?`,
+      [product_name, problem_statement, target_user_persona, solution_concept, bpId, userId]
+    );
+
+    res.json({ success: true, message: 'Blueprint updated successfully!' });
+  } catch (error: any) {
+    console.error('Update Blueprint Error:', error);
+    res.status(500).json({ error: 'Failed to update blueprint' });
+  }
+});
+
 export default router;

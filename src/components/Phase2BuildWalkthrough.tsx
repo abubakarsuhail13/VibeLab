@@ -2316,7 +2316,16 @@ Handles routing via custom React layouts, templates, and server-side model groun
                               {Object.keys(virtualFiles).length > 0 ? (
                                 <MonacoEditor
                                   height="100%"
-                                  language={activeFile.endsWith('.ts') ? 'typescript' : activeFile.endsWith('.tsx') ? 'typescript' : activeFile.endsWith('.sql') ? 'sql' : activeFile.endsWith('.md') ? 'markdown' : activeFile.endsWith('.css') ? 'css' : 'html'}
+                                  language={
+                                    activeFile.endsWith('.ts') || activeFile.endsWith('.tsx') ? 'typescript' :
+                                    activeFile.endsWith('.js') || activeFile.endsWith('.jsx') ? 'javascript' :
+                                    activeFile.endsWith('.json') ? 'json' :
+                                    activeFile.endsWith('.css') ? 'css' :
+                                    activeFile.endsWith('.sql') ? 'sql' :
+                                    activeFile.endsWith('.md') ? 'markdown' :
+                                    activeFile.endsWith('.svg') ? 'xml' :
+                                    'html'
+                                  }
                                   theme="vs-dark"
                                   value={virtualFiles[activeFile] || ''}
                                   onChange={(val) => {
@@ -2335,11 +2344,30 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                   options={{
                                     readOnly: false,
                                     minimap: { enabled: false },
-                                    fontSize: 11,
+                                    fontSize: 12,
                                     lineNumbers: "on",
-                                    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                                    lineNumbersMinChars: 3,
+                                    fontFamily: "'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace",
+                                    fontLigatures: true,
                                     smoothScrolling: true,
                                     wordWrap: "on",
+                                    automaticLayout: true,
+                                    cursorBlinking: "smooth",
+                                    cursorSmoothCaretAnimation: "on",
+                                    renderLineHighlight: "all",
+                                    folding: true,
+                                    bracketPairColorization: { enabled: true },
+                                    scrollbar: {
+                                      vertical: 'visible',
+                                      verticalScrollbarSize: 8,
+                                      horizontal: 'visible',
+                                      horizontalScrollbarSize: 8,
+                                      useShadows: false
+                                    },
+                                    suggestOnTriggerCharacters: true,
+                                    quickSuggestions: { other: true, comments: true, strings: true },
+                                    tabSize: 2,
+                                    insertSpaces: true,
                                     padding: { top: 12, bottom: 12 }
                                   }}
                                 />

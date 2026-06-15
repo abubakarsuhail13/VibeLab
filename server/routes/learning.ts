@@ -329,7 +329,87 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
 
     let rows: any = [];
-    if (Number(id) === actualPhase2Id) {
+    if (Number(id) === 1) {
+      try {
+        const [bpRows]: any = await p.execute(
+          'SELECT id, product_name, problem_statement, target_user_persona, solution_concept, mvp_definition FROM project_blueprints WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+          [req.user.userId]
+        );
+        if (bpRows && bpRows.length > 0) {
+          const bp = bpRows[0];
+          const sessionId = bp.id;
+          const [existing]: any = await p.execute(
+            'SELECT id, question, options FROM quiz_questions WHERE phase_id = 1 AND session_id = ?',
+            [sessionId]
+          );
+          if (existing && existing.length > 0) {
+            rows = existing;
+          } else {
+            // Auto generate Phase 1 customized quiz if none exists yet
+            const prompt = `
+Generate 6 simple multiple choice quiz questions for a Grade 9-12 student
+who just completed the Discovery & Ideation stage for their product idea:
+
+Product name: ${bp.product_name || 'Autonomous App'}
+Problem statement: ${bp.problem_statement || 'N/A'}
+Target Users: ${bp.target_user_persona || 'N/A'}
+Solution Concept: ${bp.solution_concept || 'N/A'}
+MVP Definition: ${bp.mvp_definition || 'N/A'}
+
+The questions must test:
+1. Product Planning: target users and defining problem statement for their idea.
+2. Scope control: keeping it small as a Minimum Viable Product (MVP).
+3. Basic product-market thinking.
+
+These questions must reference their specific product idea and target users directly, but remain very simple, beginner-friendly, and highly educational for a high school student.
+
+Please output as a valid JSON array of objects with this exact structure:
+[
+  {
+    "question": "The question text, references their product idea directly",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct_index": 0,
+    "explanation": "Extremely clear explanation of why the correct option is right."
+  }
+]
+
+Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
+`;
+
+            const geminiRes = await getGeminiClient().models.generateContent({
+              model: "gemini-3.5-flash",
+              contents: prompt,
+              config: {
+                responseMimeType: "application/json"
+               }
+            });
+
+            const clean = parseGeminiResponse(geminiRes);
+            const parsedQuestions = JSON.parse(clean);
+
+            if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+              const generatedList: any[] = [];
+              for (const q of parsedQuestions) {
+                const [insertRes]: any = await p.execute(
+                  `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
+                   VALUES (1, ?, ?, ?, ?, ?)`,
+                  [sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
+                );
+                generatedList.push({
+                  id: insertRes.insertId,
+                  question: q.question,
+                  options: q.options
+                });
+              }
+              rows = generatedList;
+            }
+          }
+        }
+      } catch (dynamicError: any) {
+        console.warn('Failed to dynamically generate Phase 1 customized quiz, using static questions fallback:', dynamicError);
+        rows = [];
+      }
+    } else if (Number(id) === actualPhase2Id) {
       try {
         const [sessions]: any = await p.execute(
           'SELECT id FROM product_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1',
@@ -482,7 +562,20 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
 
     let questions: any[] = [];
-    if (Number(id) === actualPhase2Id) {
+    if (Number(id) === 1) {
+      const [bpRows]: any = await p.execute(
+        'SELECT id FROM project_blueprints WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+        [req.user.userId]
+      );
+      if (bpRows && bpRows.length > 0) {
+        const sessionId = bpRows[0].id;
+        const [sessionQuestions]: any = await p.execute(
+          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = 1 AND session_id = ?',
+          [sessionId]
+        );
+        questions = sessionQuestions;
+      }
+    } else if (Number(id) === actualPhase2Id) {
       const [sessions]: any = await p.execute(
         'SELECT id FROM product_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1',
         [req.user.userId]
@@ -643,22 +736,24 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
     const phaseName = currentPhase[0].name;
 
     // Condition 1: Verify Minimum Required Project Submissions with valid GitHub URLs
-    const [allProjects]: any = await p.execute('SELECT id FROM phase_projects WHERE phase_id = ?', [id]);
-    if (allProjects.length === 0) return res.status(400).json({ error: 'No projects found in this phase' });
+    if (orderIndex > 1) {
+      const [allProjects]: any = await p.execute('SELECT id FROM phase_projects WHERE phase_id = ?', [id]);
+      if (allProjects.length === 0) return res.status(400).json({ error: 'No projects found in this phase' });
 
-    const projectIds = allProjects.map((ap: any) => ap.id);
-    const placeholders = projectIds.map(() => '?').join(',');
-    const [submissions]: any = await p.execute(
-      `SELECT COUNT(*) as count FROM project_submissions WHERE user_id = ? AND project_id IN (${placeholders}) AND github_url IS NOT NULL AND github_url != ''`,
-      [req.user.userId, ...projectIds]
-    );
+      const projectIds = allProjects.map((ap: any) => ap.id);
+      const placeholders = projectIds.map(() => '?').join(',');
+      const [submissions]: any = await p.execute(
+        `SELECT COUNT(*) as count FROM project_submissions WHERE user_id = ? AND project_id IN (${placeholders}) AND github_url IS NOT NULL AND github_url != ''`,
+        [req.user.userId, ...projectIds]
+      );
 
-    const requiredCount = getRequiredSubmissionsCount(orderIndex);
-    if (submissions[0].count < requiredCount) {
-      console.log(`[DEBUG] Certification Rejected: Only ${submissions[0].count}/${requiredCount} projects submitted.`);
-      return res.status(400).json({ 
-        error: `Certification Condition Failed: You must submit at least ${requiredCount} project(s) with valid GitHub details to certify. Successfully verified: ${submissions[0].count}/${requiredCount}` 
-      });
+      const requiredCount = getRequiredSubmissionsCount(orderIndex);
+      if (submissions[0].count < requiredCount) {
+        console.log(`[DEBUG] Certification Rejected: Only ${submissions[0].count}/${requiredCount} projects submitted.`);
+        return res.status(400).json({ 
+          error: `Certification Condition Failed: You must submit at least ${requiredCount} project(s) with valid GitHub details to certify. Successfully verified: ${submissions[0].count}/${requiredCount}` 
+        });
+      }
     }
 
     // Condition 2: Verify Quiz Is Passed (score >= 70%)

@@ -182,7 +182,7 @@ router.get('/submissions', authenticateToken, async (req: any, res) => {
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
     const [rows]: any = await p.execute(
-      'SELECT s.*, p.title as project_title FROM project_submissions s JOIN phase_projects p ON s.project_id = p.id WHERE s.user_id = ? ORDER BY s.created_at DESC',
+      'SELECT s.*, p.title as project_title, p.phase_id as phase_id FROM project_submissions s JOIN phase_projects p ON s.project_id = p.id WHERE s.user_id = ? ORDER BY s.created_at DESC',
       [req.user.userId]
     );
 

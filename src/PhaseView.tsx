@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import Phase2BuildWalkthrough from "./components/Phase2BuildWalkthrough";
 import MonacoEditor from '@monaco-editor/react';
+import toast from "react-hot-toast";
 import { 
   CheckCircle2, 
   Circle, 
@@ -169,6 +170,16 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [learnMinutes, setLearnMinutes] = useState(15);
   const [buildMinutes, setBuildMinutes] = useState(30);
   const [isLoggingHabit, setIsLoggingHabit] = useState(false);
+
+  // Phase 1 blueprint specific states
+  const [phase1Blueprint, setPhase1Blueprint] = useState<any>(null);
+  const [isEditingBlueprint, setIsEditingBlueprint] = useState(false);
+  const [blueprintEditFields, setBlueprintEditFields] = useState({
+    product_name: '',
+    problem_statement: '',
+    target_user_persona: '',
+    solution_concept: ''
+  });
 
   const getCodeForStep = (index: number, codeState: Record<number, string>) => {
     if (codeState[index] !== undefined && codeState[index] !== '') {
@@ -507,6 +518,34 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
     }
   };
 
+  const handleSaveBlueprintEdits = async () => {
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const res = await fetch("/api/ideation/blueprint", {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(blueprintEditFields)
+      });
+      if (res.ok) {
+        toast.success("Ideation polished successfully!");
+        setPhase1Blueprint((prev: any) => ({
+          ...prev,
+          ...blueprintEditFields
+        }));
+        setIsEditingBlueprint(false);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to update blueprint");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Something went wrong");
+    }
+  };
+
   const handleAskTutor = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!tutorInput.trim() || !selectedProject) return;
@@ -644,6 +683,25 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           }
           if (habitsRes.ok) {
             setHabitLogs(await habitsRes.json());
+          }
+          if (phaseData?.order_index === 1) {
+            try {
+              const blueprintRes = await fetch("/api/ideation/blueprint", {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              if (blueprintRes.ok) {
+                const bpData = await blueprintRes.json();
+                setPhase1Blueprint(bpData);
+                setBlueprintEditFields({
+                  product_name: bpData?.product_name || '',
+                  problem_statement: bpData?.problem_statement || '',
+                  target_user_persona: bpData?.target_user_persona || '',
+                  solution_concept: bpData?.solution_concept || '',
+                });
+              }
+            } catch (bpErr) {
+              console.error("Failed to fetch blueprint details", bpErr);
+            }
           }
           if (isPhase2) {
             const sessRes = await fetch('/api/product/session', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -1005,7 +1063,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200">
           {[
             { id: 'learn', label: 'Learn', icon: <BookOpen className="w-4 h-4" /> },
-            { id: 'build', label: 'Build', icon: <Code2 className="w-4 h-4" /> },
+            { id: 'build', label: phase?.order_index === 1 ? 'Review Ideation' : 'Build', icon: <Code2 className="w-4 h-4" /> },
             { id: 'progress', label: 'Progress', icon: <BarChart3 className="w-4 h-4" /> },
           ].map((tab) => (
             <button
@@ -1419,7 +1477,140 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             exit={{ opacity: 0, scale: 0.95 }}
             className="h-full"
           >
-            {phase?.order_index === 2 ? (
+            {phase?.order_index === 1 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-1">
+                {/* Left Side: Display active blueprint details */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-500">
+                        <Lightbulb className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Active Product Blueprint</h2>
+                        <p className="text-xs text-slate-500 font-medium">This is the core concept you defined for your MVP.</p>
+                      </div>
+                    </div>
+
+                    {phase1Blueprint ? (
+                      <div className="space-y-6 pt-4 divide-y divide-slate-100">
+                        <div className="pt-2">
+                          <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">Product Name</h4>
+                          <p className="text-lg font-bold text-slate-900">{phase1Blueprint.product_name || 'Generic App'}</p>
+                        </div>
+
+                        <div className="pt-4">
+                          <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">Problem Statement</h4>
+                          <p className="text-slate-700 text-sm leading-relaxed">{phase1Blueprint.problem_statement || 'N/A'}</p>
+                        </div>
+
+                        <div className="pt-4">
+                          <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">Target User Persona</h4>
+                          <p className="text-slate-700 text-sm leading-relaxed">{phase1Blueprint.target_user_persona || 'N/A'}</p>
+                        </div>
+
+                        <div className="pt-4">
+                          <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">Solution Concept</h4>
+                          <p className="text-slate-700 text-sm leading-relaxed">{phase1Blueprint.solution_concept || 'N/A'}</p>
+                        </div>
+
+                        {phase1Blueprint.mvp_definition && (
+                          <div className="pt-4">
+                            <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">MVP Scope</h4>
+                            <p className="text-slate-700 text-sm leading-relaxed">{phase1Blueprint.mvp_definition}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="py-12 text-center text-slate-400">
+                        No product blueprint concept found. Complete Phase 1 Ideation to generate one!
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Update Ideation panel */}
+                <div className="space-y-6">
+                  <div className="glass p-8 rounded-[2.5rem] border-slate-200 bg-white shadow-sm space-y-6">
+                    <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                      <Sparkles className="text-amber-500 w-5 h-5" />
+                      Update Ideation
+                    </h3>
+
+                    <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                      Refine your core concept details, polish your problem formulation, or specify your final target user personas.
+                    </p>
+
+                    {isEditingBlueprint ? (
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Product Name</label>
+                          <input 
+                            type="text"
+                            value={blueprintEditFields.product_name}
+                            onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, product_name: e.target.value }))}
+                            className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Problem Statement</label>
+                          <textarea 
+                            rows={3}
+                            value={blueprintEditFields.problem_statement}
+                            onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, problem_statement: e.target.value }))}
+                            className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Target User Persona</label>
+                          <textarea 
+                            rows={2}
+                            value={blueprintEditFields.target_user_persona}
+                            onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, target_user_persona: e.target.value }))}
+                            className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Solution Concept</label>
+                          <textarea 
+                            rows={3}
+                            value={blueprintEditFields.solution_concept}
+                            onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, solution_concept: e.target.value }))}
+                            className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
+                          />
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                          <button
+                            onClick={handleSaveBlueprintEdits}
+                            className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-cyan-500/10 transition-all active:scale-95"
+                          >
+                            Save Updates
+                          </button>
+                          <button
+                            onClick={() => setIsEditingBlueprint(false)}
+                            className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-all active:scale-95"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setIsEditingBlueprint(true)}
+                        disabled={!phase1Blueprint}
+                        className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-cyan-500/10 transition-all active:scale-[0.98] disabled:opacity-50"
+                      >
+                        Edit Ideation Concept
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : phase?.order_index === 2 ? (
               <Phase2BuildWalkthrough />
             ) : selectedProject ? (
               <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden sm:p-4">
