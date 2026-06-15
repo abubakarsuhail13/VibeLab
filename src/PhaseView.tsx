@@ -12,6 +12,9 @@ import {
   Trophy, 
   BookOpen, 
   Code2, 
+  Compass,
+  Cpu,
+  Target, 
   BarChart3,
   ChevronRight,
   ArrowLeft,
@@ -327,21 +330,21 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
     switch (orderIndex) {
       case 1:
         return [
-          "Python Syntax & Language Basics",
-          "Scripting, Libraries & Native Code Modules",
-          "External API Integrations & Requests",
-          "Fundamental Web Server Architectures",
-          "Command Line Operations & OS Utilities",
-          "Pristine System Error and Exception Handling"
-        ];
-      case 2:
-        return [
           "What is a Minimum Viable Product (MVP)?",
           "How to define your target user",
           "What makes a good product feature?",
           "What is a user journey?",
           "How to explain your product clearly",
           "How to demo a product confidently"
+        ];
+      case 2:
+        return [
+          "Python Syntax & Language Basics",
+          "Scripting, Libraries & Native Code Modules",
+          "External API Integrations & Requests",
+          "Fundamental Web Server Architectures",
+          "Command Line Operations & OS Utilities",
+          "Pristine System Error and Exception Handling"
         ];
       case 3:
         return [
@@ -1477,140 +1480,265 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             exit={{ opacity: 0, scale: 0.95 }}
             className="h-full"
           >
-            {phase?.order_index === 1 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-1">
-                {/* Left Side: Display active blueprint details */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm space-y-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-500">
-                        <Lightbulb className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Active Product Blueprint</h2>
-                        <p className="text-xs text-slate-500 font-medium">This is the core concept you defined for your MVP.</p>
-                      </div>
-                    </div>
+            {phase?.order_index === 1 ? (() => {
+              // Safe parse arrays helper and JSX rendering
+              let opportunities: string[] = [];
+              try {
+                if (phase1Blueprint) {
+                  if (typeof phase1Blueprint.ai_opportunity_map === 'string') {
+                    opportunities = JSON.parse(phase1Blueprint.ai_opportunity_map);
+                  } else if (Array.isArray(phase1Blueprint.ai_opportunity_map)) {
+                    opportunities = phase1Blueprint.ai_opportunity_map;
+                  }
+                }
+              } catch (e) {
+                console.error("Failed to parse opportunities:", e);
+              }
 
+              let learningPath: string[] = [];
+              try {
+                if (phase1Blueprint) {
+                  if (typeof phase1Blueprint.learning_path === 'string') {
+                    learningPath = JSON.parse(phase1Blueprint.learning_path);
+                  } else if (Array.isArray(phase1Blueprint.learning_path)) {
+                    learningPath = phase1Blueprint.learning_path;
+                  }
+                }
+              } catch (e) {
+                console.error("Failed to parse learningPath:", e);
+              }
+
+              let features: string[] = [];
+              try {
+                if (phase1Blueprint) {
+                  if (typeof phase1Blueprint.product_features === 'string') {
+                    features = JSON.parse(phase1Blueprint.product_features);
+                  } else if (Array.isArray(phase1Blueprint.product_features)) {
+                    features = phase1Blueprint.product_features;
+                  }
+                }
+              } catch (e) {
+                console.error("Failed to parse features:", e);
+              }
+
+              const getComplexityStyles = (comp: string) => {
+                switch (comp?.toLowerCase()) {
+                  case "beginner":
+                    return "bg-emerald-50 border border-emerald-100 text-emerald-600";
+                  case "intermediate":
+                    return "bg-amber-50 border border-amber-100 text-amber-600";
+                  case "advanced":
+                    return "bg-red-50 border border-red-100 text-red-600";
+                  default:
+                    return "bg-white border border-slate-200 text-slate-500";
+                }
+              };
+
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-1">
+                  {/* Left Side: Display active blueprint details */}
+                  <div className="lg:col-span-2 space-y-6">
                     {phase1Blueprint ? (
-                      <div className="space-y-6 pt-4 divide-y divide-slate-100">
-                        <div className="pt-2">
-                          <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">Product Name</h4>
-                          <p className="text-lg font-bold text-slate-900">{phase1Blueprint.product_name || 'Generic App'}</p>
+                      <div className="space-y-6">
+                        {/* Assigned Brand Name */}
+                        <div className="border border-cyan-100 bg-gradient-to-br from-cyan-50/20 to-white rounded-[2.5rem] p-8 text-center space-y-2 relative overflow-hidden shadow-sm shadow-cyan-150/10">
+                          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+                          <span className="font-mono text-[10px] font-black tracking-widest text-cyan-600 uppercase">Assigned Brand Name</span>
+                          <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-wide uppercase leading-none font-display">
+                            {phase1Blueprint.product_name}
+                          </h1>
                         </div>
 
-                        <div className="pt-4">
-                          <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">Problem Statement</h4>
-                          <p className="text-slate-700 text-sm leading-relaxed">{phase1Blueprint.problem_statement || 'N/A'}</p>
+                        {/* Bento Core Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="border border-slate-150 bg-white rounded-3xl p-5 hover:border-cyan-200 transition-all shadow-sm">
+                            <div className="flex items-center gap-1.5 mb-3 text-cyan-600">
+                              <Target className="w-4 h-4 shrink-0" />
+                              <h4 className="font-mono text-[10px] font-black uppercase tracking-wider">The Problem</h4>
+                            </div>
+                            <p className="text-slate-650 text-xs leading-relaxed font-semibold">{phase1Blueprint.problem_statement}</p>
+                          </div>
+
+                          <div className="border border-slate-150 bg-white rounded-3xl p-5 hover:border-cyan-200 transition-all shadow-sm">
+                            <div className="flex items-center gap-1.5 mb-3 text-cyan-600">
+                              <Compass className="w-4 h-4 shrink-0" />
+                              <h4 className="font-mono text-[10px] font-black uppercase tracking-wider">Target User</h4>
+                            </div>
+                            <p className="text-slate-650 text-xs leading-relaxed font-semibold">{phase1Blueprint.target_user_persona}</p>
+                          </div>
+
+                          <div className="border border-slate-150 bg-white rounded-3xl p-5 hover:border-cyan-200 transition-all shadow-sm">
+                            <div className="flex items-center gap-1.5 mb-3 text-cyan-600">
+                              <Cpu className="w-4 h-4 shrink-0" />
+                              <h4 className="font-mono text-[10px] font-black uppercase tracking-wider">The Solution</h4>
+                            </div>
+                            <p className="text-slate-650 text-xs leading-relaxed font-semibold">{phase1Blueprint.solution_concept}</p>
+                          </div>
                         </div>
 
-                        <div className="pt-4">
-                          <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">Target User Persona</h4>
-                          <p className="text-slate-700 text-sm leading-relaxed">{phase1Blueprint.target_user_persona || 'N/A'}</p>
+                        {/* AI Opportunity Map */}
+                        {opportunities.length > 0 && (
+                          <div className="border border-slate-150 bg-white rounded-3xl p-6 space-y-3 shadow-sm">
+                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">AI Opportunity Map</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {opportunities.map((item, idx) => (
+                                <span key={idx} className="border border-cyan-100 bg-cyan-50/40 text-cyan-700 font-semibold font-mono text-[10px] px-3 py-1.5 rounded-lg">
+                                  ✨ {item}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* MVP Definition */}
+                        <div className="border border-cyan-150 bg-cyan-50/10 rounded-3xl p-6 space-y-4 shadow-sm">
+                          <div className="space-y-1.5">
+                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">Your 1-Week MVP Definition</h4>
+                            <p className="text-slate-800 text-xs leading-relaxed font-semibold">{phase1Blueprint.mvp_definition}</p>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <div className="bg-white border border-slate-150 font-mono text-[10px] font-black text-slate-500 px-3.5 py-2 rounded-lg uppercase tracking-wider">
+                              ⏳ {phase1Blueprint.estimated_build_time || "1-Week"}
+                            </div>
+                            <div className={`font-mono text-[10px] font-black px-3.5 py-2 rounded-lg uppercase tracking-wider ${getComplexityStyles(phase1Blueprint.complexity)}`}>
+                              🧠 {phase1Blueprint.complexity || "beginner"}
+                            </div>
+                            <div className="bg-white border border-slate-150 font-mono text-[10px] font-black text-slate-500 px-3.5 py-2 rounded-lg uppercase tracking-wider">
+                              🛠️ {phase1Blueprint.recommended_track || "Full-stack code"}
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="pt-4">
-                          <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">Solution Concept</h4>
-                          <p className="text-slate-700 text-sm leading-relaxed">{phase1Blueprint.solution_concept || 'N/A'}</p>
-                        </div>
+                        {/* Suggested Learning Path */}
+                        {learningPath.length > 0 && (
+                          <div className="border border-slate-150 bg-white rounded-3xl p-6 space-y-4 shadow-sm">
+                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">Suggested Learnings</h4>
+                            <div className="space-y-2.5">
+                              {learningPath.map((item, idx) => (
+                                <div key={idx} className="flex gap-3 items-start">
+                                  <div className="w-5.5 h-5.5 bg-cyan-50 border border-cyan-100 text-cyan-600 font-mono font-bold rounded-md flex items-center justify-center shrink-0 text-xs">
+                                    {idx + 1}
+                                  </div>
+                                  <p className="text-slate-650 text-xs pt-0.5 leading-relaxed font-semibold">{item}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
-                        {phase1Blueprint.mvp_definition && (
-                          <div className="pt-4">
-                            <h4 className="text-xs uppercase tracking-wider font-extrabold text-slate-400 mb-1">MVP Scope</h4>
-                            <p className="text-slate-700 text-sm leading-relaxed">{phase1Blueprint.mvp_definition}</p>
+                        {/* Core Features */}
+                        {features.length > 0 && (
+                          <div className="border border-slate-150 bg-white rounded-3xl p-6 space-y-3 shadow-sm">
+                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">Core Features Included</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {features.map((feat, idx) => (
+                                <span key={idx} className="bg-slate-50 border border-slate-100 text-slate-650 font-semibold text-[11px] px-3.5 py-1.5 rounded-lg shadow-sm">
+                                  📦 {feat}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* MVP Scoping Note */}
+                        {phase1Blueprint.mvp_note && (
+                          <div className="border-l-4 border-cyan-500 bg-cyan-50/10 rounded-r-2xl p-5 space-y-1.5 shadow-sm">
+                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">Control Bounds: Scoped Down Details</h4>
+                            <p className="text-slate-700 text-xs leading-relaxed font-semibold">{phase1Blueprint.mvp_note}</p>
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className="py-12 text-center text-slate-400">
+                      <div className="border border-dashed border-slate-200 bg-slate-50 rounded-3xl py-12 text-center text-slate-400 font-semibold text-xs">
                         No product blueprint concept found. Complete Phase 1 Ideation to generate one!
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Right Side: Update Ideation panel */}
-                <div className="space-y-6">
-                  <div className="glass p-8 rounded-[2.5rem] border-slate-200 bg-white shadow-sm space-y-6">
-                    <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                      <Sparkles className="text-amber-500 w-5 h-5" />
-                      Update Ideation
-                    </h3>
+                  {/* Right Side: Update Ideation panel */}
+                  <div className="space-y-6">
+                    <div className="glass p-8 rounded-[2.5rem] border-slate-200 bg-white shadow-sm space-y-6">
+                      <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                        <Sparkles className="text-amber-500 w-5 h-5" />
+                        Update Ideation
+                      </h3>
 
-                    <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-                      Refine your core concept details, polish your problem formulation, or specify your final target user personas.
-                    </p>
+                      <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                        Refine your core concept details, polish your problem formulation, or specify your final target user personas.
+                      </p>
 
-                    {isEditingBlueprint ? (
-                      <div className="space-y-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Product Name</label>
-                          <input 
-                            type="text"
-                            value={blueprintEditFields.product_name}
-                            onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, product_name: e.target.value }))}
-                            className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                          />
+                      {isEditingBlueprint ? (
+                        <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Product Name</label>
+                            <input 
+                              type="text"
+                              value={blueprintEditFields.product_name}
+                              onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, product_name: e.target.value }))}
+                              className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Problem Statement</label>
+                            <textarea 
+                              rows={3}
+                              value={blueprintEditFields.problem_statement}
+                              onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, problem_statement: e.target.value }))}
+                              className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Target User Persona</label>
+                            <textarea 
+                              rows={2}
+                              value={blueprintEditFields.target_user_persona}
+                              onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, target_user_persona: e.target.value }))}
+                              className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
+                            />
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Solution Concept</label>
+                            <textarea 
+                              rows={3}
+                              value={blueprintEditFields.solution_concept}
+                              onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, solution_concept: e.target.value }))}
+                              className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
+                            />
+                          </div>
+
+                          <div className="flex gap-3 pt-2">
+                            <button
+                              onClick={handleSaveBlueprintEdits}
+                              className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-cyan-500/10 transition-all active:scale-95"
+                            >
+                              Save Updates
+                            </button>
+                            <button
+                              onClick={() => setIsEditingBlueprint(false)}
+                              className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-all active:scale-95"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Problem Statement</label>
-                          <textarea 
-                            rows={3}
-                            value={blueprintEditFields.problem_statement}
-                            onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, problem_statement: e.target.value }))}
-                            className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
-                          />
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Target User Persona</label>
-                          <textarea 
-                            rows={2}
-                            value={blueprintEditFields.target_user_persona}
-                            onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, target_user_persona: e.target.value }))}
-                            className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
-                          />
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-black tracking-wider text-slate-500">Solution Concept</label>
-                          <textarea 
-                            rows={3}
-                            value={blueprintEditFields.solution_concept}
-                            onChange={(e) => setBlueprintEditFields(prev => ({ ...prev, solution_concept: e.target.value }))}
-                            className="w-full p-3 rounded-xl border border-slate-200 text-slate-800 text-sm bg-slate-500/5 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"
-                          />
-                        </div>
-
-                        <div className="flex gap-3 pt-2">
-                          <button
-                            onClick={handleSaveBlueprintEdits}
-                            className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-cyan-500/10 transition-all active:scale-95"
-                          >
-                            Save Updates
-                          </button>
-                          <button
-                            onClick={() => setIsEditingBlueprint(false)}
-                            className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-all active:scale-95"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setIsEditingBlueprint(true)}
-                        disabled={!phase1Blueprint}
-                        className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-cyan-500/10 transition-all active:scale-[0.98] disabled:opacity-50"
-                      >
-                        Edit Ideation Concept
-                      </button>
-                    )}
+                      ) : (
+                        <button
+                          onClick={() => setIsEditingBlueprint(true)}
+                          disabled={!phase1Blueprint}
+                          className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold text-xs shadow-lg shadow-cyan-500/10 transition-all active:scale-[0.98] disabled:opacity-50"
+                        >
+                          Edit Ideation Concept
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : phase?.order_index === 2 ? (
+              );
+            })() : phase?.order_index === 2 ? (
               <Phase2BuildWalkthrough />
             ) : selectedProject ? (
               <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden sm:p-4">

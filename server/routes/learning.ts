@@ -273,19 +273,42 @@ router.get('/progress', authenticateToken, async (req: any, res) => {
 router.get('/phase/:id/resources', authenticateToken, async (req: any, res) => {
   const { id } = req.params;
   try {
-    if (Number(id) === 2) {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
+    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
+    const [p3Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 3');
+    const [p4Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 4');
+    const [p5Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 5');
+
+    const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
+    const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
+    const actualPhase3Id = p3Rows && p3Rows.length > 0 ? p3Rows[0].id : 3;
+    const actualPhase4Id = p4Rows && p4Rows.length > 0 ? p4Rows[0].id : 4;
+    const actualPhase5Id = p5Rows && p5Rows.length > 0 ? p5Rows[0].id : 5;
+
+    if (Number(id) === actualPhase1Id) {
       return res.json([
-        { id: 201, phase_id: id, title: 'What is an MVP?', type: 'Reading', url: 'https://www.productplan.com/glossary/minimum-viable-product/' },
-        { id: 202, phase_id: id, title: 'How to think like a product creator', type: 'Reading', url: 'https://medium.com/product-coalition/how-to-think-like-a-product-creator-eb5e76a16c14' },
-        { id: 203, phase_id: id, title: 'User journey basics', type: 'Reading', url: 'https://www.interaction-design.org/literature/article/customer-journey-map' },
-        { id: 204, phase_id: id, title: 'How to pitch your idea', type: 'Reading', url: 'https://hbr.org/2020/03/how-to-pitch-an-idea-so-it-doesnt-get-shot-down' }
+        { id: 101, phase_id: id, title: 'What is an MVP?', type: 'Reading', url: 'https://www.productplan.com/glossary/minimum-viable-product/' },
+        { id: 102, phase_id: id, title: 'How to think like a product creator', type: 'Reading', url: 'https://medium.com/product-coalition/how-to-think-like-a-product-creator-eb5e76a16c14' },
+        { id: 103, phase_id: id, title: 'User journey basics', type: 'Reading', url: 'https://www.interaction-design.org/literature/article/customer-journey-map' },
+        { id: 104, phase_id: id, title: 'How to keep scope under control for your 1-Week MVP', type: 'Reading', url: 'https://www.ycombinator.com/library/4D-how-to-plan-an-mvp' }
       ]);
     }
 
-    const p = await getPool();
-    if (!p) return res.status(503).json({ error: 'Database connection failed' });
-    
-    const [rows] = await p.execute('SELECT * FROM phase_resources WHERE phase_id = ?', [id]);
+    let queryPhaseId = id;
+    if (Number(id) === actualPhase2Id) {
+      queryPhaseId = actualPhase1Id; // Python resources are here
+    } else if (Number(id) === actualPhase3Id) {
+      queryPhaseId = actualPhase2Id; // GenAI resources are here
+    } else if (Number(id) === actualPhase4Id) {
+      queryPhaseId = actualPhase3Id; // Agent/RAG resources are here
+    } else if (Number(id) === actualPhase5Id) {
+      queryPhaseId = actualPhase4Id; // ReAct/Toolformer resources are here
+    }
+
+    const [rows] = await p.execute('SELECT * FROM phase_resources WHERE phase_id = ?', [queryPhaseId]);
     res.json(rows);
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to retrieve resources' });
@@ -325,11 +348,19 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
       [req.user.userId, id]
     );
 
+    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
+    const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
     const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
     const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
+    const [p3Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 3');
+    const actualPhase3Id = p3Rows && p3Rows.length > 0 ? p3Rows[0].id : 3;
+    const [p4Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 4');
+    const actualPhase4Id = p4Rows && p4Rows.length > 0 ? p4Rows[0].id : 4;
+    const [p5Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 5');
+    const actualPhase5Id = p5Rows && p5Rows.length > 0 ? p5Rows[0].id : 5;
 
     let rows: any = [];
-    if (Number(id) === 1) {
+    if (Number(id) === actualPhase1Id) {
       try {
         const [bpRows]: any = await p.execute(
           'SELECT id, product_name, problem_statement, target_user_persona, solution_concept, mvp_definition FROM project_blueprints WHERE user_id = ? ORDER BY id DESC LIMIT 1',
@@ -339,15 +370,15 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
           const bp = bpRows[0];
           const sessionId = bp.id;
           const [existing]: any = await p.execute(
-            'SELECT id, question, options FROM quiz_questions WHERE phase_id = 1 AND session_id = ?',
-            [sessionId]
+            'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
+            [actualPhase1Id, sessionId]
           );
           if (existing && existing.length > 0) {
             rows = existing;
           } else {
             // Auto generate Phase 1 customized quiz if none exists yet
             const prompt = `
-Generate 6 simple multiple choice quiz questions for a Grade 9-12 student
+Generate EXACTLY 10 simple multiple choice quiz questions for a Grade 9-12 student
 who just completed the Discovery & Ideation stage for their product idea:
 
 Product name: ${bp.product_name || 'Autonomous App'}
@@ -356,14 +387,14 @@ Target Users: ${bp.target_user_persona || 'N/A'}
 Solution Concept: ${bp.solution_concept || 'N/A'}
 MVP Definition: ${bp.mvp_definition || 'N/A'}
 
-The questions must test:
+The 10 questions must test:
 1. Product Planning: target users and defining problem statement for their idea.
 2. Scope control: keeping it small as a Minimum Viable Product (MVP).
 3. Basic product-market thinking.
 
 These questions must reference their specific product idea and target users directly, but remain very simple, beginner-friendly, and highly educational for a high school student.
 
-Please output as a valid JSON array of objects with this exact structure:
+Please output as a valid JSON array of EXACTLY 10 objects with this exact structure:
 [
   {
     "question": "The question text, references their product idea directly",
@@ -392,8 +423,8 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
               for (const q of parsedQuestions) {
                 const [insertRes]: any = await p.execute(
                   `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
-                   VALUES (1, ?, ?, ?, ?, ?)`,
-                  [sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
+                   VALUES (?, ?, ?, ?, ?, ?)`,
+                  [actualPhase1Id, sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
                 );
                 generatedList.push({
                   id: insertRes.insertId,
@@ -495,7 +526,18 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
     }
 
     if (rows.length === 0) {
-      const [staticRows]: any = await p.execute('SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL', [id]);
+      let queryPhaseId = id;
+      if (Number(id) === actualPhase2Id) {
+        queryPhaseId = actualPhase1Id;
+      } else if (Number(id) === actualPhase3Id) {
+        queryPhaseId = actualPhase2Id;
+      } else if (Number(id) === actualPhase4Id) {
+        queryPhaseId = actualPhase3Id;
+      } else if (Number(id) === actualPhase5Id) {
+        queryPhaseId = actualPhase4Id;
+      }
+
+      const [staticRows]: any = await p.execute('SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL', [queryPhaseId]);
       rows = staticRows;
     }
 
@@ -558,11 +600,19 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       }
     }
     
+    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
+    const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
     const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
     const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
+    const [p3Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 3');
+    const actualPhase3Id = p3Rows && p3Rows.length > 0 ? p3Rows[0].id : 3;
+    const [p4Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 4');
+    const actualPhase4Id = p4Rows && p4Rows.length > 0 ? p4Rows[0].id : 4;
+    const [p5Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 5');
+    const actualPhase5Id = p5Rows && p5Rows.length > 0 ? p5Rows[0].id : 5;
 
     let questions: any[] = [];
-    if (Number(id) === 1) {
+    if (Number(id) === actualPhase1Id) {
       const [bpRows]: any = await p.execute(
         'SELECT id FROM project_blueprints WHERE user_id = ? ORDER BY id DESC LIMIT 1',
         [req.user.userId]
@@ -570,8 +620,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       if (bpRows && bpRows.length > 0) {
         const sessionId = bpRows[0].id;
         const [sessionQuestions]: any = await p.execute(
-          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = 1 AND session_id = ?',
-          [sessionId]
+          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
+          [actualPhase1Id, sessionId]
         );
         questions = sessionQuestions;
       }
@@ -591,9 +641,20 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     }
 
     if (questions.length === 0) {
+      let queryPhaseId = id;
+      if (Number(id) === actualPhase2Id) {
+        queryPhaseId = actualPhase1Id;
+      } else if (Number(id) === actualPhase3Id) {
+        queryPhaseId = actualPhase2Id;
+      } else if (Number(id) === actualPhase4Id) {
+        queryPhaseId = actualPhase3Id;
+      } else if (Number(id) === actualPhase5Id) {
+        queryPhaseId = actualPhase4Id;
+      }
+
       const [staticQuestions]: any = await p.execute(
         'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL',
-        [id]
+        [queryPhaseId]
       );
       questions = staticQuestions;
     }
