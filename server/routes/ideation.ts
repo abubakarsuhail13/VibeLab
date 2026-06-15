@@ -26,13 +26,35 @@ function getGeminiClient(): GoogleGenAI {
 
 // 1. POST /api/ideation/start
 router.post('/start', authenticateToken, async (req: any, res) => {
+  const { force_new } = req.body || {};
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
     const userId = req.user.userId;
 
-    // Create a new in-progress ideation session
+    if (force_new) {
+      // Mark any prior in_progress sessions as completed to archive them
+      await p.execute(
+        'UPDATE ideation_sessions SET status = "completed", completed_at = CURRENT_TIMESTAMP WHERE user_id = ? AND status = "in_progress"',
+        [userId]
+      );
+    } else {
+      // Check if there is already an active in_progress session to resume
+      const [existing]: any = await p.execute(
+        'SELECT id FROM ideation_sessions WHERE user_id = ? AND status = "in_progress" ORDER BY id DESC LIMIT 1',
+        [userId]
+      );
+
+      if (existing && existing.length > 0) {
+        return res.json({
+          session_id: existing[0].id,
+          opening_message: "Let's pick up where we left off."
+        });
+      }
+    }
+
+    // Create a brand new in-progress ideation session
     const [result]: any = await p.execute(
       'INSERT INTO ideation_sessions (user_id, status) VALUES (?, ?)',
       [userId, 'in_progress']
@@ -45,6 +67,120 @@ router.post('/start', authenticateToken, async (req: any, res) => {
   } catch (error: any) {
     console.error('Ideation Start Error:', error);
     res.status(500).json({ error: 'Failed to start ideation session' });
+  }
+});
+
+// GET /api/ideation/active-session
+router.get('/active-session', authenticateToken, async (req: any, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const userId = req.user.userId;
+
+    const [rows]: any = await p.execute(
+      'SELECT id FROM ideation_sessions WHERE user_id = ? AND status = "in_progress" ORDER BY id DESC LIMIT 1',
+      [userId]
+    );
+
+    if (rows && rows.length > 0) {
+      return res.json({ session_id: rows[0].id });
+    }
+
+    res.json({ session_id: null });
+  } catch (error: any) {
+    console.error('Fetch Active Session Error:', error);
+    res.status(500).json({ error: 'Failed to check active session' });
+  }
+});
+
+// GET /api/ideation/session/:sessionId/history
+router.get('/session/:sessionId/history', authenticateToken, async (req: any, res) => {
+  const { sessionId } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [responses]: any = await p.execute(
+      'SELECT id, story_number, story_code, question_text, user_response, ai_followup FROM ideation_responses WHERE session_id = ? ORDER BY id ASC',
+      [sessionId]
+    );
+
+    if (responses.length === 0) {
+      return res.json({
+        history: [],
+        currIndex: 0,
+        completedPercent: 0
+      });
+    }
+
+    // Reconstruct history
+    const history: any[] = [
+      {
+        id: "init-1",
+        sender: "ai",
+        text: "Let's discover what is worth building."
+      },
+      {
+        id: "init-2",
+        sender: "ai",
+        text: responses[0].question_text
+      }
+    ];
+
+    let lastNextStoryNum = 1;
+
+    for (let i = 0; i < responses.length; i++) {
+      const r = responses[i];
+      let aiText = '';
+      let nextNum = r.story_number + 1;
+
+      if (r.ai_followup) {
+        try {
+          const parsed = JSON.parse(r.ai_followup);
+          aiText = parsed.text || '';
+          if (parsed.next_story_number) {
+            nextNum = parsed.next_story_number;
+          }
+        } catch (_) {
+          aiText = r.ai_followup;
+        }
+      }
+
+      // User Answer
+      history.push({
+        id: `user-${r.id}`,
+        sender: "user",
+        text: r.user_response
+      });
+
+      // AI follow-up / next question message
+      if (aiText) {
+        history.push({
+          id: `ai-${r.id}`,
+          sender: "ai",
+          text: aiText
+        });
+      }
+
+      lastNextStoryNum = nextNum;
+    }
+
+    // Find currIndex corresponding to lastNextStoryNum
+    let currIndex = lastNextStoryNum ? (lastNextStoryNum - 1) : 0;
+    if (currIndex < 0) currIndex = 0;
+    if (currIndex > 12) currIndex = 12;
+
+    const completedPercent = Math.round((currIndex / 13) * 100);
+
+    res.json({
+      history,
+      currIndex,
+      completedPercent
+    });
+  } catch (error: any) {
+    console.error('Fetch Session History Error:', error);
+    res.status(500).json({ error: 'Failed to retrieve session history' });
   }
 });
 
@@ -73,7 +209,16 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
     );
 
     const previousAnswersText = historyRows.map((r: any) => {
-      return `Question ${r.story_number}: "${r.question_text}"\nAnswer: "${r.user_response}"${r.ai_followup ? `\nFollowup Question: "${r.ai_followup}"` : ''}`;
+      let aiText = '';
+      if (r.ai_followup) {
+        try {
+          const parsedFollowup = JSON.parse(r.ai_followup);
+          aiText = parsedFollowup.text || '';
+        } catch (_) {
+          aiText = r.ai_followup;
+        }
+      }
+      return `Question ${r.story_number}: "${r.question_text}"\nAnswer: "${r.user_response}"${aiText ? `\nFollowup Question: "${aiText}"` : ''}`;
     }).join('\n\n');
 
     const prompt = `
@@ -148,13 +293,16 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
       next_question = null;
     }
 
-    // Save follow-up prompt on the response if we are following up
-    if (next_story_number === story_number && !is_complete) {
-      await p.execute(
-        'UPDATE ideation_responses SET ai_followup = ? WHERE session_id = ? AND story_number = ? ORDER BY id DESC LIMIT 1',
-        [parsed.ai_message, session_id, story_number]
-      );
-    }
+    // Always save the AI's response message details inside ai_followup as JSON so we can rebuild history on resume
+    const followupPayload = JSON.stringify({
+      text: parsed.ai_message,
+      next_story_number: next_story_number
+    });
+
+    await p.execute(
+      'UPDATE ideation_responses SET ai_followup = ? WHERE session_id = ? AND story_number = ? ORDER BY id DESC LIMIT 1',
+      [followupPayload, session_id, story_number]
+    );
 
     res.json({
       ai_message: parsed.ai_message,

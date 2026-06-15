@@ -343,12 +343,14 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
             </button>
           )}
 
-          <button 
-            onClick={() => navTo('leaderboard')} 
-            className={`hover:text-cyan-600 transition-colors ${currentPage === 'leaderboard' ? 'text-cyan-600 font-black' : ''}`}
-          >
-            Global Leaderboard
-          </button>
+          {user && (
+            <button 
+              onClick={() => navTo('leaderboard')} 
+              className={`hover:text-cyan-600 transition-colors ${currentPage === 'leaderboard' ? 'text-cyan-600 font-black' : ''}`}
+            >
+              Global Leaderboard
+            </button>
+          )}
 
           <button 
             onClick={() => navTo('verify-credential')} 
@@ -446,12 +448,14 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
                 </button>
               )}
 
-              <button 
-                onClick={() => navTo('leaderboard')} 
-                className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'leaderboard' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                Global Leaderboard
-              </button>
+              {user && (
+                <button 
+                  onClick={() => navTo('leaderboard')} 
+                  className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'leaderboard' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
+                >
+                  Global Leaderboard
+                </button>
+              )}
 
               <button 
                 onClick={() => navTo('verify-credential')} 

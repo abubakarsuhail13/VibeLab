@@ -89,7 +89,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
     scrollToBottom();
   }, [messages, typing, isGeneratingBlueprint]);
 
-  // Initial setup: retrieve session id and load initial questions
+  // Initial setup: retrieve session id and load initial questions or previous history
   useEffect(() => {
     const sId = sessionStorage.getItem("vibelab_ideation_session_id");
     if (!sId) {
@@ -99,20 +99,48 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
     }
     setSessionId(sId);
 
-    // Bootstrap initial message chat sequence
-    setMessages([
-      {
-        id: "init-1",
-        sender: "ai",
-        text: "Let's discover what is worth building."
-      },
-      {
-        id: "init-2",
-        sender: "ai",
-        text: QUESTIONS[0].text
+    const loadHistory = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("vibelab_token");
+        const res = await fetch(`/api/ideation/session/${sId}/history`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.history && data.history.length > 0) {
+            setMessages(data.history);
+            setCurrIndex(data.currIndex);
+            setCompletedPercent(data.completedPercent);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error loading chat history:", err);
       }
-    ]);
-    setCompletedPercent(Math.round((0 / QUESTIONS.length) * 100));
+
+      // Bootstrap initial message chat sequence when starting from scratch
+      setMessages([
+        {
+          id: "init-1",
+          sender: "ai",
+          text: "Let's discover what is worth building."
+        },
+        {
+          id: "init-2",
+          sender: "ai",
+          text: QUESTIONS[0].text
+        }
+      ]);
+      setCompletedPercent(Math.round((0 / QUESTIONS.length) * 100));
+      setLoading(false);
+    };
+
+    loadHistory();
   }, []);
 
   const handleSend = async (e?: React.FormEvent) => {

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Loader2, Sparkles, ChevronRight, HelpCircle, ArrowLeft } from "lucide-react";
+import { Loader2, Sparkles, ChevronRight, HelpCircle, ArrowLeft, RefreshCw } from "lucide-react";
 import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
 interface IdeationEntryProps {
@@ -10,8 +10,37 @@ interface IdeationEntryProps {
 export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
 
-  const handleStart = async () => {
+  useEffect(() => {
+    const checkActiveSession = async () => {
+      try {
+        const token = localStorage.getItem("vibelab_token");
+        if (!token) return;
+
+        const res = await fetch("/api/ideation/active-session", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.session_id) {
+            setHasActiveSession(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking active session:", err);
+      } finally {
+        setCheckingSession(false);
+      }
+    };
+    checkActiveSession();
+  }, []);
+
+  const handleStart = async (forceNew = false) => {
     setLoading(true);
     setErrorMsg("");
 
@@ -29,6 +58,7 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
+        body: JSON.stringify({ force_new: forceNew })
       });
 
       if (!response.ok) {
@@ -149,23 +179,66 @@ export default function IdeationEntry({ onNavigate }: IdeationEntryProps) {
             </p>
           )}
 
-          <button
-            onClick={handleStart}
-            disabled={loading}
-            className="group relative inline-flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-dmsans font-extrabold text-base md:text-lg px-8 py-4.5 rounded-2xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-slate-950/10 hover:shadow-cyan-500/10 disabled:opacity-50 min-w-[220px]"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Entering Lab...</span>
-              </>
-            ) : (
-              <>
-                <span>Start Ideation</span>
-                <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </>
-            )}
-          </button>
+          {checkingSession ? (
+            <button
+              disabled
+              className="group relative inline-flex items-center justify-center gap-3 bg-slate-900/60 text-white/80 font-dmsans font-extrabold text-base md:text-lg px-8 py-4.5 rounded-2xl min-w-[220px]"
+            >
+              <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+              <span>Checking suite status...</span>
+            </button>
+          ) : hasActiveSession ? (
+            <div className="flex flex-col items-center gap-4">
+              <button
+                onClick={() => handleStart(false)}
+                disabled={loading}
+                className="group relative inline-flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-dmsans font-extrabold text-base md:text-lg px-8 py-4.5 rounded-2xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-slate-950/10 hover:shadow-cyan-500/10 disabled:opacity-50 min-w-[240px] cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Entering Lab...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continue Discovery</span>
+                    <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1 text-cyan-400" />
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (confirm("Are you sure you want to start a new discovery session? Your current progress will be reset.")) {
+                    handleStart(true);
+                  }
+                }}
+                disabled={loading}
+                className="inline-flex items-center justify-center gap-1.5 text-slate-400 hover:text-red-500 font-jetbrains text-[10.5px] uppercase tracking-wide transition-colors bg-transparent border-none outline-none cursor-pointer mt-1 font-bold group"
+              >
+                <RefreshCw className="w-3.5 h-3.5 transition-transform group-hover:rotate-45" />
+                <span>Start Fresh (Reset current progress)</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => handleStart(false)}
+              disabled={loading}
+              className="group relative inline-flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-dmsans font-extrabold text-base md:text-lg px-8 py-4.5 rounded-2xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-slate-950/10 hover:shadow-cyan-500/10 disabled:opacity-50 min-w-[220px] cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Entering Lab...</span>
+                </>
+              ) : (
+                <>
+                  <span>Start Ideation</span>
+                  <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </>
+              )}
+            </button>
+          )}
 
           <p className="font-dmsans text-xs text-slate-400 font-medium select-none tracking-tight">
             Used by student builders worldwide
