@@ -1637,4 +1637,45 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
   }
 });
 
+// Added save-progress helpers for Phase 2 Stepper
+router.post('/blueprint/save', authenticateToken, async (req: any, res) => {
+  const { session_id, project_name, problem_statement, target_users, mvp_scope } = req.body;
+  if (!session_id) {
+    return res.status(400).json({ error: 'Missing session_id' });
+  }
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    await p.execute(
+      `UPDATE product_blueprints 
+       SET project_name = ?, problem_statement = ?, target_users = ?, mvp_scope = ?
+       WHERE session_id = ?`,
+      [project_name || '', problem_statement || '', target_users || '', mvp_scope || '', session_id]
+    );
+    res.json({ success: true, message: 'Blueprint draft saved!' });
+  } catch (error: any) {
+    console.error('Failed to save blueprint draft:', error);
+    res.status(500).json({ error: 'Failed to save blueprint draft' });
+  }
+});
+
+router.post('/screens/save-requests', authenticateToken, async (req: any, res) => {
+  const { session_id, change_requests } = req.body;
+  if (!session_id) {
+    return res.status(400).json({ error: 'Missing session_id' });
+  }
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+    await p.execute(
+      `UPDATE product_screens SET change_requests = ? WHERE session_id = ?`,
+      [change_requests || '', session_id]
+    );
+    res.json({ success: true, message: 'Screen modifications saved!' });
+  } catch (err: any) {
+    console.error('Failed to save screen requests:', err);
+    res.status(500).json({ error: 'Failed to save screen requests' });
+  }
+});
+
 export default router;

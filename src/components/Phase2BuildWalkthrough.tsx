@@ -31,7 +31,8 @@ import {
   Award,
   CheckCircle,
   HelpCircle,
-  Star
+  Star,
+  Save
 } from 'lucide-react';
 import { EducationalAiBackground } from "./EducationalAiBackground";
 
@@ -381,6 +382,144 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
       toast.error('Could not load some of your product data.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 0. Save-in-progress Draft helpers
+  const handleSaveBlueprintDraft = async (showToast = true) => {
+    if (!session?.id) return;
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const res = await fetch('/api/product/blueprint/save', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          session_id: session.id,
+          project_name: projectName,
+          problem_statement: problemStatement,
+          target_users: targetUsers,
+          mvp_scope: mvpScope
+        })
+      });
+      if (res.ok && showToast) {
+        toast.success('Blueprint draft saved!', { icon: '💾' });
+      }
+    } catch (error) {
+      console.error('Failed to save blueprint draft:', error);
+    }
+  };
+
+  const handleSaveScreensDraft = async (showToast = true) => {
+    if (!session?.id) return;
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const res = await fetch('/api/product/screens/save-requests', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          session_id: session.id,
+          change_requests: changeRequests
+        })
+      });
+      if (res.ok && showToast) {
+        toast.success('Screen remarks saved!', { icon: '💾' });
+      }
+    } catch (error) {
+      console.error('Failed to save screen requests:', error);
+    }
+  };
+
+  const handleSaveDescriptionDraft = async (showToast = true) => {
+    if (!session?.id) return;
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const res = await fetch('/api/product/description/save', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          session_id: session.id,
+          product_description: productDescription
+        })
+      });
+      if (res.ok && showToast) {
+        toast.success('Launch description saved!', { icon: '💾' });
+      }
+    } catch (error) {
+      console.error('Failed to save description:', error);
+    }
+  };
+
+  const handleSaveDemoDraft = async (showToast = true) => {
+    if (!session?.id) return;
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const res = await fetch('/api/product/demo/save', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          session_id: session.id,
+          demo_script: demoScript,
+          key_talking_points: mvp?.key_talking_points || []
+        })
+      });
+      if (res.ok && showToast) {
+        toast.success('Demo script draft saved!', { icon: '💾' });
+      }
+    } catch (error) {
+      console.error('Failed to save demo draft:', error);
+    }
+  };
+
+  const handleSaveGlobalDraft = async (showToast = true) => {
+    setIsSubmitting(true);
+    try {
+      if (activeStep === 1) {
+        await handleSaveBlueprintDraft(false);
+      } else if (activeStep === 2) {
+        await syncFeaturesWithServer(features);
+      } else if (activeStep === 4) {
+        await handleSaveScreensDraft(false);
+      } else if (activeStep === 7) {
+        await handleSaveDescriptionDraft(false);
+      } else if (activeStep === 8) {
+        for (const feat of features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true))) {
+          const rationale = featureRationales[feat.id] || '';
+          if (rationale.trim()) {
+            await handleExplainFeatureStep8(feat.id, rationale);
+          }
+        }
+      } else if (activeStep === 9) {
+        await handleSaveDemoDraft(false);
+      }
+
+      if (showToast) {
+        toast.success('Progress Saved! Feel free to exit or continue later.', {
+          icon: '💾',
+          style: {
+            borderRadius: '12px',
+            background: '#0f172a',
+            color: '#f8fafc',
+            border: '1px solid rgba(37, 99, 235, 0.4)'
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Error saving global draft:', err);
+      toast.error('Could not save draft progress.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -979,8 +1118,8 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
       </header>
 
       {/* Progression Timeline Tracker */}
-      <div className="bg-slate-50/80 backdrop-blur-sm border-b border-slate-200 px-6 py-2 flex items-center shrink-0 overflow-x-auto scrollbar-none z-20">
-        <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
+      <div className="bg-slate-50/80 backdrop-blur-sm border-b border-slate-200 px-4 md:px-12 py-2 flex items-center shrink-0 overflow-x-auto scrollbar-none z-20">
+        <div className="flex items-center gap-2 w-full justify-between">
           {STEP_LABELS.map((stepItem) => {
             const isStepCompleted = stepItem.step < activeStep;
             const isStepActive = stepItem.step === activeStep;
@@ -1016,7 +1155,7 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
 
       {/* Scrollable container for the single active step content */}
       <div className="flex-1 overflow-y-auto px-4 py-6 md:px-12 md:py-8 relative z-10 flex flex-col justify-start">
-        <div className="max-w-7xl mx-auto w-full bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 flex-1 flex flex-col overflow-y-auto">
+        <div className="w-full bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 flex-1 flex flex-col overflow-y-auto">
           <div className="border-b border-slate-100 pb-4 mb-6">
             <h1 className="text-base font-bold text-slate-800 flex items-center gap-2">
               <span className="w-5 h-5 rounded-full bg-[#2563eb]/10 border border-[#2563eb]/20 flex items-center justify-center text-[10px] font-mono text-[#2563eb]">
@@ -1102,22 +1241,10 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                             </div>
                           </div>
 
-                          <button 
-                            disabled={isSubmitting}
-                            onClick={handleApproveBlueprint}
-                            className="w-full inline-flex items-center justify-center bg-[#2563eb] hover:bg-blue-700 text-white font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
-                          >
-                            {isSubmitting ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Analyzing and Saving Blueprint...
-                              </>
-                            ) : (
-                              <>
-                                Confirm Blueprint →
-                              </>
-                            )}
-                          </button>
+                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
+                            <Info className="w-4 h-4 text-[#2563eb] shrink-0" />
+                            <span>Verify your project blueprint. Once satisfied, click <strong>Confirm Blueprint</strong> in the footer below to lock in ideas and generate feature scopes!</span>
+                          </div>
                         </div>
                       )}
 
@@ -1320,24 +1447,9 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                             </button>
                           </form>
 
-                          {/* Lock-In button */}
-                          <div className="pt-4">
-                            <button 
-                              disabled={isSubmitting}
-                              onClick={handleApproveFeatures}
-                              className="w-full inline-flex items-center justify-center bg-[#2563eb] hover:bg-[#3b82f6] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
-                            >
-                              {isSubmitting ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                  Structuring User Journeys...
-                                </>
-                              ) : (
-                                <>
-                                  Lock In My Features →
-                                </>
-                              )}
-                            </button>
+                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
+                            <Info className="w-4 h-4 text-[#2563eb] shrink-0" />
+                            <span>Confirm your prioritized feature scope, then click <strong>Confirm Features</strong> in the footer below to map out the User Journey!</span>
                           </div>
                         </div>
                       )}
@@ -1390,23 +1502,9 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                             </div>
                           )}
 
-                          <div className="pt-4">
-                            <button 
-                              disabled={isSubmitting}
-                              onClick={handleApproveJourney}
-                              className="w-full inline-flex items-center justify-center bg-[#2563eb] hover:bg-[#3b82f6] text-slate-950 font-black text-xs tracking-wider py-4 rounded-xl shadow-xl transition-all disabled:opacity-50 uppercase cursor-pointer"
-                            >
-                              {isSubmitting ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                  Designing Product Screens Preview...
-                                </>
-                              ) : (
-                                <>
-                                  Looks Right →
-                                </>
-                              )}
-                            </button>
+                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
+                            <Info className="w-4 h-4 text-[#2563eb] shrink-0" />
+                            <span>Read through the user journey steps. When everything looks accurate, click <strong>Approve Journey</strong> in the footer below to generate the product wireframes & screens!</span>
                           </div>
                         </div>
                       )}
@@ -1487,14 +1585,9 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                           </div>
 
                           {/* Build Activation Button */}
-                          <div className="pt-4">
-                            <button 
-                              disabled={isSubmitting}
-                              onClick={handleApproveScreensAndBuild}
-                              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-[#2563eb] to-[#3b82f6] hover:from-[#3b82f6] hover:to-[#2563eb] text-white font-extrabold tracking-wider text-xs sm:text-sm py-4 rounded-xl shadow-xl shadow-[#2563eb]/5 transition-all disabled:opacity-50 uppercase cursor-pointer"
-                            >
-                              Build My Product →
-                            </button>
+                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
+                            <Info className="w-4.5 h-4.5 text-[#2563eb] shrink-0" />
+                            <span>When screens are verified, click <strong>Approve & Click-to-Build</strong> in the footer below to compile and preview your full interactive MVP!</span>
                           </div>
                         </div>
                       )}
@@ -1597,13 +1690,10 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                             </div>
 
                             <div className="pt-2">
-                              <button
-                                onClick={handleCompleteStep6}
-                                disabled={isSubmitting}
-                                className="w-full py-3.5 bg-[#2563eb] hover:bg-[#3b82f6] text-black rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-[#2563eb]/5 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 font-sans"
-                              >
-                                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : 'I Understand — Complete Step 6 →'}
-                              </button>
+                              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-[10px] leading-relaxed flex items-start gap-1.5 font-sans">
+                                <Info className="w-3.5 h-3.5 text-[#2563eb] mt-0.5 shrink-0" />
+                                <span>Study the code panel structure. When you understand how it fits together, click <strong>Lock Walkthrough & Code Review</strong> in the footer below to lock this section!</span>
+                              </div>
                             </div>
                           </div>
 
@@ -1761,20 +1851,9 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                             </div>
                           </div>
 
-                          <div className="flex justify-end pt-4 border-t border-slate-200">
-                            <button
-                              onClick={handleSaveDescriptionStep7}
-                              disabled={isSubmitting}
-                              className="px-8 py-3.5 bg-[#2563eb] hover:bg-[#3b82f6] text-white font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#2563eb]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
-                            >
-                              {isSubmitting ? (
-                                <Loader2 className="w-4 h-4 animate-spin text-black" />
-                              ) : (
-                                <>
-                                  Save My Description <ArrowRight className="w-4 h-4" />
-                                </>
-                              )}
-                            </button>
+                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
+                            <Info className="w-4.5 h-4.5 text-[#2563eb] shrink-0" />
+                            <span>Customize your startup pitch description above, then click <strong>Save Description & Pitch</strong> in the footer below to lock in the story!</span>
                           </div>
                         </div>
                       )}
@@ -1847,14 +1926,9 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                             ))}
                           </div>
 
-                          <div className="flex justify-end pt-4 border-t border-slate-200">
-                            <button
-                              onClick={handleCompleteStep8}
-                              disabled={isSubmitting}
-                              className="px-8 py-3.5 bg-[#2563eb] hover:bg-[#3b82f6] text-white font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#2563eb]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
-                            >
-                              I've Explained My Features <ArrowRight className="w-4 h-4" />
-                            </button>
+                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
+                            <Info className="w-4.5 h-4.5 text-[#2563eb] shrink-0" />
+                            <span>Explain your rationales for each must-have feature above, then click <strong>Confirm Feature Explanations</strong> in the footer below to proceed!</span>
                           </div>
                         </div>
                       )}
@@ -1962,14 +2036,9 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
                             </div>
                           </div>
 
-                          <div className="flex justify-end pt-4 border-t border-slate-200">
-                            <button
-                              onClick={handleSaveDemoStep9}
-                              disabled={isSubmitting}
-                              className="px-8 py-3.5 bg-[#2563eb] hover:bg-[#3b82f6] text-white font-extrabold tracking-wider text-xs uppercase rounded-xl transition-all shadow-md shadow-[#2563eb]/10 inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 font-sans"
-                            >
-                              I've Designed My Demo Script <ArrowRight className="w-5 h-5" />
-                            </button>
+                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
+                            <Info className="w-4.5 h-4.5 text-[#2563eb] shrink-0" />
+                            <span>Prepare your demo rehearsal script above, then click <strong>Lock Demo Script</strong> in the footer below to lock your active rehearsal draft!</span>
                           </div>
                         </div>
                       )}
@@ -2076,7 +2145,7 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
     
           {/* Footer Navigation Bar */}
           <div className="flex items-center justify-between px-6 py-4.5 md:px-12 z-20 border-t border-slate-200 bg-white/75 backdrop-blur-md shrink-0 select-none">
-            <div>
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => {
                   if (activeStep > 1) {
@@ -2090,6 +2159,24 @@ export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => vo
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
+
+              {/* On-demand and Automatic Save Status Indicators */}
+              <div className="hidden md:flex items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-500 text-[9px] uppercase font-mono font-bold tracking-wider select-none">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Auto-Save Active
+                </span>
+                
+                {activeStep !== 3 && activeStep !== 5 && activeStep !== 6 && activeStep !== 10 && (
+                  <button
+                    disabled={isSubmitting}
+                    onClick={() => handleSaveGlobalDraft(true)}
+                    className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-[#2563eb] border border-[#2563eb]/20 hover:border-[#2563eb]/45 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    title="Click to manually back up your current progress"
+                  >
+                    <Save className="w-3.5 h-3.5 text-[#2563eb]" /> Save Progress
+                  </button>
+                )}
+              </div>
             </div>
     
             {/* Dynamic primary CTA button based on current step */}
