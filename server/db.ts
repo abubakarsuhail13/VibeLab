@@ -1004,6 +1004,8 @@ export const getPool = async () => {
         // Migrate Quiz Questions Columns для Phase 2 Custom Quiz
         await addColumnIfNeeded('quiz_questions', 'session_id', 'INT NULL DEFAULT NULL');
         await addColumnIfNeeded('quiz_questions', 'explanation', 'TEXT NULL DEFAULT NULL');
+        await addColumnIfNeeded('quiz_questions', 'section_number', 'INT NULL DEFAULT NULL');
+        await addColumnIfNeeded('quiz_attempts', 'section_number', 'INT NULL DEFAULT NULL');
 
         // Migration query to assign vl_id for users with NULL results, running safely immediately after columns migrate
         try {

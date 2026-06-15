@@ -234,9 +234,15 @@ const STEP_MAP_ORDER: Record<string, number> = {
   'approved': 10
 };
 
-export default function Phase2BuildWalkthrough({ onClose }: { onClose?: () => void }) {
+export default function Phase2BuildWalkthrough({ 
+  onClose, 
+  initialStep 
+}: { 
+  onClose?: () => void;
+  initialStep?: number;
+}) {
   const [session, setSession] = useState<ProductSession | null>(null);
-  const [activeStep, setActiveStep] = useState<number>(1);
+  const [activeStep, setActiveStep] = useState<number>(initialStep || 1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -673,7 +679,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
         const data = await sessRes.json();
         if (data.session) {
           setSession(data.session);
-          const mappedStep = STEP_MAP_ORDER[data.session.current_step] || 1;
+          const mappedStep = initialStep || STEP_MAP_ORDER[data.session.current_step] || 1;
           setActiveStep(mappedStep);
 
           if (data.blueprint) {

@@ -315,17 +315,31 @@ router.get('/phase/:id/resources', authenticateToken, async (req: any, res) => {
   }
 });
 
+const PHASE2_SECTIONS = [
+  { step: 1, label: 'Your Project Blueprint', desc: 'Confirming foundational MVP ideas and aligning product requirements.' },
+  { step: 2, label: 'Feature Discovery', desc: 'Identifying and prioritizing must-haves, nice-to-haves, and future plans to prevent scope creep.' },
+  { step: 3, label: 'User Journey', desc: 'Modeling how users will navigate through the application pages/views, path mappings.' },
+  { step: 4, label: 'Product Screens', desc: 'Designing mock visual layouts with interactive triggers and state controls.' },
+  { step: 5, label: 'Building Your Product', desc: 'NPM package compilation, bundling source codes, and local runtime verification.' },
+  { step: 6, label: 'MVP Code Walkthrough', desc: 'Synthesizing layout templates, inspecting DOM code structures, and linking views.' },
+  { step: 7, label: 'Pitch Story', desc: 'Refining core marketing descriptions, value propositions, and explaining product outcomes.' },
+  { step: 8, label: 'AI Mechanics', desc: 'Implementing server-side LLM secure proxy controls, configuring system instructions.' },
+  { step: 9, label: 'Demo Script', desc: 'Drafting presentation scripts and preparing step-by-step product walkthrough pitches.' },
+  { step: 10, label: 'All Completed', desc: 'Consolidating deliverables, verifying credentials, and final completion tasks.' }
+];
+
 // GET trivia multiple choice questions for a phase
 router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
   const { id } = req.params;
+  const sectionNum = req.query.section ? Number(req.query.section) : 1;
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     
     // Check latest attempt for failed cooldown check (24-hour cooldown on failed attempts)
     const [latestAttempts]: any = await p.execute(
-      'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? ORDER BY attempted_at DESC LIMIT 1',
-      [req.user.userId, id]
+      'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL)) ORDER BY attempted_at DESC LIMIT 1',
+      [req.user.userId, id, sectionNum, sectionNum]
     );
 
     if (latestAttempts.length > 0 && !latestAttempts[0].passed) {
@@ -344,8 +358,8 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     }
 
     const [bestAttempt]: any = await p.execute(
-      'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? ORDER BY score DESC, attempted_at DESC LIMIT 1',
-      [req.user.userId, id]
+      'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL)) ORDER BY score DESC, attempted_at DESC LIMIT 1',
+      [req.user.userId, id, sectionNum, sectionNum]
     );
 
     const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
@@ -449,23 +463,30 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
         if (sessions && sessions.length > 0) {
           const sessionId = sessions[0].id;
           const [existing]: any = await p.execute(
-            'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
-            [actualPhase2Id, sessionId]
+            'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL))',
+            [actualPhase2Id, sessionId, sectionNum, sectionNum]
           );
           if (existing && existing.length > 0) {
             rows = existing;
           } else {
-            // Auto generate if none exist yet
+            // Auto generate if none exist yet for this specific section!
             const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [sessionId]);
             if (bpRows && bpRows.length > 0) {
               const bp = bpRows[0];
               const [features]: any = await p.execute('SELECT * FROM product_features WHERE session_id = ?', [sessionId]);
               const featuresList = features.map((f: any) => `- ${f.feature_name}: ${f.feature_description} [${f.category}]`).join('\n');
 
-              const prompt = `
-Generate 10 multiple choice quiz questions for a Grade 9-12 student
-who just built the following product:
+              const sectionTitle = PHASE2_SECTIONS[sectionNum - 1]?.label || `Section ${sectionNum}`;
+              const sectionDesc = PHASE2_SECTIONS[sectionNum - 1]?.desc || '';
 
+              const prompt = `
+Generate EXACTLY 10 multiple choice quiz questions for a Grade 9-12 student
+who is learning about Section ${sectionNum} of Phase 2 (Product Creation).
+
+The current section is: ${sectionTitle}
+Focus of this section: ${sectionDesc}
+
+Student's product details:
 Product name: ${bp.project_name || 'Autonomous App'}
 Problem it solves: ${bp.problem_statement || 'N/A'}
 Target Users: ${bp.target_users || 'N/A'}
@@ -473,16 +494,16 @@ MVP Scope: ${bp.mvp_scope || 'N/A'}
 Key Features:
 ${featuresList || 'None listed'}
 
-We want to test if they understand how their product is designed, how it works, and key software design/theory decisions.
-Ensure the questions are highly personalized to their product and target users, yet educational about product management, software logic, and MVP design.
+We want the quiz to test their knowledge on "${sectionTitle}" as it applies to their product idea and software architecture.
+Ensure the questions are highly personalized to their product and target users, yet educational about product management, software engineering, and the specific learnings of Section ${sectionNum}.
 
-Please output as a valid JSON array of objects with this exact structure:
+Please output as a valid JSON array of EXACTLY 10 objects with this exact structure:
 [
   {
     "question": "The question text, references their product directly",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correct_index": 0,
-    "explanation": "Extremely clear explanation of why the correct option is right based on product design and theory."
+    "explanation": "Extremely clear explanation of why the correct option is right."
   }
 ]
 
@@ -504,9 +525,9 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
                 const generatedList: any[] = [];
                 for (const q of parsedQuestions) {
                   const [insertRes]: any = await p.execute(
-                    `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
-                     VALUES (?, ?, ?, ?, ?, ?)`,
-                    [actualPhase2Id, sessionId, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
+                    `INSERT INTO quiz_questions (phase_id, session_id, section_number, question, options, correct_index, explanation)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [actualPhase2Id, sessionId, sectionNum, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
                   );
                   generatedList.push({
                     id: insertRes.insertId,
@@ -556,7 +577,9 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
 // POST submit quiz answers and calculate results
 router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) => {
   const { id } = req.params;
-  const { answers } = req.body; // Array of { questionId: number, selectedIndex: number }
+  const { answers, section } = req.body; // Array of { questionId: number, selectedIndex: number }
+  const sectionNum = section ? Number(section) : 1;
+
   if (!answers || !Array.isArray(answers)) {
     return res.status(400).json({ error: 'Answers must be provided as an array.' });
   }
@@ -567,8 +590,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     
     // Cooldown verification on any previous failed attempt in the last 24 hours
     const [latestAttempts]: any = await p.execute(
-      'SELECT score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? ORDER BY attempted_at DESC LIMIT 1',
-      [req.user.userId, id]
+      'SELECT score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL)) ORDER BY attempted_at DESC LIMIT 1',
+      [req.user.userId, id, sectionNum, sectionNum]
     );
 
     if (latestAttempts.length > 0 && !latestAttempts[0].passed) {
@@ -585,8 +608,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     
     // Cooldown verification: once passed, 24 hours cooldown operates
     const [latestPass]: any = await p.execute(
-      'SELECT attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND passed = 1 ORDER BY attempted_at DESC LIMIT 1',
-      [req.user.userId, id]
+      'SELECT attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND passed = 1 AND (section_number = ? OR (? IS NULL AND section_number IS NULL)) ORDER BY attempted_at DESC LIMIT 1',
+      [req.user.userId, id, sectionNum, sectionNum]
     );
     if (latestPass.length > 0) {
       const lastPassTime = new Date(latestPass[0].attempted_at).getTime();
@@ -633,8 +656,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       if (sessions && sessions.length > 0) {
         const sessionId = sessions[0].id;
         const [sessionQuestions]: any = await p.execute(
-          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
-          [actualPhase2Id, sessionId]
+          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL))',
+          [actualPhase2Id, sessionId, sectionNum, sectionNum]
         );
         questions = sessionQuestions;
       }
@@ -682,8 +705,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     const passed = score >= 70;
     
     await p.execute(
-      'INSERT INTO quiz_attempts (user_id, phase_id, score, passed) VALUES (?, ?, ?, ?)',
-      [req.user.userId, id, score, passed ? 1 : 0]
+      'INSERT INTO quiz_attempts (user_id, phase_id, score, passed, section_number) VALUES (?, ?, ?, ?, ?)',
+      [req.user.userId, id, score, passed ? 1 : 0, sectionNum]
     );
     
     res.json({
@@ -796,8 +819,8 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
     const orderIndex = currentPhase[0].order_index;
     const phaseName = currentPhase[0].name;
 
-    // Condition 1: Verify Minimum Required Project Submissions with valid GitHub URLs
-    if (orderIndex > 1) {
+    // Condition 1: Verify Minimum Required Project Submissions with valid GitHub URLs (Bypassed for Phase 2 Custom MVP Builder)
+    if (orderIndex > 1 && orderIndex !== 2) {
       const [allProjects]: any = await p.execute('SELECT id FROM phase_projects WHERE phase_id = ?', [id]);
       if (allProjects.length === 0) return res.status(400).json({ error: 'No projects found in this phase' });
 

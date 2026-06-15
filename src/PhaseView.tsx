@@ -168,6 +168,8 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [quizResult, setQuizResult] = useState<{ score: number, passed: boolean, correctCount: number, totalQuestions: number, details?: Record<number, { correct: boolean; correctIndex: number; explanation: string }> } | null>(null);
   const [quizErrorMsg, setQuizErrorMsg] = useState('');
   const [activeSession, setActiveSession] = useState<any>(null);
+  const [selectedPhase2Section, setSelectedPhase2Section] = useState(1);
+  const [showDetailedBuilder, setShowDetailedBuilder] = useState(false);
 
   // Daily tracker logging states
   const [learnMinutes, setLearnMinutes] = useState(15);
@@ -338,14 +340,74 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           "How to demo a product confidently"
         ];
       case 2:
-        return [
-          "Python Syntax & Language Basics",
-          "Scripting, Libraries & Native Code Modules",
-          "External API Integrations & Requests",
-          "Fundamental Web Server Architectures",
-          "Command Line Operations & OS Utilities",
-          "Pristine System Error and Exception Handling"
-        ];
+        switch (selectedPhase2Section) {
+          case 1:
+            return [
+              "Translating ideas into technical requirements",
+              "Setting MVP project boundaries and goals",
+              "Aligning user feedback with blueprint definitions"
+            ];
+          case 2:
+            return [
+              "Prioritization: Must-haves vs. Nice-to-haves",
+              "Scope creep prevention in technical specs",
+              "Formulating feature cards for rapid development"
+            ];
+          case 3:
+            return [
+              "UX wireframes and routing pipelines",
+              "Path analysis: From landing page to checkout/action",
+              "State management across multi-view layouts"
+            ];
+          case 4:
+            return [
+              "High-fidelity wireframing and CSS rules",
+              "Component reuse and styling grids",
+              "Interactive triggers and layout state binding"
+            ];
+          case 5:
+            return [
+              "Production compile stages and build configuration",
+              "Dependency management: NPM and lockfiles",
+              "Debugging deployment and web server errors"
+            ];
+          case 6:
+            return [
+              "Interpreting full-stack code structures",
+              "DOM manipulation and events handling in browser",
+              "Connecting front-end controllers to mock APIs"
+            ];
+          case 7:
+            return [
+              "Formulating core value propositions elegantly",
+              "Writing compelling descriptions for product hunt/launches",
+              "Converting tech features into clear human outcomes"
+            ];
+          case 8:
+            return [
+              "Gemini LLM API keys and secure server proxies",
+              "System instructions and custom context scaffolding",
+              "Parameter tuning: Temperature, tokens, and safety"
+            ];
+          case 9:
+            return [
+              "Interactive live product presentation strategies",
+              "Designing standard demos under 3 minutes",
+              "Addressing fallback pathways and edge cases smoothly"
+            ];
+          case 10:
+            return [
+              "Publishing and launching startup kits successfully",
+              "Verifying security protocols and database credentials",
+              "Reviewing engineering portfolios for job readiness"
+            ];
+          default:
+            return [
+              "Translating ideas into technical requirements",
+              "Setting MVP project boundaries and goals",
+              "Aligning user feedback with blueprint definitions"
+            ];
+        }
       case 3:
         return [
           "Express.js Config, Middleware Pipeline & Handling",
