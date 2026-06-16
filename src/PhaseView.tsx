@@ -171,6 +171,35 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [selectedPhase2Section, setSelectedPhase2Section] = useState(1);
   const [showDetailedBuilder, setShowDetailedBuilder] = useState(false);
 
+  const PHASE2_SECTIONS = [
+    { step: 1, label: 'Your Project Blueprint', desc: 'Confirming foundational MVP ideas and aligning product requirements.' },
+    { step: 2, label: 'Feature Discovery', desc: 'Identifying and prioritizing must-haves, nice-to-haves, and future plans to prevent scope creep.' },
+    { step: 3, label: 'User Journey', desc: 'Modeling how users will navigate through the application windows/pages.' },
+    { step: 4, label: 'Product Screens', desc: 'Designing mock visual layouts with interactive triggers and state controls.' },
+    { step: 5, label: 'Building Your Product', desc: 'NPM package compilation, bundling source codes, and local runtime verification.' },
+    { step: 6, label: 'MVP Code Walkthrough', desc: 'Synthesizing layout templates, inspecting DOM code structures, and linking views.' },
+    { step: 7, label: 'Pitch Story', desc: 'Refining core marketing descriptions, value propositions, and explaining product outcomes.' },
+    { step: 8, label: 'AI Mechanics', desc: 'Implementing server-side LLM secure proxy controls, configuring system instructions.' },
+    { step: 9, label: 'Demo Script', desc: 'Drafting presentation scripts and preparing step-by-step product walkthrough pitches.' },
+    { step: 10, label: 'All Completed', desc: 'Consolidating deliverables, verifying credentials, and final completion tasks.' }
+  ];
+
+  const getSectionIcon = (step: number) => {
+    switch (step) {
+      case 1: return <Lightbulb className="w-5 h-5 text-amber-500" />;
+      case 2: return <Target className="w-5 h-5 text-rose-500" />;
+      case 3: return <Compass className="w-5 h-5 text-indigo-500" />;
+      case 4: return <Monitor className="w-5 h-5 text-cyan-500" />;
+      case 5: return <Cpu className="w-5 h-5 text-purple-500" />;
+      case 6: return <Code2 className="w-5 h-5 text-emerald-500" />;
+      case 7: return <MessageSquare className="w-5 h-5 text-blue-500" />;
+      case 8: return <Zap className="w-5 h-5 text-violet-500" />;
+      case 9: return <Info className="w-5 h-5 text-slate-500" />;
+      case 10: return <Trophy className="w-5 h-5 text-orange-400 font-bold" />;
+      default: return <BookOpen className="w-5 h-5 text-slate-500" />;
+    }
+  };
+
   // Daily tracker logging states
   const [learnMinutes, setLearnMinutes] = useState(15);
   const [buildMinutes, setBuildMinutes] = useState(30);
@@ -1097,7 +1126,10 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   </div>
                 </div>
                 <button 
-                  onClick={() => navigate('/phase/2')}
+                  onClick={() => {
+                    setActiveTab('build');
+                    setShowDetailedBuilder(true);
+                  }}
                   className="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
                 >
                   Launch Custom Builder <ChevronRight className="w-3.5 h-3.5" />
@@ -1106,9 +1138,8 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             )}
           </div>
         </div>
-
         <div className="flex items-center gap-4">
-          {phase.progress_percentage === 100 && !hasBadge && (
+          {(!hasBadge && (phase.order_index === 1 || phase.order_index === 2 || phase.progress_percentage === 100)) && (
              <motion.button 
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
@@ -1160,6 +1191,33 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             {/* Left Content Side */}
             <div className="lg:col-span-2 space-y-6">
               
+              {phase?.order_index === 2 && (
+                <div className="p-6 bg-slate-900 text-white rounded-[2rem] border border-indigo-500/20 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 shrink-0 font-extrabold text-lg">
+                      {selectedPhase2Section}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-base leading-none mb-1 text-white">
+                        Aligned Study Module: Section {selectedPhase2Section}
+                      </h4>
+                      <p className="text-slate-400 text-xs font-semibold leading-relaxed">
+                        Currently studying: {PHASE2_SECTIONS[selectedPhase2Section - 1]?.label || "Your Project Blueprint"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setActiveTab('build');
+                      setShowDetailedBuilder(false);
+                    }}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-indigo-600/10 shrink-0"
+                  >
+                    View Section Overview Map
+                  </button>
+                </div>
+              )}
+
               {/* Honest Topics Progress Checklist */}
               <div id="curriculum-checklist-section" className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between mb-4">
@@ -1801,7 +1859,165 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                 </div>
               );
             })() : phase?.order_index === 2 ? (
-              <Phase2BuildWalkthrough />
+              showDetailedBuilder ? (
+                <Phase2BuildWalkthrough 
+                  initialStep={selectedPhase2Section || 1}
+                  onClose={() => {
+                    setShowDetailedBuilder(false);
+                    fetchPhaseData();
+                  }}
+                />
+              ) : (
+                <div className="space-y-8 select-none">
+                  {(() => {
+                    const STEP_MAP_ORDER: Record<string, number> = {
+                      'blueprint': 1,
+                      'features': 2,
+                      'journey': 3,
+                      'screens': 4,
+                      'build': 5,
+                      'walkthrough': 6,
+                      'pitch': 7,
+                      'ai_mechanics': 8,
+                      'demo_script': 9,
+                      'approved': 10
+                    };
+                    return (
+                      <>
+                        {/* Phase 2 Introduction Card */}
+                        <div className="p-8 md:p-10 rounded-[3rem] border border-slate-200 bg-white shadow-sm relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-indigo-50/20 to-cyan-50/20 rounded-full blur-3xl pointer-events-none" />
+                          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="space-y-2">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50/10 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-wider border border-indigo-100">
+                                <Sparkles className="w-3 h-3 text-indigo-500 animate-pulse" />
+                                Phase 2 Curriculum Map
+                              </div>
+                              <h2 className="text-3xl font-display font-bold text-slate-900 tracking-tight">
+                                Software Architecture & MVP Builder
+                              </h2>
+                              <p className="text-sm text-slate-500 max-w-2xl font-medium leading-relaxed">
+                                Your custom product co-created in Phase 1 is loaded! Select a section below to study its customized quiz challenge under the <strong>Learn</strong> tab. Once you are confident, click <strong>Launch Selected Session</strong> in the bottom bar to build the corresponding module!
+                              </p>
+                            </div>
+                            
+                            <button
+                              onClick={() => setShowDetailedBuilder(true)}
+                              className="px-6 py-4 bg-slate-900 border border-slate-800 text-white hover:bg-slate-800 rounded-2xl font-black text-xs shadow-lg transition-all active:scale-95 shrink-0 flex items-center gap-2"
+                            >
+                              <Zap className="w-4 h-4 text-amber-400" />
+                              Launch Full Builder Walkthrough
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Section Selection Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {PHASE2_SECTIONS.map((sec) => {
+                            const currentSessionStep = STEP_MAP_ORDER[activeSession?.session?.current_step] || 1;
+                            const isCompleted = sec.step < currentSessionStep;
+                            const isActiveStep = sec.step === currentSessionStep;
+                            const isSelected = selectedPhase2Section === sec.step;
+
+                            return (
+                              <motion.div
+                                key={sec.step}
+                                whileHover={{ scale: 1.015, y: -2 }}
+                                whileTap={{ scale: 0.985 }}
+                                onClick={() => {
+                                  setSelectedPhase2Section(sec.step);
+                                  toast.success(`Active segment set to Section ${sec.step}. Check your Quiz under the Learn tab!`, { id: 'sec-toggle' });
+                                }}
+                                className={`cursor-pointer group relative p-6 md:p-8 rounded-[2rem] transition-all flex flex-col justify-between min-h-[170px] ${
+                                  isSelected
+                                    ? 'bg-gradient-to-b from-indigo-50/30 to-white border-2 border-indigo-500 bg-white shadow-xl shadow-indigo-500/5 ring-4 ring-indigo-500/5'
+                                    : 'bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md'
+                                }`}
+                              >
+                                <div className="space-y-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                                      isSelected ? 'bg-indigo-100/50 border border-indigo-200 shadow-sm' : 'bg-slate-50 border border-slate-100'
+                                    }`}>
+                                      {getSectionIcon(sec.step)}
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5">
+                                      {isCompleted && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700/80 rounded-full text-[10px] font-black border border-emerald-100">
+                                          <Check className="w-2.5 h-2.5" /> Approved
+                                        </span>
+                                      )}
+                                      {isActiveStep && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[10px] font-black border border-amber-100 animate-pulse">
+                                          <Zap className="w-2.5 h-2.5 text-amber-500" /> Build Now
+                                        </span>
+                                      )}
+                                      <span className="font-mono text-[10px] text-slate-400 font-bold group-hover:text-slate-600">
+                                        Section 0{sec.step}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-900 transition-colors">
+                                      {sec.label}
+                                    </h3>
+                                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                                      {sec.desc}
+                                    </p>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Elegant Sticky Interactive Action Bar */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 30 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-6 bg-slate-900 text-white rounded-[2rem] border border-indigo-500/20 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4"
+                        >
+                          <div>
+                            <span className="font-mono text-[9px] font-black text-indigo-400 tracking-widest uppercase">
+                              Configuration Focused
+                            </span>
+                            <h3 className="font-bold text-lg text-white">
+                              Selected: Section {selectedPhase2Section} — {PHASE2_SECTIONS[selectedPhase2Section - 1]?.label}
+                            </h3>
+                            <p className="text-xs text-slate-400">
+                              {selectedPhase2Section === (STEP_MAP_ORDER[activeSession?.session?.current_step] || 1)
+                                ? "This is your active building section. Code and earn credit today!"
+                                : "Explore study topics or jump step-by-step into structural walkthrough sessions."}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3 w-full md:w-auto">
+                            <button
+                              onClick={() => {
+                                setActiveTab('learn');
+                              }}
+                              className="flex-1 md:flex-none px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all border border-slate-700"
+                            >
+                              Launch Quizzes
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowDetailedBuilder(true);
+                              }}
+                              className="flex-1 md:flex-none px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                            >
+                              <Play className="w-3.5 h-3.5 fill-white" />
+                              Launch Selected Session
+                            </button>
+                          </div>
+                        </motion.div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )
             ) : selectedProject ? (
               <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden sm:p-4">
                 {/* Header Bar */}

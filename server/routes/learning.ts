@@ -336,11 +336,25 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     
+    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
+    const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
+    const isPhase2 = Number(id) === actualPhase2Id;
+
     // Check latest attempt for failed cooldown check (24-hour cooldown on failed attempts)
-    const [latestAttempts]: any = await p.execute(
-      'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL)) ORDER BY attempted_at DESC LIMIT 1',
-      [req.user.userId, id, sectionNum, sectionNum]
-    );
+    let latestAttempts: any[] = [];
+    if (isPhase2) {
+      const [rowsAttempt]: any = await p.execute(
+        'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number = ? ORDER BY attempted_at DESC LIMIT 1',
+        [req.user.userId, id, sectionNum]
+      );
+      latestAttempts = rowsAttempt;
+    } else {
+      const [rowsAttempt]: any = await p.execute(
+        'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number IS NULL ORDER BY attempted_at DESC LIMIT 1',
+        [req.user.userId, id]
+      );
+      latestAttempts = rowsAttempt;
+    }
 
     if (latestAttempts.length > 0 && !latestAttempts[0].passed) {
       const lastAttemptTime = new Date(latestAttempts[0].attempted_at).getTime();
@@ -357,15 +371,23 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
       }
     }
 
-    const [bestAttempt]: any = await p.execute(
-      'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL)) ORDER BY score DESC, attempted_at DESC LIMIT 1',
-      [req.user.userId, id, sectionNum, sectionNum]
-    );
+    let bestAttempt: any[] = [];
+    if (isPhase2) {
+      const [rowsBest]: any = await p.execute(
+        'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number = ? ORDER BY score DESC, attempted_at DESC LIMIT 1',
+        [req.user.userId, id, sectionNum]
+      );
+      bestAttempt = rowsBest;
+    } else {
+      const [rowsBest]: any = await p.execute(
+        'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number IS NULL ORDER BY score DESC, attempted_at DESC LIMIT 1',
+        [req.user.userId, id]
+      );
+      bestAttempt = rowsBest;
+    }
 
     const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
     const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
-    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
-    const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
     const [p3Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 3');
     const actualPhase3Id = p3Rows && p3Rows.length > 0 ? p3Rows[0].id : 3;
     const [p4Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 4');
@@ -526,7 +548,7 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
                 for (const q of parsedQuestions) {
                   const [insertRes]: any = await p.execute(
                     `INSERT INTO quiz_questions (phase_id, session_id, section_number, question, options, correct_index, explanation)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                     VALUES (?, ?, ?, ?, ?, ?, ?)`,
                     [actualPhase2Id, sessionId, sectionNum, q.question, JSON.stringify(q.options), q.correct_index, q.explanation]
                   );
                   generatedList.push({
@@ -547,18 +569,7 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
     }
 
     if (rows.length === 0) {
-      let queryPhaseId = id;
-      if (Number(id) === actualPhase2Id) {
-        queryPhaseId = actualPhase1Id;
-      } else if (Number(id) === actualPhase3Id) {
-        queryPhaseId = actualPhase2Id;
-      } else if (Number(id) === actualPhase4Id) {
-        queryPhaseId = actualPhase3Id;
-      } else if (Number(id) === actualPhase5Id) {
-        queryPhaseId = actualPhase4Id;
-      }
-
-      const [staticRows]: any = await p.execute('SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL', [queryPhaseId]);
+      const [staticRows]: any = await p.execute('SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL', [id]);
       rows = staticRows;
     }
 
@@ -588,11 +599,25 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     
+    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
+    const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
+    const isPhase2 = Number(id) === actualPhase2Id;
+
     // Cooldown verification on any previous failed attempt in the last 24 hours
-    const [latestAttempts]: any = await p.execute(
-      'SELECT score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL)) ORDER BY attempted_at DESC LIMIT 1',
-      [req.user.userId, id, sectionNum, sectionNum]
-    );
+    let latestAttempts: any[] = [];
+    if (isPhase2) {
+      const [rowsAttempt]: any = await p.execute(
+        'SELECT score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number = ? ORDER BY attempted_at DESC LIMIT 1',
+        [req.user.userId, id, sectionNum]
+      );
+      latestAttempts = rowsAttempt;
+    } else {
+      const [rowsAttempt]: any = await p.execute(
+        'SELECT score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number IS NULL ORDER BY attempted_at DESC LIMIT 1',
+        [req.user.userId, id]
+      );
+      latestAttempts = rowsAttempt;
+    }
 
     if (latestAttempts.length > 0 && !latestAttempts[0].passed) {
       const lastAttemptTime = new Date(latestAttempts[0].attempted_at).getTime();
@@ -607,10 +632,20 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     }
     
     // Cooldown verification: once passed, 24 hours cooldown operates
-    const [latestPass]: any = await p.execute(
-      'SELECT attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND passed = 1 AND (section_number = ? OR (? IS NULL AND section_number IS NULL)) ORDER BY attempted_at DESC LIMIT 1',
-      [req.user.userId, id, sectionNum, sectionNum]
-    );
+    let latestPass: any[] = [];
+    if (isPhase2) {
+      const [rowsPass]: any = await p.execute(
+        'SELECT attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND passed = 1 AND section_number = ? ORDER BY attempted_at DESC LIMIT 1',
+        [req.user.userId, id, sectionNum]
+      );
+      latestPass = rowsPass;
+    } else {
+      const [rowsPass]: any = await p.execute(
+        'SELECT attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND passed = 1 AND section_number IS NULL ORDER BY attempted_at DESC LIMIT 1',
+        [req.user.userId, id]
+      );
+      latestPass = rowsPass;
+    }
     if (latestPass.length > 0) {
       const lastPassTime = new Date(latestPass[0].attempted_at).getTime();
       const now = Date.now();
@@ -625,8 +660,6 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     
     const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
     const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
-    const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
-    const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
     const [p3Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 3');
     const actualPhase3Id = p3Rows && p3Rows.length > 0 ? p3Rows[0].id : 3;
     const [p4Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 4');
@@ -664,20 +697,9 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     }
 
     if (questions.length === 0) {
-      let queryPhaseId = id;
-      if (Number(id) === actualPhase2Id) {
-        queryPhaseId = actualPhase1Id;
-      } else if (Number(id) === actualPhase3Id) {
-        queryPhaseId = actualPhase2Id;
-      } else if (Number(id) === actualPhase4Id) {
-        queryPhaseId = actualPhase3Id;
-      } else if (Number(id) === actualPhase5Id) {
-        queryPhaseId = actualPhase4Id;
-      }
-
       const [staticQuestions]: any = await p.execute(
         'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL',
-        [queryPhaseId]
+        [id]
       );
       questions = staticQuestions;
     }
