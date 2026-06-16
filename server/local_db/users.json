@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "name": "Test Builder",
+    "email": "testbuilder@vibelab.io",
+    "password": "$2a$10$O0O/e9Bv6g5iY5.1uP9qO.rPZ/BGlxscCym6sXvG0I9eI.83W052y",
+    "role": "student",
+    "is_verified": 1,
+    "vl_id": "VL-2026-00001",
+    "created_at": "2026-06-16T13:38:32.113Z"
+  }
+]

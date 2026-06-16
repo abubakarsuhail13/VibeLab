@@ -397,6 +397,7 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
 
     let rows: any = [];
     let isMissingBlueprint = false;
+    let sessionId: any = null;
     if (Number(id) === actualPhase1Id) {
       try {
         const [bpRows]: any = await p.execute(
@@ -405,7 +406,7 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
         );
         if (bpRows && bpRows.length > 0) {
           const bp = bpRows[0];
-          const sessionId = bp.id;
+          sessionId = bp.id;
           const originalSessionId = bp.session_id;
 
           // Fetch the conversational history of user reactions/AI refinements
@@ -547,6 +548,61 @@ Do not return any markdown, backticks (like \`\`\`json), or text before/after th
       } catch (dynamicError: any) {
         console.warn('Failed to dynamically generate Phase 1 customized quiz, using static questions fallback:', dynamicError);
         rows = [];
+      }
+
+      if (rows.length === 0 && !isMissingBlueprint) {
+        console.log('[DEBUG] Dynamic Phase 1 quiz generation failed/empty, inserting robust static fallback questions in the database...');
+        try {
+          const fallbacks = [
+            {
+              q: "When defining your target user's core problem, which approach ensures your product stays highly relevant?",
+              o: ["Focusing on a single critical pain point first and validating it with real users", "Adding as many cool features as possible beforehand to appeal to everyone", "Waiting until the product is 100% complete before talking to any target users", "Relying solely on your own assumptions without asking for feedback"],
+              c: 0,
+              e: "Focusing on a single pain point first and validating it ensures you build a solution that people actually need, saving time and effort."
+            },
+            {
+              q: "How did collaborating with our AI coach during the ideation process help refine your product concept?",
+              o: ["It helped break down a broad, vague idea into structured MVP features and target personas through helpful back-and-forth prompts", "It automatically built the actual source code and database rules without my input", "It limited my creativity by forcing me to only build simple default apps", "It replaced the need for me to understand my own product scope"],
+              c: 0,
+              e: "Collaborative AI prompting acts as a sounding board, helping to structure, challenge, and refine your unique perspectives into concrete product parameters."
+            },
+            {
+              q: "Why is keeping your Minimum Viable Product (MVP) scope small and focused so essential for Phase 1?",
+              o: ["It allows you to build, test, and gather user feedback quickly without getting bogged down in secondary complexities", "It makes the product look simpler and less impressive to potential investors", "It is a strict requirement that prevents you from adding any advanced features in later phases", "It ensures that your application doesn't require any server-side database configuration"],
+              c: 0,
+              e: "A tight MVP scope allows you to launch faster, validate assumptions, and pivot easily based on actual user testing instead of guesswork."
+            },
+            {
+              q: "When guiding an AI assistant to write code or design screens, what constitutes the most effective human-AI partnership?",
+              o: ["Providing clear, descriptive prompts with specific context and reviewing the output critically", "Asking the AI to 'build a whole app' with a single sentence and expecting perfect results", "Letting the AI make all product decisions without human oversight or evaluation", "Avoiding any AI tools entirely to ensure the code is 100% written manually"],
+              c: 0,
+              e: "A great co-creation partner guides the AI with clear instructions, domain context, and critical oversight, blending human creativity with AI efficiency."
+            },
+            {
+              q: "As you finalize your ideation and prepare to transition into Phase 2 (Product Creation), what is your main priority?",
+              o: ["To map out the user flow, outline core styling patterns, and iteratively construct the MVP interface with your AI tutor", "To worry about writing thousands of lines of complex backend code before validating the UI", "To completely rewrite your product concept from scratch if the first attempt is not fully perfect", "To wait for other student builders to complete their projects first before proceeding"],
+              c: 0,
+              e: "Moving to Phase 2 means translating your ideation blueprint into layouts, views, and visual states, keeping your user's experience at the forefront."
+            }
+          ];
+
+          const generatedList: any[] = [];
+          for (const item of fallbacks) {
+            const [insertRes]: any = await p.execute(
+              `INSERT INTO quiz_questions (phase_id, session_id, question, options, correct_index, explanation)
+               VALUES (?, ?, ?, ?, ?, ?)`,
+              [actualPhase1Id, sessionId || null, item.q, JSON.stringify(item.o), item.c, item.e]
+            );
+            generatedList.push({
+              id: insertRes.insertId,
+              question: item.q,
+              options: item.o
+            });
+          }
+          rows = generatedList;
+        } catch (dbErr) {
+          console.error('[ERROR] Failed to insert static fallbacks in DB:', dbErr);
+        }
       }
     } else if (Number(id) === actualPhase2Id) {
       try {
