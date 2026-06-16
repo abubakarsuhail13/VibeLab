@@ -287,8 +287,8 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
 
       const data = await res.json();
       
-      // Navigate to /dashboard
-      onNavigate("dashboard");
+      // Navigate to /ideation/blueprint directly
+      onNavigate("ideation-blueprint");
 
       // Immediately show a custom gorgeous toast notification
       toast.custom((t) => (
@@ -296,7 +296,7 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
           className={`${
             t.visible ? "animate-enter opacity-100 translate-y-0" : "animate-leave opacity-0 -translate-y-4"
           } max-w-md w-full bg-[#0a1126] border border-white/10 shadow-2xl rounded-2xl pointer-events-auto flex flex-col p-5 font-sans text-left relative overflow-hidden transition-all duration-300`}
-          style={{ borderLeft: "4px solid #2563eb" }}
+          style={{ borderLeft: "4px solid #10b981" }}
         >
           <div className="flex items-start gap-4">
             {/* Green success indicator */}
@@ -307,25 +307,11 @@ export default function IdeationChat({ onNavigate }: IdeationChatProps) {
             {/* Content block */}
             <div className="flex-1 space-y-2">
               <h3 className="text-sm font-bold text-white tracking-wide font-dmsans">
-                Ideation Complete 🎉
+                Blueprint Created Successfully! 🎉
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed font-semibold font-dmsans">
-                Your blueprint is ready. You can review it anytime from the Ideation section. Phase 2 is now unlocked &mdash; you're ready to start building.
+                Congratulations! Your custom brand strategy, problem analysis, and 1-week MVP specification are compiled. Phase 2 is now fully unlocked.
               </p>
-              
-              {/* Action Button */}
-              <div className="pt-1 flex justify-start">
-                <button
-                  type="button"
-                  onClick={() => {
-                    toast.dismiss(t.id);
-                    onNavigate("ideation-blueprint");
-                  }}
-                  className="px-3.5 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-slate-950 font-bold text-xs rounded-xl transition-all tracking-wider shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                >
-                  View Blueprint →
-                </button>
-              </div>
             </div>
             
             {/* Close Button */}

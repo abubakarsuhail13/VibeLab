@@ -2219,9 +2219,13 @@ export default function App() {
           navigate('/intro', { replace: true });
         }
       } else {
-        // If they completed both, and are on onboarding / intro / login / signup, send them to dashboard
+        // If they completed both, and are on onboarding / intro / login / signup, send them to dashboard or ideation
         if (path === '/intro' || path === '/onboarding' || path === '/login' || path === '/signup') {
-          navigate('/dashboard', { replace: true });
+          if (path === '/intro') {
+            navigate('/ideation', { replace: true });
+          } else {
+            navigate('/dashboard', { replace: true });
+          }
         }
       }
     }

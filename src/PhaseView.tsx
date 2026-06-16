@@ -1773,114 +1773,111 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   <div className="lg:col-span-2 space-y-6">
                     {phase1Blueprint ? (
                       <div className="space-y-6">
-                        {/* Assigned Brand Name */}
-                        <div className="border border-cyan-100 bg-gradient-to-br from-cyan-50/20 to-white rounded-[2.5rem] p-8 text-center space-y-2 relative overflow-hidden shadow-sm shadow-cyan-150/10">
+                        {/* PREMIUM BLUEPRINT CARD */}
+                        <div className="border border-slate-200/80 bg-gradient-to-br from-indigo-500/[0.015] to-white rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden shadow-sm hover:shadow-md transition-all">
                           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-                          <span className="font-mono text-[10px] font-black tracking-widest text-cyan-600 uppercase">Assigned Brand Name</span>
-                          <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-wide uppercase leading-none font-display">
-                            {phase1Blueprint.product_name}
-                          </h1>
-                        </div>
-
-                        {/* Bento Core Row */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="border border-slate-150 bg-white rounded-3xl p-5 hover:border-cyan-200 transition-all shadow-sm">
-                            <div className="flex items-center gap-1.5 mb-3 text-cyan-600">
-                              <Target className="w-4 h-4 shrink-0" />
-                              <h4 className="font-mono text-[10px] font-black uppercase tracking-wider">The Problem</h4>
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+                            <div>
+                              <span className="font-mono text-[10px] font-black tracking-widest text-cyan-600 uppercase">
+                                Discovery & Ideation Output
+                              </span>
+                              <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-wide uppercase font-display mt-1">
+                                {phase1Blueprint.product_name}
+                              </h1>
+                              <p className="text-sm font-semibold text-slate-500 mt-1 flex items-center gap-2">
+                                🛠️ {phase1Blueprint.recommended_track || "AI Co-creation Tracker"}
+                              </p>
                             </div>
-                            <p className="text-slate-650 text-xs leading-relaxed font-semibold">{phase1Blueprint.problem_statement}</p>
-                          </div>
-
-                          <div className="border border-slate-150 bg-white rounded-3xl p-5 hover:border-cyan-200 transition-all shadow-sm">
-                            <div className="flex items-center gap-1.5 mb-3 text-cyan-600">
-                              <Compass className="w-4 h-4 shrink-0" />
-                              <h4 className="font-mono text-[10px] font-black uppercase tracking-wider">Target User</h4>
-                            </div>
-                            <p className="text-slate-650 text-xs leading-relaxed font-semibold">{phase1Blueprint.target_user_persona}</p>
-                          </div>
-
-                          <div className="border border-slate-150 bg-white rounded-3xl p-5 hover:border-cyan-200 transition-all shadow-sm">
-                            <div className="flex items-center gap-1.5 mb-3 text-cyan-600">
-                              <Cpu className="w-4 h-4 shrink-0" />
-                              <h4 className="font-mono text-[10px] font-black uppercase tracking-wider">The Solution</h4>
-                            </div>
-                            <p className="text-slate-650 text-xs leading-relaxed font-semibold">{phase1Blueprint.solution_concept}</p>
-                          </div>
-                        </div>
-
-                        {/* AI Opportunity Map */}
-                        {opportunities.length > 0 && (
-                          <div className="border border-slate-150 bg-white rounded-3xl p-6 space-y-3 shadow-sm">
-                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">AI Opportunity Map</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {opportunities.map((item, idx) => (
-                                <span key={idx} className="border border-cyan-100 bg-cyan-50/40 text-cyan-700 font-semibold font-mono text-[10px] px-3 py-1.5 rounded-lg">
-                                  ✨ {item}
-                                </span>
-                              ))}
+                            
+                            <div className="flex flex-col gap-2 shrink-0">
+                              {/* Blueprint Status */}
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold border border-emerald-100 self-start md:self-auto">
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                <span>Blueprint Finalized</span>
+                              </div>
+                              {/* Completion Date */}
+                              <div className="text-[10px] font-bold text-slate-400 font-mono tracking-tight self-start md:self-auto text-left">
+                                Completed: Jun 16, 2026
+                              </div>
                             </div>
                           </div>
-                        )}
-
-                        {/* MVP Definition */}
-                        <div className="border border-cyan-150 bg-cyan-50/10 rounded-3xl p-6 space-y-4 shadow-sm">
-                          <div className="space-y-1.5">
-                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">Your 1-Week MVP Definition</h4>
-                            <p className="text-slate-800 text-xs leading-relaxed font-semibold">{phase1Blueprint.mvp_definition}</p>
+                          
+                          <div className="py-6 space-y-4 text-slate-600 text-sm font-semibold max-w-xl">
+                            <p>
+                              Your AI Co-creation session is locked. The system has automatically validated and customized this build roadmap to fit your {phase1Blueprint.complexity} level.
+                            </p>
+                            <div className="grid grid-cols-2 gap-4 pt-2">
+                              <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-2xl">
+                                <span className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest font-mono">MVP Estimated Time</span>
+                                <span className="text-slate-800 font-extrabold text-sm">{phase1Blueprint.estimated_build_time || "1-Week"}</span>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-100 p-3.5 rounded-2xl">
+                                <span className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest font-mono">Complexity Grade</span>
+                                <span className="text-slate-800 font-extrabold text-sm capitalize">{phase1Blueprint.complexity || "beginner"}</span>
+                              </div>
+                            </div>
                           </div>
-
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            <div className="bg-white border border-slate-150 font-mono text-[10px] font-black text-slate-500 px-3.5 py-2 rounded-lg uppercase tracking-wider">
-                              ⏳ {phase1Blueprint.estimated_build_time || "1-Week"}
-                            </div>
-                            <div className={`font-mono text-[10px] font-black px-3.5 py-2 rounded-lg uppercase tracking-wider ${getComplexityStyles(phase1Blueprint.complexity)}`}>
-                              🧠 {phase1Blueprint.complexity || "beginner"}
-                            </div>
-                            <div className="bg-white border border-slate-150 font-mono text-[10px] font-black text-slate-500 px-3.5 py-2 rounded-lg uppercase tracking-wider">
-                              🛠️ {phase1Blueprint.recommended_track || "Full-stack code"}
-                            </div>
+                          
+                          <div className="pt-2">
+                            <button
+                              onClick={() => {
+                                navigate('/ideation/blueprint');
+                              }}
+                              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-slate-900/10 hover:scale-[1.01] transition-all cursor-pointer select-none"
+                            >
+                              <BookOpen className="w-4 h-4 text-cyan-405" />
+                              <span>View Full Blueprint Screen</span>
+                            </button>
                           </div>
                         </div>
 
-                        {/* Suggested Learning Path */}
-                        {learningPath.length > 0 && (
-                          <div className="border border-slate-150 bg-white rounded-3xl p-6 space-y-4 shadow-sm">
-                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">Suggested Learnings</h4>
-                            <div className="space-y-2.5">
-                              {learningPath.map((item, idx) => (
-                                <div key={idx} className="flex gap-3 items-start">
-                                  <div className="w-5.5 h-5.5 bg-cyan-50 border border-cyan-100 text-cyan-600 font-mono font-bold rounded-md flex items-center justify-center shrink-0 text-xs">
-                                    {idx + 1}
-                                  </div>
-                                  <p className="text-slate-650 text-xs pt-0.5 leading-relaxed font-semibold">{item}</p>
-                                </div>
-                              ))}
-                            </div>
+                        {/* Direct Next Action Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="border border-slate-200/70 bg-white hover:bg-slate-50 p-6 rounded-3xl transition-all shadow-sm">
+                            <h4 className="font-bold text-slate-900 text-sm mb-1 flex items-center gap-1.5">
+                              <Sparkles className="text-indigo-500 w-4 h-4" />
+                              <span>Complete Reflection Checklist</span>
+                            </h4>
+                            <p className="text-xs text-slate-500 mb-4 font-semibold">
+                              Certify your theoretical understanding on Core concepts checklists and claim your badge.
+                            </p>
+                            <button
+                              onClick={() => {
+                                // Scroll or fallback to progress tab
+                                const element = document.getElementById("curriculum-checklist-section");
+                                if (element) {
+                                  element.scrollIntoView({ behavior: 'smooth' });
+                                } else {
+                                  setActiveTab('progress');
+                                }
+                              }}
+                              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline flex items-center gap-1"
+                            >
+                              <span>Open Progress & Reflection</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                        )}
 
-                        {/* Core Features */}
-                        {features.length > 0 && (
-                          <div className="border border-slate-150 bg-white rounded-3xl p-6 space-y-3 shadow-sm">
-                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">Core Features Included</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {features.map((feat, idx) => (
-                                <span key={idx} className="bg-slate-50 border border-slate-100 text-slate-650 font-semibold text-[11px] px-3.5 py-1.5 rounded-lg shadow-sm">
-                                  📦 {feat}
-                                </span>
-                              ))}
-                            </div>
+                          <div className="border border-slate-200/70 bg-white hover:bg-slate-50 p-6 rounded-3xl transition-all shadow-sm">
+                            <h4 className="font-bold text-slate-900 text-sm mb-1 flex items-center gap-1.5">
+                              <Zap className="text-amber-500 w-4 h-4" />
+                              <span>Begin Building MVP (Phase 2)</span>
+                            </h4>
+                            <p className="text-xs text-slate-500 mb-4 font-semibold">
+                              Ready to make it? Advance straight into interactive build module steps.
+                            </p>
+                            <button
+                              onClick={() => {
+                                onProgress && onProgress();
+                                navigate('/phase/2');
+                              }}
+                              className="text-xs font-bold text-amber-600 hover:text-amber-800 underline flex items-center gap-1"
+                            >
+                              <span>Go to Phase 2 Workspace</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
                           </div>
-                        )}
-
-                        {/* MVP Scoping Note */}
-                        {phase1Blueprint.mvp_note && (
-                          <div className="border-l-4 border-cyan-500 bg-cyan-50/10 rounded-r-2xl p-5 space-y-1.5 shadow-sm">
-                            <h4 className="font-mono text-[10px] font-black text-cyan-600 uppercase tracking-wider">Control Bounds: Scoped Down Details</h4>
-                            <p className="text-slate-700 text-xs leading-relaxed font-semibold">{phase1Blueprint.mvp_note}</p>
-                          </div>
-                        )}
+                        </div>
                       </div>
                     ) : (
                       <div className="border border-dashed border-slate-200 bg-slate-50 rounded-3xl py-12 text-center text-slate-400 font-semibold text-xs">
