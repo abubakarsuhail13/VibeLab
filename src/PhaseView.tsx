@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
+import { usePhase1Reflection } from "./hooks/usePhase1Reflection";
 import Phase2BuildWalkthrough from "./components/Phase2BuildWalkthrough";
 import MonacoEditor from '@monaco-editor/react';
 import toast from "react-hot-toast";
@@ -125,6 +126,7 @@ export function formatPhaseNameForUI(name: string): string {
 
 export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProps) {
   const navigate = useNavigate();
+  const phase1Reflection = usePhase1Reflection();
   const [phase, setPhase] = useState<Phase | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,6 +169,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState<{ score: number, passed: boolean, correctCount: number, totalQuestions: number, details?: Record<number, { correct: boolean; correctIndex: number; explanation: string }> } | null>(null);
   const [quizErrorMsg, setQuizErrorMsg] = useState('');
+  const [isMissingBlueprint, setIsMissingBlueprint] = useState(false);
   const [activeSession, setActiveSession] = useState<any>(null);
   const [selectedPhase2Section, setSelectedPhase2Section] = useState(1);
   const [showDetailedBuilder, setShowDetailedBuilder] = useState(false);
@@ -561,48 +564,64 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
     setQuizSubmitting(true);
     setQuizErrorMsg('');
     try {
-      const token = localStorage.getItem('vibe_token') || localStorage.getItem('vibelab_token');
-      const answersArray = Object.entries(selectedQuizAnswers).map(([qId, sIdx]) => ({
-        questionId: parseInt(qId),
-        selectedIndex: sIdx
-      }));
-
-      const res = await fetch(`/api/phase/${phaseId}/quiz/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ answers: answersArray })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setQuizResult(data);
-        if (data.passed) {
-          // Re-fetch quiz data to update best attempt status
-          const qRes = await fetch(`/api/phase/${phaseId}/quiz`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (qRes.ok) {
-            const qData = await qRes.json();
-            setPreviousQuizAttempt(qData.previousAttempt || null);
-          }
-          // Also fetch phase details
+      if (phase?.order_index === 1) {
+        const data = await phase1Reflection.submitAnswers(selectedQuizAnswers);
+        if (data) {
+          setQuizResult(data);
+          const token = localStorage.getItem('vibe_token') || localStorage.getItem('vibelab_token');
           const phaseRes = await fetch(`/api/phase/${phaseId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (phaseRes.ok) {
             setPhase(await phaseRes.json());
           }
+          await phase1Reflection.fetchQuestions(); // Refresh attempt
           onProgress?.();
         }
       } else {
-        const errorData = await res.json();
-        if (errorData.cooldown) {
-          setQuizErrorMsg(errorData.message);
+        const token = localStorage.getItem('vibe_token') || localStorage.getItem('vibelab_token');
+        const answersArray = Object.entries(selectedQuizAnswers).map(([qId, sIdx]) => ({
+          questionId: parseInt(qId),
+          selectedIndex: sIdx
+        }));
+
+        const res = await fetch(`/api/phase/${phaseId}/quiz/submit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ answers: answersArray })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setQuizResult(data);
+          if (data.passed) {
+            // Re-fetch quiz data to update best attempt status
+            const qRes = await fetch(`/api/phase/${phaseId}/quiz`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (qRes.ok) {
+              const qData = await qRes.json();
+              setPreviousQuizAttempt(qData.previousAttempt || null);
+            }
+            // Also fetch phase details
+            const phaseRes = await fetch(`/api/phase/${phaseId}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (phaseRes.ok) {
+              setPhase(await phaseRes.json());
+            }
+            onProgress?.();
+          }
         } else {
-          setQuizErrorMsg(errorData.error || "Failed to submit answers.");
+          const errorData = await res.json();
+          if (errorData.cooldown) {
+            setQuizErrorMsg(errorData.message);
+          } else {
+            setQuizErrorMsg(errorData.error || "Failed to submit answers.");
+          }
         }
       }
     } catch (err) {
@@ -764,6 +783,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             setQuizQuestions(qData.questions || []);
             setPreviousQuizAttempt(qData.previousAttempt || null);
             setQuizCooldown(null);
+            setIsMissingBlueprint(!!qData.isMissingBlueprint);
           } else if (quizRes.status === 403) {
             const qData = await quizRes.json();
             if (qData.cooldown) {
@@ -774,6 +794,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               });
               setPreviousQuizAttempt(qData.previousAttempt || null);
             }
+            setIsMissingBlueprint(!!qData.isMissingBlueprint);
           }
           if (habitsRes.ok) {
             setHabitLogs(await habitsRes.json());
@@ -1278,11 +1299,21 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                      <Trophy className="text-indigo-600 w-5 h-5" />
+                      {phase?.order_index === 1 ? (
+                        <Sparkles className="text-indigo-600 w-5 h-5" />
+                      ) : (
+                        <Trophy className="text-indigo-600 w-5 h-5" />
+                      )}
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Phase Theory Challenge</h2>
-                      <p className="text-xs text-slate-500 font-medium">Verify your high theoretical proficiency with a 10-question quiz.</p>
+                      <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+                        {phase?.order_index === 1 ? "Discovery & Ideation Reflection" : "Phase Theory Challenge"}
+                      </h2>
+                      <p className="text-xs text-slate-500 font-medium">
+                        {phase?.order_index === 1 
+                          ? "A supportive assessment of your product co-creation journey to certify Phase 1."
+                          : "Verify your high theoretical proficiency with a 10-question quiz."}
+                      </p>
                     </div>
                   </div>
 
@@ -1292,208 +1323,288 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                         ? 'bg-emerald-50 border-emerald-100 text-emerald-700' 
                         : 'bg-rose-50 border-rose-100 text-rose-700'
                     }`}>
-                      Best Score: {previousQuizAttempt.score}% {previousQuizAttempt.passed ? 'PASSED' : 'RETRY'}
+                      {phase?.order_index === 1 
+                        ? "Reflection Completed ✅"
+                        : `Best Score: ${previousQuizAttempt.score}% ${previousQuizAttempt.passed ? 'PASSED' : 'RETRY'}`}
                     </span>
                   )}
                 </div>
 
-                {quizActive ? (
-                  /* Active Quiz Simulation Container */
-                  <div className="space-y-8 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                    <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Question Quiz Sheet</span>
-                      <button 
-                        onClick={() => {
-                          setQuizActive(false);
-                          setSelectedQuizAnswers({});
-                          setQuizResult(null);
-                        }}
-                        className="text-xs font-bold text-rose-600 hover:underline"
-                      >
-                        Cancel Quiz
-                      </button>
+                {phase?.order_index === 1 && isMissingBlueprint ? (
+                  <div className="p-8 md:p-10 bg-gradient-to-br from-amber-50/20 to-white rounded-[2.5rem] border border-amber-200/50 text-center space-y-4">
+                    <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-3xl mx-auto shadow-sm shadow-amber-200/25">
+                      ⚠️
                     </div>
-
-                    {quizQuestions.length > 0 ? (
-                      <div className="space-y-8">
-                        {quizQuestions.map((qIndex, index) => {
-                          const options = parseOptions(qIndex.options);
-                          const qDetails = quizResult?.details?.[qIndex.id];
-                          
-                          return (
-                            <div key={qIndex.id} className="space-y-3 p-5 bg-white/50 rounded-2xl border border-slate-100/80">
-                              <p className="font-bold text-slate-950 text-base font-display">
-                                {index + 1}. {qIndex.question}
-                              </p>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {options.map((opt: string, optIdx: number) => {
-                                  const isSelected = selectedQuizAnswers[qIndex.id] === optIdx;
-                                  
-                                  let buttonStyle = 'bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50';
-                                  
-                                  if (qDetails) {
-                                    if (optIdx === qDetails.correctIndex) {
-                                      buttonStyle = 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/10 font-bold';
-                                    } else if (isSelected) {
-                                      buttonStyle = 'bg-rose-600 text-white border-rose-600 shadow-bold-500 shadow-rose-500/10 font-bold';
-                                    } else {
-                                      buttonStyle = 'bg-slate-50 text-slate-500 border-slate-200/60 opacity-60 pointer-events-none';
-                                    }
-                                  } else if (isSelected) {
-                                    buttonStyle = 'bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/10';
-                                  }
-
-                                  return (
-                                    <button
-                                      key={optIdx}
-                                      type="button"
-                                      disabled={!!qDetails}
-                                      onClick={() => setSelectedQuizAnswers(prev => ({ ...prev, [qIndex.id]: optIdx }))}
-                                      className={`p-4 rounded-xl border text-left text-sm font-medium transition-all ${buttonStyle}`}
-                                    >
-                                      {opt}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-
-                              {qDetails && (
-                                qDetails.correct ? (
-                                  <div className="p-4 bg-emerald-50/80 border border-emerald-200/70 text-emerald-900 rounded-xl text-xs leading-relaxed space-y-1">
-                                    <p className="font-black text-emerald-850 uppercase tracking-wider text-[10px] mb-1">✓ Correct Answer</p>
-                                    <p className="font-medium text-emerald-950">{qDetails.explanation}</p>
-                                  </div>
-                                ) : (
-                                  <div className="p-4 bg-rose-50/80 border border-rose-250 text-rose-900 rounded-xl text-xs leading-relaxed space-y-1.5">
-                                    <p className="font-black text-rose-850 uppercase tracking-wider text-[10px] mb-1">✗ Incorrect Choice</p>
-                                    <p className="text-slate-800 font-semibold mb-1">
-                                      Correct choice was: <strong className="font-extrabold text-slate-900 underline">{options[qDetails.correctIndex]}</strong>
-                                    </p>
-                                    <p className="font-medium text-rose-950 leading-relaxed">{qDetails.explanation}</p>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          );
-                        })}
-
-                        {quizResult && (
-                          <div className={`p-6 rounded-3xl border-2 ${
-                            quizResult.passed 
-                              ? 'bg-emerald-50/80 border-emerald-250 text-emerald-900 shadow-sm' 
-                              : 'bg-rose-50/80 border-rose-250 text-rose-900 shadow-sm'
-                          }`}>
-                            <h4 className="font-black text-xl tracking-tight mb-2">
-                              {quizResult.passed ? '🎉 Challenge Passed!' : '😢 Attempt Unsuccessful'}
-                            </h4>
-                            <p className="text-sm leading-relaxed mb-4 font-medium">
-                              You scored <strong className="font-black">{quizResult.score}%</strong> ({quizResult.correctCount} of {quizResult.totalQuestions} questions correct).
-                            </p>
-                            
-                            {phase?.order_index === 2 ? (
-                              <div className="p-4 bg-white/70 rounded-2xl border border-white/60 text-sm font-bold text-slate-800">
-                                {quizResult.passed ? (
-                                  <span>You understand <strong className="text-emerald-700">{activeSession?.blueprint?.project_name || "your product"}</strong>! Phase 2 theory complete.</span>
-                                ) : (
-                                  <span className="text-rose-700">Review your product and try again in 24 hours.</span>
-                                )}
-                              </div>
-                            ) : (
-                              <p className="text-xs font-semibold">
-                                {quizResult.passed 
-                                  ? 'You have satisfied the theoretical condition for Phase Certification!' 
-                                  : 'You must score 70% or higher to pass. You can retry immediately!'}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {quizErrorMsg && (
-                          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-sm font-medium">
-                            {quizErrorMsg}
-                          </div>
-                        )}
-
-                        <div className="pt-4 border-t border-slate-200/65 flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <p className="text-xs text-slate-500 font-medium font-display">All answers are validated automatically on our Node.js servers.</p>
-                          <button
-                            type="button"
-                            disabled={quizSubmitting || Object.keys(selectedQuizAnswers).length < quizQuestions.length}
-                            onClick={handleQuizSubmitFinal}
-                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 font-bold text-white text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-40 active:scale-95 flex items-center gap-2"
-                          >
-                            {quizSubmitting ? (
-                              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="w-4 h-4" />
-                            )}
-                            Grade Quiz
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-slate-500 font-medium text-center py-6">There are no quiz questions seeded for this phase yet.</p>
-                    )}
+                    <h3 className="text-xl font-bold text-slate-900 font-display">Ideation Blueprint Required</h3>
+                    <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+                      You haven't finalized your product blueprint yet in the Discovery workspace! Speak with your AI co-creation tutor to finalize your idea draft. Once saved, yours will activate our personalized reflection assessment!
+                    </p>
+                    <button
+                      onClick={() => {
+                        setActiveTab('build');
+                      }}
+                      className="px-6 py-3 bg-slate-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-slate-850 transition-all active:scale-95 shadow-lg shadow-slate-900/10"
+                    >
+                      Go to Ideation Workspace
+                    </button>
                   </div>
                 ) : (
-                  /* Standard Inactive Quiz State Screen */
-                  <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 text-center flex flex-col items-center justify-center space-y-4">
-                    {quizCooldown && quizCooldown.active && (quizCooldown.expiresAt - Date.now() > 0) ? (
-                      <div className="w-full space-y-6">
-                        <div className="p-6 bg-rose-50 border border-rose-100/50 rounded-2xl text-center flex flex-col items-center space-y-2">
-                          <span className="text-rose-600 text-[10px] font-black uppercase tracking-widest bg-rose-100/40 px-3 py-1 rounded-full">
-                            🔒 Cooldown Active
-                          </span>
-                          <h4 className="font-bold text-slate-900 mt-1">Quiz Access Temporarily Locked</h4>
-                          <p className="text-slate-500 text-xs font-medium max-w-sm">
-                            You failed your last attempt. VibeLab enforces a 24-hour study break so you can master the topics before retaking.
-                          </p>
-                          <span className="text-xs font-mono font-black text-rose-600 bg-rose-200/50 px-4.5 py-1.5 rounded-xl uppercase tracking-wider mt-2 shadow-xs">
-                            {getRemainingCooldownText(quizCooldown.expiresAt)}
-                          </span>
-                        </div>
-                        
-                        <div className="text-left bg-white border border-slate-200/80 p-6 rounded-2xl space-y-4">
-                          <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Recommended Study Checklist</h5>
-                          <ul className="space-y-3">
-                            {getStudySuggestions(phase?.order_index || 1).map((s, idx) => (
-                              <li key={idx} className="flex gap-3 items-start text-xs text-slate-600 font-medium">
-                                <span className="text-emerald-500 font-bold mt-0.5">✓</span>
-                                <span className="leading-relaxed">{s}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <Trophy className="w-10 h-10 text-slate-600" />
-                        <div>
-                          <h4 className="font-bold text-slate-900">Quiz Challenge</h4>
-                          <p className="text-slate-500 text-xs font-medium max-w-md mx-auto leading-relaxed mt-1">
-                            Consists of randomized questions covering core concepts in this phase. Pass threshold is 70%. Once passed, a secure 24-hour retake cooldown locks further attempts.
-                          </p>
-                        </div>
-
+                  quizActive ? (
+                    /* Active Quiz Simulation Container */
+                    <div className="space-y-8 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                      <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                          {phase?.order_index === 1 ? "Your Reflection Sheets" : "Question Quiz Sheet"}
+                        </span>
                         <button 
-                          type="button"
                           onClick={() => {
-                            setQuizActive(true);
-                            setQuizResult(null);
+                            setQuizActive(false);
                             setSelectedQuizAnswers({});
-                            setQuizErrorMsg('');
+                            setQuizResult(null);
                           }}
-                          className="px-6 py-2.5 bg-white hover:bg-slate-800 text-slate-800 font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
+                          className="text-xs font-bold text-rose-600 hover:underline"
                         >
-                          Start Trivia Quiz
+                          Cancel
                         </button>
-                      </>
-                    )}
-                  </div>
+                      </div>
+
+                      {quizQuestions.length > 0 ? (
+                        <div className="space-y-8">
+                          {quizQuestions.map((qIndex, index) => {
+                            const options = parseOptions(qIndex.options);
+                            const qDetails = quizResult?.details?.[qIndex.id];
+                            
+                            return (
+                              <div key={qIndex.id} className="space-y-3 p-5 bg-white/50 rounded-2xl border border-slate-100/80">
+                                <p className="font-bold text-slate-950 text-base font-display">
+                                  {index + 1}. {qIndex.question}
+                                </p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {options.map((opt: string, optIdx: number) => {
+                                    const isSelected = selectedQuizAnswers[qIndex.id] === optIdx;
+                                    
+                                    let buttonStyle = 'bg-white text-slate-700 border-slate-200/80 hover:border-slate-300 hover:bg-slate-50';
+                                    
+                                    if (qDetails) {
+                                      if (optIdx === qDetails.correctIndex) {
+                                        buttonStyle = 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/10 font-bold';
+                                      } else if (isSelected) {
+                                        buttonStyle = 'bg-rose-600 text-white border-rose-600 shadow-bold-500 shadow-rose-500/10 font-bold';
+                                      } else {
+                                        buttonStyle = 'bg-slate-50 text-slate-500 border-slate-200/60 opacity-60 pointer-events-none';
+                                      }
+                                    } else if (isSelected) {
+                                      buttonStyle = 'bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/10';
+                                    }
+
+                                    return (
+                                      <button
+                                        key={optIdx}
+                                        type="button"
+                                        disabled={!!qDetails}
+                                        onClick={() => setSelectedQuizAnswers(prev => ({ ...prev, [qIndex.id]: optIdx }))}
+                                        className={`p-4 rounded-xl border text-left text-sm font-medium transition-all ${buttonStyle}`}
+                                      >
+                                        {opt}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                {qDetails && (
+                                  phase?.order_index === 1 ? (
+                                    <div className="p-4 bg-emerald-50/80 border border-emerald-200/70 text-emerald-950 rounded-xl text-xs leading-relaxed">
+                                      <p className="font-black text-emerald-800 uppercase tracking-wider text-[10px] mb-1">💡 Perspective Analysis</p>
+                                      <p className="font-medium text-slate-800">{qDetails.explanation}</p>
+                                    </div>
+                                  ) : qDetails.correct ? (
+                                    <div className="p-4 bg-emerald-50/80 border border-emerald-200/70 text-emerald-900 rounded-xl text-xs leading-relaxed space-y-1">
+                                      <p className="font-black text-emerald-850 uppercase tracking-wider text-[10px] mb-1">✓ Correct Answer</p>
+                                      <p className="font-medium text-emerald-950">{qDetails.explanation}</p>
+                                    </div>
+                                  ) : (
+                                    <div className="p-4 bg-rose-50/80 border border-rose-250 text-rose-900 rounded-xl text-xs leading-relaxed space-y-1.5">
+                                      <p className="font-black text-rose-850 uppercase tracking-wider text-[10px] mb-1">✗ Incorrect Choice</p>
+                                      <p className="text-slate-800 font-semibold mb-1">
+                                        Correct choice was: <strong className="font-extrabold text-slate-900 underline">{options[qDetails.correctIndex]}</strong>
+                                      </p>
+                                      <p className="font-medium text-rose-950 leading-relaxed">{qDetails.explanation}</p>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            );
+                          })}
+
+                          {quizResult && (
+                            <div className="p-6 rounded-3xl border-2 bg-emerald-50/80 border-emerald-250 text-emerald-900 shadow-sm">
+                              <h4 className="font-black text-xl tracking-tight mb-2">
+                                {phase?.order_index === 1 ? '🎉 Reflection Complete!' : (quizResult.passed ? '🎉 Challenge Passed!' : '😢 Attempt Unsuccessful')}
+                              </h4>
+                              <p className="text-sm leading-relaxed mb-4 font-medium">
+                                {phase?.order_index === 1 ? (
+                                  <span>You have beautifully expressed your co-creation learning process. Excellent! You have successfully completed Phase 1 Theory requirements.</span>
+                                ) : (
+                                  <span>You scored <strong className="font-black">{quizResult.score}%</strong> ({quizResult.correctCount} of {quizResult.totalQuestions} questions correct).</span>
+                                )}
+                              </p>
+                              
+                              {phase?.order_index === 1 ? (
+                                <div className="space-y-4">
+                                  <p className="text-xs text-slate-600 font-normal leading-relaxed">
+                                    Your response profiles have been saved to your digital learner profile. Let's claim your official badge and phase certification now!
+                                  </p>
+                                  <button
+                                    onClick={handleCertify}
+                                    disabled={isCertifying}
+                                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-indigo-600/10 flex items-center justify-center gap-2"
+                                  >
+                                    {isCertifying ? (
+                                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                      "Claim Phase 1 Certificate 🎓"
+                                    )}
+                                  </button>
+                                </div>
+                              ) : phase?.order_index === 2 ? (
+                                <div className="p-4 bg-white/70 rounded-2xl border border-white/60 text-sm font-bold text-slate-800">
+                                  {quizResult.passed ? (
+                                    <span>You understand <strong className="text-emerald-700">{activeSession?.blueprint?.project_name || "your product"}</strong>! Phase 2 theory complete.</span>
+                                  ) : (
+                                    <span className="text-rose-700">Review your product and try again in 24 hours.</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-xs font-semibold">
+                                  {quizResult.passed 
+                                    ? 'You have satisfied the theoretical condition for Phase Certification!' 
+                                    : 'You must score 70% or higher to pass. You can retry immediately!'}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {quizErrorMsg && (
+                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-amber-800 text-sm font-medium">
+                              {quizErrorMsg}
+                            </div>
+                          )}
+
+                          <div className="pt-4 border-t border-slate-200/65 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <p className="text-xs text-slate-500 font-medium font-display">
+                              {phase?.order_index === 1 
+                                ? "This AI-assisted self-reflection has no failing marks. Complete to certify." 
+                                : "All answers are validated automatically on our Node.js servers."}
+                            </p>
+                            <button
+                              type="button"
+                              disabled={quizSubmitting || Object.keys(selectedQuizAnswers).length < quizQuestions.length}
+                              onClick={handleQuizSubmitFinal}
+                              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-550 font-bold text-white text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-40 active:scale-95 flex items-center gap-2"
+                            >
+                              {quizSubmitting ? (
+                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="w-4 h-4" />
+                              )}
+                              {phase?.order_index === 1 ? "Submit Reflection Responses" : "Grade Quiz"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500 font-medium text-center py-6">There are no reflection questions seeded for this phase yet.</p>
+                      )}
+                    </div>
+                  ) : (
+                    /* Standard Inactive Quiz State Screen */
+                    <div className="p-8 rounded-[2rem] bg-slate-50 border border-slate-100 text-center flex flex-col items-center justify-center space-y-4">
+                      {quizCooldown && quizCooldown.active && (quizCooldown.expiresAt - Date.now() > 0) ? (
+                        <div className="w-full space-y-6">
+                          <div className="p-6 bg-rose-50 border border-rose-100/50 rounded-2xl text-center flex flex-col items-center space-y-2">
+                            <span className="text-rose-600 text-[10px] font-black uppercase tracking-widest bg-rose-100/40 px-3 py-1 rounded-full">
+                              🔒 Cooldown Active
+                            </span>
+                            <h4 className="font-bold text-slate-900 mt-1">Quiz Access Temporarily Locked</h4>
+                            <p className="text-slate-500 text-xs font-medium max-w-sm">
+                              You failed your last attempt. VibeLab enforces a 24-hour study break so you can master the topics before retaking.
+                            </p>
+                            <span className="text-xs font-mono font-black text-rose-600 bg-rose-200/50 px-4.5 py-1.5 rounded-xl uppercase tracking-wider mt-2 shadow-xs">
+                              {getRemainingCooldownText(quizCooldown.expiresAt)}
+                            </span>
+                          </div>
+                          
+                          <div className="text-left bg-white border border-slate-200/80 p-6 rounded-2xl space-y-4">
+                            <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Recommended Study Checklist</h5>
+                            <ul className="space-y-3">
+                              {getStudySuggestions(phase?.order_index || 1).map((s, idx) => (
+                                <li key={idx} className="flex gap-3 items-start text-xs text-slate-600 font-medium">
+                                  <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+                                  <span className="leading-relaxed">{s}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {phase?.order_index === 1 ? (
+                            <>
+                              <Sparkles className="w-10 h-10 text-indigo-500" />
+                              <div className="space-y-1.5">
+                                <h4 className="font-bold text-slate-900 text-lg">Personalized Co-Creation Assessment</h4>
+                                <span className="inline-block text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-md bg-indigo-50 border border-indigo-100/30 text-indigo-600">
+                                  PROMPT CHAIN GENERATED
+                                </span>
+                                <p className="text-slate-500 text-xs font-medium max-w-sm mx-auto leading-relaxed pt-1">
+                                  An AI-customized collection of 5 reflection questions designed around your active product ideas and co-creation learning process. There are no wrong answers!
+                                </p>
+                              </div>
+
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  setQuizActive(true);
+                                  setQuizResult(null);
+                                  setSelectedQuizAnswers({});
+                                  setQuizErrorMsg('');
+                                }}
+                                className="px-6 py-2.5 bg-slate-950 hover:bg-slate-850 text-white font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
+                              >
+                                Start Reflection Quiz
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <Trophy className="w-10 h-10 text-slate-600" />
+                              <div>
+                                <h4 className="font-bold text-slate-900">Quiz Challenge</h4>
+                                <p className="text-slate-500 text-xs font-medium max-w-md mx-auto leading-relaxed mt-1">
+                                  Consists of randomized questions covering core concepts in this phase. Pass threshold is 70%. Once passed, a secure 24-hour retake cooldown locks further attempts.
+                                </p>
+                              </div>
+
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  setQuizActive(true);
+                                  setQuizResult(null);
+                                  setSelectedQuizAnswers({});
+                                  setQuizErrorMsg('');
+                                }}
+                                className="px-6 py-2.5 bg-white hover:bg-slate-800 text-slate-800 font-bold text-xs rounded-xl uppercase tracking-wider transition-all"
+                              >
+                                Start Trivia Quiz
+                              </button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )
                 )}
               </div>
-            </div>
+              </div>
 
             {/* Right Side Column */}
             <div className="space-y-6">

@@ -396,6 +396,7 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     const actualPhase5Id = p5Rows && p5Rows.length > 0 ? p5Rows[0].id : 5;
 
     let rows: any = [];
+    let isMissingBlueprint = false;
     if (Number(id) === actualPhase1Id) {
       try {
         const [bpRows]: any = await p.execute(
@@ -428,43 +429,84 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
           if (existing && existing.length > 0) {
             rows = existing;
           } else {
-            // Auto generate Phase 1 customized supportive quiz if none exists yet
-            const prompt = `
-You are a supportive, friendly product design coach. Generate EXACTLY 6 multiple-choice reflection questions for a school student who just completed Phase 1 (Discovery & Ideation) for their product idea.
+            console.log('[DEBUG] Executing Prompt Chain for Phase 1 Reflection Quiz Auto Generation...');
+            
+            // PROMPT CHAIN STEP 1: Process and analyze the human-AI co-creation history to extract key milestones and focus areas.
+            const analysisPrompt = `
+You are a detailed product architecture analyst. Analyze this high school student's product idea and the conversation history of how it was developed.
 
-These questions should NOT feel like a rigid, stressful exam. Instead, they should feel like supportive reflections, learning-validation, and positive check-ins focused on understanding, prompt refinement, and product structure.
-
-Here is the student's Product Idea:
+Student's Idea:
 - Product Name: ${bp.product_name || 'Autonomous App'}
 - Problem Statement: ${bp.problem_statement || 'N/A'}
 - Target Users: ${bp.target_user_persona || 'N/A'}
 - Solution Concept: ${bp.solution_concept || 'N/A'}
 - MVP Scope: ${bp.mvp_definition || 'N/A'}
 
-And here is some conversational history showing how they interacted with the AI during co-creation and how their ideas were refined:
+Conversational history with the AI coach during ideation:
 ${conversationContext || 'No conversation details available.'}
 
-Focus areas to map to the 6 questions:
-1. Product Clarity & Core Definition: Reflection on their actual problem statement, solution concept, and target segment for "${bp.product_name || 'their product'}".
-2. AI Refinement Collaboration: Evaluating how effectively they communicated their ideas to the AI, how they answered follow-up questions, and how the AI helped refine or expand their vague initial product ideas.
-3. MVP Scope Control: Understanding what a Minimum Viable Product (MVP) is, why keeping it small and focused for "${bp.product_name || 'their product'}" prevents scope creep, and distinguishing MVP must-haves vs future nice-to-haves.
-4. Problem Statement & User Persona Awareness: Reflecting on their target user's direct needs/frustrations, and checking whether they understand the actual core problem they are addressing.
-5. Human-AI Symbiosis Strategy: Checking whether they understood how the AI helper refined their idea based on their specific inputs, expressing prompt clarity, and why human intuition + AI speed is powerful.
-6. Forward-Looking Inspiration: A supportive next-steps check-in validating their enthusiasm, bridging into Phase 2's development and styling setup.
+Analyze this ideation progress and output a valid JSON object with EXACTLY these three keys (no other keys, no backticks, no markdown):
+{
+  "collaboration_insight": "A 1-sentence analytical insight about how the AI follow-ups and user's inputs refined this specific product idea from a vague concept to a defined scope.",
+  "mvp_pitfall_avoided": "A 1-sentence description of a specific over-complication or scope creep pitfall that their defined MVP successfully avoids.",
+  "user_understanding_insight": "A 1-sentence descriptor of how this product directly tackles the primary core pain point of their target user persona."
+}
+            `;
 
-Wording & Guidelines:
-- Non-technical, warm, encouraging, and highly beginner-friendly.
-- The correct option must represent a proactive, iterative, structured, or thoughtful product-management response or a clear understanding of their MVP.
-- Incorrect options must still be constructive, gentle, reassuring, and positive (never punitive, silly, or demoralizing).
-- The explanation must be welcoming, praise the student's progress, and clarify the core learning objective beautifully.
+            let analysis = {
+              collaboration_insight: "The user collaboratively iterated on follow-ups to narrow down their product scope.",
+              mvp_pitfall_avoided: "Over-scoping with auxiliary systems before launching the main core feature.",
+              user_understanding_insight: "Providing a direct, streamlined solution for the target demographic's main pain point."
+            };
 
-Please output as a valid JSON array of EXACTLY 6 objects with this exact structure:
+            try {
+              const analysisRes = await getGeminiClient().models.generateContent({
+                model: "gemini-3.5-flash",
+                contents: analysisPrompt,
+                config: {
+                  responseMimeType: "application/json"
+                }
+              });
+              const cleanAnalysis = parseGeminiResponse(analysisRes);
+              const parsedAnalysis = JSON.parse(cleanAnalysis);
+              if (parsedAnalysis && parsedAnalysis.collaboration_insight) {
+                analysis = parsedAnalysis;
+              }
+            } catch (err) {
+              console.warn("[WARN] Analysis step of prompt chain failed, using sensible fallbacks:", err);
+            }
+
+            // PROMPT CHAIN STEP 2: Use the generated insights to produce 5 highly personalized, welcoming reflection questions.
+            const prompt = `
+You are a warm, nurturing, and extremely supportive product design coach.
+Generate EXACTLY 5 highly personalized multiple-choice reflection questions for a school student who has completed Phase 1 (Discovery & Ideation) for their product idea: "${bp.product_name || 'Autonomous App'}".
+
+Use these analytical insights from our analysis stage to make them super tailored:
+1. Product Improvement/Collaboration: ${analysis.collaboration_insight}
+2. MVP Focus State: ${analysis.mvp_pitfall_avoided}
+3. Target User Challenge: ${analysis.user_understanding_insight}
+
+Guidelines for the 5 questions:
+1. They should NOT feel like a stressful, technical exam or knowledge memorization.
+2. They should focus on student reflection, celebrating understanding, self-assessment, and prompt interaction.
+3. Every option must be constructive, positive, encouraging, and highly friendly. Avoid silly, punitive, or demoralizing answers.
+4. Each question's correct_index represents the most thoughtful, proactive, or structured product management approach (e.g. focusing on users, keeping MVP small, communicating with AI clearly).
+5. The explanation must praise the student's progress and reinforce the core product design learning objective beautifully.
+
+Map the 5 questions to these exact structures/topics:
+Question 1 (Defining clear Problem & Persona): Reflecting on how "${bp.product_name || 'their product'}" addresses their target user’s real need.
+Question 2 (AI Refinement Collaboration): Reflecting on how their prompts and replies to the AI helped refine their idea.
+Question 3 (MVP Scope Control): Reflecting on keeping their MVP manageable as opposed to overloading with nice-to-haves.
+Question 4 (Prompt & AI Symbiosis): Reflecting on how clear instructions can guide an AI helper, showing human-AI partnership.
+Question 5 (Forward Inspiration & Next Steps): Bridging their confidence and validating their entry into Phase 2 creation & styling.
+
+Please output as a valid JSON array of EXACTLY 5 objects with this exact structure:
 [
   {
     "question": "A personalized reflection question referring to their product and AI co-creation",
-    "options": ["Encouraging Option A", "Encouraging Option B", "Encouraging Option C", "Encouraging Option D"],
+    "options": ["A positive, constructive response", "Another thoughtful, reflective option", "A third positive choice", "A fourth encouraging choice"],
     "correct_index": 0,
-    "explanation": "Friendly, supportive, and educational explanation of why the correct option is the ideal product mindset response."
+    "explanation": "Friendly, supportive, and educational explanation of why this option represents a wonderful product-coach mindset."
   }
 ]
 
@@ -499,6 +541,8 @@ Do not return any markdown, backticks (like \`\`\`json), or text before/after th
               rows = generatedList;
             }
           }
+        } else {
+          isMissingBlueprint = true;
         }
       } catch (dynamicError: any) {
         console.warn('Failed to dynamically generate Phase 1 customized quiz, using static questions fallback:', dynamicError);
@@ -607,7 +651,8 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
     
     res.json({
       questions: shuffled,
-      previousAttempt: bestAttempt.length > 0 ? bestAttempt[0] : null
+      previousAttempt: bestAttempt.length > 0 ? bestAttempt[0] : null,
+      isMissingBlueprint
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to retrieve quiz questions' });
@@ -632,6 +677,10 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
     const isPhase2 = Number(id) === actualPhase2Id;
 
+    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
+    const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
+    const isPhase1 = Number(id) === actualPhase1Id;
+
     // Cooldown verification on any previous failed attempt in the last 24 hours
     let latestAttempts: any[] = [];
     if (isPhase2) {
@@ -648,7 +697,7 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       latestAttempts = rowsAttempt;
     }
 
-    if (latestAttempts.length > 0 && !latestAttempts[0].passed) {
+    if (!isPhase1 && latestAttempts.length > 0 && !latestAttempts[0].passed) {
       const lastAttemptTime = new Date(latestAttempts[0].attempted_at).getTime();
       const now = Date.now();
       const diffHours = (now - lastAttemptTime) / (1000 * 60 * 60);
@@ -675,7 +724,7 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       );
       latestPass = rowsPass;
     }
-    if (latestPass.length > 0) {
+    if (!isPhase1 && latestPass.length > 0) {
       const lastPassTime = new Date(latestPass[0].attempted_at).getTime();
       const now = Date.now();
       const diffHours = (now - lastPassTime) / (1000 * 60 * 60);
@@ -687,8 +736,6 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       }
     }
     
-    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
-    const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
     const [p3Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 3');
     const actualPhase3Id = p3Rows && p3Rows.length > 0 ? p3Rows[0].id : 3;
     const [p4Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 4');
@@ -752,8 +799,13 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     }
     
     const totalQuestions = answers.length || 1;
-    const score = Math.round((correctCount / totalQuestions) * 100);
-    const passed = score >= 70;
+    let score = Math.round((correctCount / totalQuestions) * 100);
+    let passed = score >= 70;
+    
+    if (isPhase1) {
+      score = 100;
+      passed = true;
+    }
     
     await p.execute(
       'INSERT INTO quiz_attempts (user_id, phase_id, score, passed, section_number) VALUES (?, ?, ?, ?, ?)',
@@ -909,7 +961,7 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
       [req.user.userId, id]
     );
     const checklist = progressRow.length > 0 && progressRow[0].topics_checklist ? JSON.parse(progressRow[0].topics_checklist) : [];
-    if (!Array.isArray(checklist) || checklist.length === 0) {
+    if (orderIndex > 1 && (!Array.isArray(checklist) || checklist.length === 0)) {
       console.log(`[DEBUG] Certification Rejected: No topics checked.`);
       return res.status(400).json({
         error: 'Certification Condition Failed: Please review and check study topics in the checklist to confirm understanding before certifying.'
