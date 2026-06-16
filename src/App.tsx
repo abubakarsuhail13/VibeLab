@@ -308,28 +308,28 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center p-6 pointer-events-none">
-      <div className="glass px-6 sm:px-8 py-4 rounded-2xl flex items-center gap-8 max-w-6xl w-full justify-between shadow-xl shadow-slate-200/50 pointer-events-auto border border-white/20 backdrop-blur-md relative z-50">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center p-4 md:p-5 pointer-events-none">
+      <div className="glass px-6 sm:px-8 py-2.5 rounded-2xl flex items-center gap-6 max-w-6xl w-full justify-between shadow-lg shadow-slate-200/30 pointer-events-auto border border-white/20 backdrop-blur-md relative z-50">
         <div 
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => navTo('home')}
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform">
-            <BrainCircuit className="text-white w-6 h-6" />
+          <div className="w-9 h-9 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform">
+            <BrainCircuit className="text-white w-5 h-5" />
           </div>
-          <span className="font-display font-bold text-2xl tracking-tight text-slate-900">VibeLab</span>
+          <span className="font-display font-bold text-xl tracking-tight text-slate-900">VibeLab</span>
         </div>
-        <div className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-semibold text-slate-600">
+        <div className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-semibold">
           <button 
             onClick={() => navTo('home')} 
-            className={`hover:text-cyan-600 transition-colors ${currentPage === 'home' ? 'text-slate-900 font-extrabold' : ''}`}
+            className={`hover:text-blue-600 transition-colors py-1 ${currentPage === 'home' ? 'text-blue-600 font-bold border-b-2 border-blue-600' : 'text-slate-600'}`}
           >
             Home
           </button>
           
           <button 
             onClick={handleHowItWorksClick} 
-            className="hover:text-cyan-600 transition-colors"
+            className="text-slate-600 hover:text-blue-600 transition-colors py-1"
           >
             How It Works
           </button>
@@ -337,7 +337,7 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
           {user && (
             <button 
               onClick={() => navTo('dashboard')} 
-              className={`hover:text-cyan-600 transition-colors ${currentPage === 'dashboard' ? 'text-slate-900 font-extrabold' : ''}`}
+              className={`hover:text-blue-600 transition-colors py-1 ${currentPage === 'dashboard' ? 'text-blue-600 font-bold border-b-2 border-blue-600' : 'text-slate-600'}`}
             >
               Dashboard
             </button>
@@ -346,7 +346,7 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
           {user && (
             <button 
               onClick={() => navTo('leaderboard')} 
-              className={`hover:text-cyan-600 transition-colors ${currentPage === 'leaderboard' ? 'text-cyan-600 font-black' : ''}`}
+              className={`hover:text-blue-600 transition-colors py-1 ${currentPage === 'leaderboard' ? 'text-blue-600 font-bold border-b-2 border-blue-600' : 'text-slate-600'}`}
             >
               Global Leaderboard
             </button>
@@ -354,7 +354,7 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
 
           <button 
             onClick={() => navTo('verify-credential')} 
-            className={`hover:text-cyan-600 transition-colors ${currentPage === 'verify-credential' ? 'text-slate-900 font-extrabold' : ''}`}
+            className={`hover:text-blue-600 transition-colors py-1 ${currentPage === 'verify-credential' ? 'text-blue-600 font-bold border-b-2 border-blue-600' : 'text-slate-600'}`}
           >
             Verify Credential
           </button>
@@ -362,7 +362,7 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
         <div className="flex items-center gap-3 sm:gap-4">
           {user ? (
             <>
-              <div className="hidden sm:flex flex-col items-end mr-2">
+              <div className="hidden sm:flex flex-col items-end mr-1">
                 <span className="text-xs font-bold text-slate-900 leading-tight">{user.name}</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">{user.role}</span>
@@ -381,7 +381,7 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
               </div>
               <button 
                 onClick={onLogout}
-                className="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all select-none"
+                className="bg-slate-100 text-slate-600 px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all select-none"
               >
                 Logout
               </button>
@@ -390,13 +390,13 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
             <>
               <button 
                 onClick={() => navTo('login')}
-                className="text-slate-600 px-4 py-2.5 rounded-xl text-sm font-bold hover:text-slate-900 transition-all"
+                className="text-slate-600 px-3.5 py-2 rounded-xl text-xs font-bold hover:text-slate-900 transition-all"
               >
                 Login
               </button>
               <button 
                 onClick={() => navTo('signup')}
-                className="bg-slate-905 text-white bg-slate-900 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
+                className="bg-slate-900 text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
               >
                 Sign Up
               </button>
@@ -1898,82 +1898,82 @@ const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 
 const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   return (
-    <footer className="pt-32 pb-12 px-6 border-t border-slate-200 bg-white">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-12 mb-24">
+    <footer className="pt-16 pb-8 px-6 border-t border-slate-200 bg-white">
+      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
         <div className="col-span-2">
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
               <BrainCircuit className="text-white w-5 h-5" />
             </div>
             <span className="font-display font-bold text-2xl tracking-tight text-slate-900">VibeLab</span>
           </div>
-          <p className="text-slate-600 mb-8 max-w-xs leading-relaxed">
+          <p className="text-slate-600 mb-6 max-w-xs leading-relaxed text-sm">
             The world's first project-native learning platform for the next generation of builders.
           </p>
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex gap-4">
               {[
-                { icon: <Twitter className="w-5 h-5" />, href: "https://twitter.com/vibelab" },
-                { icon: <Linkedin className="w-5 h-5" />, href: "https://linkedin.com/company/vibelab" },
-                { icon: <Github className="w-5 h-5" />, href: "https://github.com/vibelab" }
+                { icon: <Twitter className="w-4 h-4" />, href: "https://twitter.com/vibelab" },
+                { icon: <Linkedin className="w-4 h-4" />, href: "https://linkedin.com/company/vibelab" },
+                { icon: <Github className="w-4 h-4" />, href: "https://github.com/vibelab" }
               ].map((social, i) => (
                 <a 
                   key={i} 
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-xl glass flex items-center justify-center hover:bg-cyan-500/5 hover:text-cyan-600 transition-all cursor-pointer border-slate-200 text-slate-500"
+                  className="w-9 h-9 rounded-xl glass flex items-center justify-center hover:bg-cyan-500/5 hover:text-cyan-600 transition-all cursor-pointer border border-slate-205 text-slate-500"
                 >
                   {social.icon}
                 </a>
               ))}
             </div>
-            <a href="mailto:vibelab@nexaforgetech.com" className="flex items-center gap-3 text-slate-600 hover:text-cyan-600 transition-colors group">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-cyan-50 transition-colors">
-                <Mail className="w-5 h-5" />
+            <a href="mailto:vibelab@nexaforgetech.com" className="flex items-center gap-3 text-slate-600 hover:text-cyan-600 transition-colors group text-sm">
+              <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-cyan-50 transition-colors border border-slate-100/50">
+                <Mail className="w-4 h-4" />
               </div>
               <span className="font-medium">vibelab@nexaforgetech.com</span>
             </a>
           </div>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs">Platform</h4>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Curriculum</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">AI Tutors</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">VR Labs</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Pricing</a>
+        <div className="flex flex-col gap-4 text-sm">
+          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs mb-1">Platform</h4>
+          <a href="#" className="text-slate-600 hover:text-cyan-650 transition-colors">Curriculum</a>
+          <a href="#" className="text-slate-600 hover:text-cyan-650 transition-colors">AI Tutors</a>
+          <a href="#" className="text-slate-600 hover:text-cyan-650 transition-colors">VR Labs</a>
+          <a href="#" className="text-slate-600 hover:text-cyan-650 transition-colors">Pricing</a>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs">Resources</h4>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Documentation</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Community</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">API Reference</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Blog</a>
+        <div className="flex flex-col gap-4 text-sm">
+          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs mb-1">Resources</h4>
+          <a href="#" className="text-slate-600 hover:text-cyan-650 transition-colors">Documentation</a>
+          <a href="#" className="text-slate-600 hover:text-cyan-650 transition-colors">Community</a>
+          <a href="#" className="text-slate-600 hover:text-cyan-650 transition-colors">API Reference</a>
+          <a href="#" className="text-slate-600 hover:text-cyan-650 transition-colors">Blog</a>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs">Company</h4>
-          <button onClick={() => onNavigate('about')} className="text-left text-slate-600 hover:text-cyan-600 transition-colors">About Us</button>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Careers</a>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Press</a>
-          <button onClick={() => onNavigate('contact')} className="text-left text-slate-600 hover:text-cyan-600 transition-colors">Contact</button>
+        <div className="flex flex-col gap-4 text-sm">
+          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs mb-1">Company</h4>
+          <button onClick={() => onNavigate('about')} className="text-left text-slate-600 hover:text-cyan-655 transition-colors">About Us</button>
+          <a href="#" className="text-slate-600 hover:text-cyan-655 transition-colors">Careers</a>
+          <a href="#" className="text-slate-600 hover:text-cyan-655 transition-colors">Press</a>
+          <button onClick={() => onNavigate('contact')} className="text-left text-slate-600 hover:text-cyan-655 transition-colors">Contact</button>
         </div>
 
-        <div className="flex flex-col gap-6">
-          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs">Admin</h4>
+        <div className="flex flex-col gap-4 text-sm">
+          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs mb-1">Admin</h4>
           <button 
             onClick={() => onNavigate('admin')}
-            className="text-left text-slate-600 hover:text-cyan-600 transition-colors"
+            className="text-left text-slate-600 hover:text-cyan-660 transition-colors"
           >
             Submissions
           </button>
-          <a href="#" className="text-slate-600 hover:text-cyan-600 transition-colors">Internal Ops</a>
+          <a href="#" className="text-slate-600 hover:text-cyan-660 transition-colors">Internal Ops</a>
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto pt-12 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">
+      <div className="max-w-7xl mx-auto pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400">
         <div className="flex flex-col items-center md:items-start gap-2">
           <span>© 2026 VibeLab Inc. All rights reserved.</span>
           <span className="normal-case tracking-normal font-medium text-slate-500">

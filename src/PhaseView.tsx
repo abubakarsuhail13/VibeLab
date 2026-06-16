@@ -1108,11 +1108,11 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
         )}
       </AnimatePresence>
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
         <div className="flex items-center gap-6">
           <button 
             onClick={onBack}
-            className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-all shadow-sm group"
+            className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900 transition-all shadow-sm group shrink-0"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           </button>
@@ -1128,45 +1128,16 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               {phase.status === 'locked' && <Lock className="text-slate-500 w-5 h-5" />}
             </div>
             <p className="text-slate-500 font-medium">{phase.description}</p>
-            {phase?.order_index === 2 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-[2rem] border border-indigo-500/20 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="flex items-center gap-4 relative z-10 w-full md:w-3/4">
-                  <div className="w-12 h-12 bg-indigo-600/20 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 shrink-0">
-                    <Sparkles className="w-6 h-6 animate-pulse" />
-                  </div>
-                  <div>
-                    <h4 className="text-white font-bold leading-none mb-1 text-base">Build Your Custom Startup MVP</h4>
-                    <p className="text-indigo-100/80 text-xs font-medium leading-relaxed">
-                      Transform the custom product concept and idea you co-created in Phase 1 into a fully-functional MVP with our interactive 10-step builder wizard!
-                    </p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => {
-                    setActiveTab('build');
-                    setShowDetailedBuilder(true);
-                  }}
-                  className="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-xs shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
-                >
-                  Launch Custom Builder <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </motion.div>
-            )}
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center flex-wrap gap-4">
           {(!hasBadge && (phase.order_index === 1 || phase.order_index === 2 || phase.progress_percentage === 100)) && (
              <motion.button 
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
                onClick={handleCertify}
                disabled={isCertifying}
-               className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-amber-500/20 flex items-center gap-2"
+               className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-amber-500/20 flex items-center gap-2 shrink-0"
              >
                {isCertifying ? (
                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -1177,7 +1148,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
              </motion.button>
           )}
 
-          <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200">
+          <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm shrink-0">
           {[
             { id: 'learn', label: 'Learn', icon: <BookOpen className="w-4 h-4" /> },
             { id: 'build', label: phase?.order_index === 1 ? 'Review Ideation' : 'Build', icon: <Code2 className="w-4 h-4" /> },
@@ -1186,19 +1157,50 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             <button
                key={tab.id}
                onClick={() => setActiveTab(tab.id as any)}
-               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+               className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all ${
                  activeTab === tab.id 
-                   ? 'bg-white text-white shadow-lg shadow-slate-900/10' 
-                   : 'text-slate-500 hover:bg-slate-50'
+                   ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' 
+                   : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                }`}
             >
               {tab.icon}
               {tab.label}
             </button>
           ))}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Hero Section of Phase 2 */}
+      {phase?.order_index === 2 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-[2rem] border border-indigo-500/20 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex items-center gap-5 relative z-10 w-full md:w-3/4">
+            <div className="w-14 h-14 bg-indigo-600/20 border border-indigo-500/30 rounded-2xl flex items-center justify-center text-indigo-400 shrink-0">
+              <Sparkles className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <h4 className="text-white font-bold leading-tight mb-1 text-lg">Build Your Custom Startup MVP</h4>
+              <p className="text-indigo-100/80 text-sm font-medium leading-relaxed">
+                Transform the custom product concept and idea you co-created in Phase 1 into a fully-functional MVP with our interactive 10-step builder wizard!
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              setActiveTab('build');
+              setShowDetailedBuilder(true);
+            }}
+            className="px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
+          >
+            Launch Custom Builder <ChevronRight className="w-4 h-4" />
+          </button>
+        </motion.div>
+      )}
 
       <AnimatePresence mode="wait">
         {activeTab === 'learn' && (
@@ -2039,15 +2041,15 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                   setSelectedPhase2Section(sec.step);
                                   toast.success(`Active segment set to Section ${sec.step}. Check your Quiz under the Learn tab!`, { id: 'sec-toggle' });
                                 }}
-                                className={`cursor-pointer group relative p-6 md:p-8 rounded-[2rem] transition-all flex flex-col justify-between min-h-[170px] ${
+                                className={`cursor-pointer group relative p-5 md:p-6 rounded-2xl transition-all flex flex-col justify-between min-h-[150px] ${
                                   isSelected
-                                    ? 'bg-gradient-to-b from-indigo-50/30 to-white border-2 border-indigo-500 bg-white shadow-xl shadow-indigo-500/5 ring-4 ring-indigo-500/5'
-                                    : 'bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md'
+                                    ? 'bg-gradient-to-b from-indigo-50/20 to-white border-2 border-indigo-600 bg-white shadow-lg shadow-indigo-500/5 ring-4 ring-indigo-500/5'
+                                    : 'bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-sm'
                                 }`}
                               >
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                   <div className="flex items-center justify-between">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
                                       isSelected ? 'bg-indigo-100/50 border border-indigo-200 shadow-sm' : 'bg-slate-50 border border-slate-100'
                                     }`}>
                                       {getSectionIcon(sec.step)}
@@ -2055,26 +2057,26 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
 
                                     <div className="flex items-center gap-1.5">
                                       {isCompleted && (
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 text-emerald-700/80 rounded-full text-[10px] font-black border border-emerald-100">
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[9px] font-bold border border-emerald-100">
                                           <Check className="w-2.5 h-2.5" /> Approved
                                         </span>
                                       )}
                                       {isActiveStep && (
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[10px] font-black border border-amber-100 animate-pulse">
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[9px] font-bold border border-amber-100 animate-pulse">
                                           <Zap className="w-2.5 h-2.5 text-amber-500" /> Build Now
                                         </span>
                                       )}
-                                      <span className="font-mono text-[10px] text-slate-400 font-bold group-hover:text-slate-600">
+                                      <span className="font-mono text-[9px] text-slate-400 font-bold group-hover:text-slate-600">
                                         Section 0{sec.step}
                                       </span>
                                     </div>
                                   </div>
 
                                   <div className="space-y-1">
-                                    <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-900 transition-colors">
+                                    <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-950 transition-colors">
                                       {sec.label}
                                     </h3>
-                                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                                    <p className="text-xs text-slate-500 leading-relaxed font-medium line-clamp-2">
                                       {sec.desc}
                                     </p>
                                   </div>
@@ -2086,30 +2088,30 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
 
                         {/* Elegant Sticky Interactive Action Bar */}
                         <motion.div
-                          initial={{ opacity: 0, y: 30 }}
+                          initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="p-6 bg-slate-900 text-white rounded-[2rem] border border-indigo-500/20 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4"
+                          className="mt-8 p-5 md:p-6 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4"
                         >
                           <div>
                             <span className="font-mono text-[9px] font-black text-indigo-400 tracking-widest uppercase">
                               Configuration Focused
                             </span>
-                            <h3 className="font-bold text-lg text-white">
+                            <h3 className="font-bold text-base text-white mt-0.5">
                               Selected: Section {selectedPhase2Section} — {PHASE2_SECTIONS[selectedPhase2Section - 1]?.label}
                             </h3>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-slate-400 mt-1 font-medium">
                               {selectedPhase2Section === (STEP_MAP_ORDER[activeSession?.session?.current_step] || 1)
                                 ? "This is your active building section. Code and earn credit today!"
                                 : "Explore study topics or jump step-by-step into structural walkthrough sessions."}
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-3 w-full md:w-auto">
+                          <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
                             <button
                               onClick={() => {
                                 setActiveTab('learn');
                               }}
-                              className="flex-1 md:flex-none px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all border border-slate-700"
+                              className="flex-1 md:flex-none px-4 py-2.5 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold text-xs rounded-xl transition-all border border-slate-700/60"
                             >
                               Launch Quizzes
                             </button>
@@ -2117,9 +2119,9 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                               onClick={() => {
                                 setShowDetailedBuilder(true);
                               }}
-                              className="flex-1 md:flex-none px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                              className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-1.5"
                             >
-                              <Play className="w-3.5 h-3.5 fill-white" />
+                              <Play className="w-3 h-3 fill-white" />
                               Launch Selected Session
                             </button>
                           </div>

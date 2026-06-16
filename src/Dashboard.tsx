@@ -510,12 +510,12 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <div className="w-72 bg-white border-r border-slate-200 hidden lg:flex flex-col p-8 pt-24 sticky top-0 h-screen">
-        <div className="relative group mb-10">
-          <div className="flex items-center gap-4 px-2 py-3 bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+      <div className="w-72 bg-white border-r border-slate-200 hidden lg:flex flex-col p-6 pt-20 sticky top-0 h-screen">
+        <div className="relative group mb-6">
+          <div className="flex items-center gap-3.5 px-3 py-2.5 bg-slate-50/50 rounded-xl border border-slate-100/50 overflow-hidden">
             <div 
               onClick={handleAvatarClick}
-              className="relative w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xl uppercase overflow-hidden cursor-pointer group/avatar shrink-0"
+              className="relative w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg uppercase overflow-hidden cursor-pointer group/avatar shrink-0"
             >
               {user?.avatar_url ? (
                 <img src={user.avatar_url} alt={user.name} className="w-full h-full object-cover" />
@@ -527,7 +527,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </div>
               {uploading && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 </div>
               )}
             </div>
@@ -539,16 +539,16 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               accept="image/*"
             />
             <div className="truncate">
-              <p className="font-bold text-slate-900 truncate">{user?.name || 'User'}</p>
+              <p className="font-bold text-slate-900 text-sm truncate">{user?.name || 'User'}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{user?.role || 'Member'}</p>
+                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest leading-none">{user?.role || 'Member'}</p>
                 {user?.is_verified ? (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-150 text-[8px] font-black uppercase tracking-wider shadow-sm select-none">
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 text-[8px] font-black uppercase tracking-wider shadow-sm select-none leading-none">
                     <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
                     Verified
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-150 text-[8px] font-black uppercase tracking-wider shadow-sm select-none">
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 text-[8px] font-black uppercase tracking-wider shadow-sm select-none leading-none">
                     <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
                     Pending
                   </span>
@@ -766,18 +766,18 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
           )}
         </nav>
 
-        <div className="mt-8 pt-6 border-t border-slate-100 space-y-4">
-           <div className="p-5 rounded-2xl bg-slate-50/50 border border-slate-100">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Public Verification</p>
-              <p className="text-[11px] text-slate-500 mb-4 font-medium leading-relaxed">Share your verified builder profile with recruiters.</p>
-            <div className="flex gap-2">
+        <div className="mt-6 pt-4 border-t border-slate-100 space-y-3">
+           <div className="p-4 rounded-xl bg-slate-50/40 border border-slate-100/80">
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Public Verification</p>
+              <p className="text-[10px] text-slate-450 mb-3 font-medium leading-relaxed">Share your verified builder profile with recruiters.</p>
+            <div className="flex gap-1.5">
               <a 
                 href={`/profile/${user.vl_id || user.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 text-[11px] font-bold hover:bg-slate-50 transition-all shadow-sm text-center"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-950 text-[10px] font-bold hover:bg-slate-50 transition-all shadow-sm text-center"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                 View Profile
               </a>
               <button 
@@ -787,27 +787,27 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                   setCopied(true);
                   setTimeout(() => setCopied(false), 2000);
                 }}
-                className={`flex items-center justify-center p-2.5 rounded-xl bg-white border transition-all shadow-sm ${copied ? 'border-emerald-200 text-emerald-600 bg-emerald-50/50' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                className={`flex items-center justify-center p-2 rounded-lg bg-white border transition-all shadow-sm ${copied ? 'border-emerald-200 text-emerald-600 bg-emerald-50/50' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
                 title="Copy profile link"
               >
-                {copied ? <span className="text-[10px] font-bold px-1">Copied!</span> : <LinkIcon className="w-4 h-4" />}
+                {copied ? <span className="text-[9px] font-bold px-1 text-emerald-600">Copied!</span> : <LinkIcon className="w-3.5 h-3.5" />}
               </button>
             </div>
            </div>
            
            <button 
             onClick={onLogout}
-            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-all"
+            className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50/50 transition-all"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
             Log Out
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-8 md:p-12 pt-16 lg:pt-32 overflow-y-auto">
-        <div className="max-w-5xl mx-auto">
+      <div className="flex-1 p-6 md:p-10 pt-16 lg:pt-28 overflow-y-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
             {user?.role === "teacher" ? (
               // TEACHER SYSTEM WORKSPACE
@@ -2055,7 +2055,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="max-w-5xl mx-auto"
+                className="w-full"
               >
                 <div className="flex items-center justify-between mb-12">
                    <div>
