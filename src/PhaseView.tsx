@@ -169,6 +169,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState<{ score: number, passed: boolean, correctCount: number, totalQuestions: number, details?: Record<number, { correct: boolean; correctIndex: number; explanation: string }> } | null>(null);
   const [quizErrorMsg, setQuizErrorMsg] = useState('');
+  const [quizFetchError, setQuizFetchError] = useState<string | null>(null);
   const [isMissingBlueprint, setIsMissingBlueprint] = useState(false);
   const [activeSession, setActiveSession] = useState<any>(null);
   const [selectedPhase2Section, setSelectedPhase2Section] = useState(1);
@@ -784,6 +785,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             setPreviousQuizAttempt(qData.previousAttempt || null);
             setQuizCooldown(null);
             setIsMissingBlueprint(!!qData.isMissingBlueprint);
+            setQuizFetchError(null);
           } else if (quizRes.status === 403) {
             const qData = await quizRes.json();
             if (qData.cooldown) {
@@ -795,6 +797,9 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               setPreviousQuizAttempt(qData.previousAttempt || null);
             }
             setIsMissingBlueprint(!!qData.isMissingBlueprint);
+            setQuizFetchError(null);
+          } else {
+            setQuizFetchError("Dynamic quiz compilation is currently undergoing brief background maintenance. Try again in a minute, or contact support if the issue persists.");
           }
           if (habitsRes.ok) {
             setHabitLogs(await habitsRes.json());
@@ -827,6 +832,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           }
         } catch (e) {
           console.error("Curriculum dynamic datasets failed to fetch", e);
+          setQuizFetchError("Dynamic quiz compilation is currently undergoing brief background maintenance. Try again in a minute, or contact support if the issue persists.");
         }
       }
     } catch (err) {
@@ -1332,7 +1338,27 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                   )}
                 </div>
 
-                {phase?.order_index === 1 && isMissingBlueprint ? (
+                {quizFetchError ? (
+                  <div className="p-8 md:p-10 bg-gradient-to-br from-rose-50/20 to-white rounded-[2.5rem] border border-rose-250 text-center space-y-4 max-w-2xl mx-auto shadow-sm">
+                    <div className="w-16 h-16 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center text-rose-500 mx-auto shadow-sm shadow-rose-200/25">
+                      <AlertTriangle className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 font-display">Dynamic Quiz Compilation Unavailable</h3>
+                    <p className="text-sm text-slate-500 font-semibold max-w-sm mx-auto leading-relaxed">
+                      {quizFetchError}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setQuizFetchError(null);
+                        fetchPhaseData();
+                      }}
+                      className="px-6 py-2.5 bg-slate-905 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-95 shadow-lg shadow-slate-900/10 flex items-center gap-2 mx-auto cursor-pointer"
+                    >
+                      <RotateCw className="w-3.5 h-3.5 text-cyan-405" />
+                      <span>Retry Connection</span>
+                    </button>
+                  </div>
+                ) : phase?.order_index === 1 && isMissingBlueprint ? (
                   <div className="p-8 md:p-10 bg-gradient-to-br from-amber-50/20 to-white rounded-[2.5rem] border border-amber-200/50 text-center space-y-4">
                     <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center text-3xl mx-auto shadow-sm shadow-amber-200/25">
                       ⚠️
