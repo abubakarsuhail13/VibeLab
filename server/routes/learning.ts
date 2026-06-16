@@ -399,12 +399,28 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     if (Number(id) === actualPhase1Id) {
       try {
         const [bpRows]: any = await p.execute(
-          'SELECT id, product_name, problem_statement, target_user_persona, solution_concept, mvp_definition FROM project_blueprints WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+          'SELECT id, session_id, product_name, problem_statement, target_user_persona, solution_concept, mvp_definition FROM project_blueprints WHERE user_id = ? ORDER BY id DESC LIMIT 1',
           [req.user.userId]
         );
         if (bpRows && bpRows.length > 0) {
           const bp = bpRows[0];
           const sessionId = bp.id;
+          const originalSessionId = bp.session_id;
+
+          // Fetch the conversational history of user reactions/AI refinements
+          let conversationContext = '';
+          if (originalSessionId) {
+            const [respRows]: any = await p.execute(
+              'SELECT question_text, user_response, ai_followup FROM ideation_responses WHERE session_id = ? ORDER BY id ASC LIMIT 10',
+              [originalSessionId]
+            );
+            if (respRows && respRows.length > 0) {
+              conversationContext = respRows
+                .map((r: any) => `AI Prompt Suggestion: "${r.question_text}"\nUser Response/Feedback: "${r.user_response}"\nAI Feedback Refinement: "${r.ai_followup || ''}"`)
+                .join('\n---\n');
+            }
+          }
+
           const [existing]: any = await p.execute(
             'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ?',
             [actualPhase1Id, sessionId]
@@ -412,35 +428,47 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
           if (existing && existing.length > 0) {
             rows = existing;
           } else {
-            // Auto generate Phase 1 customized quiz if none exists yet
+            // Auto generate Phase 1 customized supportive quiz if none exists yet
             const prompt = `
-Generate EXACTLY 10 simple multiple choice quiz questions for a Grade 9-12 student
-who just completed the Discovery & Ideation stage for their product idea:
+You are a supportive, friendly product design coach. Generate EXACTLY 6 multiple-choice reflection questions for a school student who just completed Phase 1 (Discovery & Ideation) for their product idea.
 
-Product name: ${bp.product_name || 'Autonomous App'}
-Problem statement: ${bp.problem_statement || 'N/A'}
-Target Users: ${bp.target_user_persona || 'N/A'}
-Solution Concept: ${bp.solution_concept || 'N/A'}
-MVP Definition: ${bp.mvp_definition || 'N/A'}
+These questions should NOT feel like a rigid, stressful exam. Instead, they should feel like supportive reflections, learning-validation, and positive check-ins focused on understanding, prompt refinement, and product structure.
 
-The 10 questions must test:
-1. Product Planning: target users and defining problem statement for their idea.
-2. Scope control: keeping it small as a Minimum Viable Product (MVP).
-3. Basic product-market thinking.
+Here is the student's Product Idea:
+- Product Name: ${bp.product_name || 'Autonomous App'}
+- Problem Statement: ${bp.problem_statement || 'N/A'}
+- Target Users: ${bp.target_user_persona || 'N/A'}
+- Solution Concept: ${bp.solution_concept || 'N/A'}
+- MVP Scope: ${bp.mvp_definition || 'N/A'}
 
-These questions must reference their specific product idea and target users directly, but remain very simple, beginner-friendly, and highly educational for a high school student.
+And here is some conversational history showing how they interacted with the AI during co-creation and how their ideas were refined:
+${conversationContext || 'No conversation details available.'}
 
-Please output as a valid JSON array of EXACTLY 10 objects with this exact structure:
+Focus areas to map to the 6 questions:
+1. Product Clarity & Core Definition: Reflection on their actual problem statement, solution concept, and target segment for "${bp.product_name || 'their product'}".
+2. AI Refinement Collaboration: Evaluating how effectively they communicated their ideas to the AI, how they answered follow-up questions, and how the AI helped refine or expand their vague initial product ideas.
+3. MVP Scope Control: Understanding what a Minimum Viable Product (MVP) is, why keeping it small and focused for "${bp.product_name || 'their product'}" prevents scope creep, and distinguishing MVP must-haves vs future nice-to-haves.
+4. Problem Statement & User Persona Awareness: Reflecting on their target user's direct needs/frustrations, and checking whether they understand the actual core problem they are addressing.
+5. Human-AI Symbiosis Strategy: Checking whether they understood how the AI helper refined their idea based on their specific inputs, expressing prompt clarity, and why human intuition + AI speed is powerful.
+6. Forward-Looking Inspiration: A supportive next-steps check-in validating their enthusiasm, bridging into Phase 2's development and styling setup.
+
+Wording & Guidelines:
+- Non-technical, warm, encouraging, and highly beginner-friendly.
+- The correct option must represent a proactive, iterative, structured, or thoughtful product-management response or a clear understanding of their MVP.
+- Incorrect options must still be constructive, gentle, reassuring, and positive (never punitive, silly, or demoralizing).
+- The explanation must be welcoming, praise the student's progress, and clarify the core learning objective beautifully.
+
+Please output as a valid JSON array of EXACTLY 6 objects with this exact structure:
 [
   {
-    "question": "The question text, references their product idea directly",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "question": "A personalized reflection question referring to their product and AI co-creation",
+    "options": ["Encouraging Option A", "Encouraging Option B", "Encouraging Option C", "Encouraging Option D"],
     "correct_index": 0,
-    "explanation": "Extremely clear explanation of why the correct option is right."
+    "explanation": "Friendly, supportive, and educational explanation of why the correct option is the ideal product mindset response."
   }
 ]
 
-Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
+Do not return any markdown, backticks (like \`\`\`json), or text before/after the JSON array. Output strictly valid JSON.
 `;
 
             const geminiRes = await getGeminiClient().models.generateContent({
@@ -573,8 +601,9 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
       rows = staticRows;
     }
 
-    // Retrieve up to 10 randomized quiz questions
-    const shuffled = rows.sort(() => 0.5 - Math.random()).slice(0, 10);
+    // Retrieve up to 10 randomized quiz questions - skip random shuffling for Phase 1 to preserve narrative order
+    const isPhase1 = Number(id) === actualPhase1Id;
+    const shuffled = isPhase1 ? rows : rows.sort(() => 0.5 - Math.random()).slice(0, 10);
     
     res.json({
       questions: shuffled,
