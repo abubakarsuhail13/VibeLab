@@ -1278,7 +1278,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
       }, 800);
       return () => clearTimeout(t);
     }
-  }, [activeStep, mvp]);
+  }, [activeStep, mvp?.mvp_html]);
 
   const handleCompleteStep6 = async () => {
     setIsSubmitting(true);
@@ -1312,30 +1312,35 @@ Handles routing via custom React layouts, templates, and server-side model groun
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('vibelab_token');
-      const res = await fetch('/api/product/description/save', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          session_id: session?.id,
-          product_description: productDescription
+      
+      // Save description and complete step in parallel to eliminate sequential API request latency
+      const [res, completeRes] = await Promise.all([
+        fetch('/api/product/description/save', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            session_id: session?.id,
+            product_description: productDescription
+          })
+        }),
+        fetch('/api/product/step/complete', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            session_id: session?.id,
+            step: 'description'
+          })
         })
-      });
-      if (!res.ok) throw new Error('Failed to save description.');
+      ]);
 
-      await fetch('/api/product/step/complete', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          session_id: session?.id,
-          step: 'description'
-        })
-      });
+      if (!res.ok) throw new Error('Failed to save description in database.');
+      if (!completeRes.ok) throw new Error('Failed to register description step as complete.');
 
       setActiveStep(8);
       toast.success('Description saved! Let\'s explain your features.');
@@ -1404,31 +1409,36 @@ Handles routing via custom React layouts, templates, and server-side model groun
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('vibelab_token');
-      const res = await fetch('/api/product/demo/save', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          session_id: session?.id,
-          demo_script: demoScript,
-          key_talking_points: mvp?.key_talking_points || []
+      
+      // Save demo script and complete step in parallel to optimize latency and rendering cycles
+      const [res, completeRes] = await Promise.all([
+        fetch('/api/product/demo/save', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            session_id: session?.id,
+            demo_script: demoScript,
+            key_talking_points: mvp?.key_talking_points || []
+          })
+        }),
+        fetch('/api/product/step/complete', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            session_id: session?.id,
+            step: 'demo'
+          })
         })
-      });
-      if (!res.ok) throw new Error('Failed to save demo.');
+      ]);
 
-      await fetch('/api/product/step/complete', {
-         method: 'POST',
-         headers: {
-           'Authorization': `Bearer ${token}`,
-           'Content-Type': 'application/json'
-         },
-         body: JSON.stringify({
-           session_id: session?.id,
-           step: 'demo'
-         })
-      });
+      if (!res.ok) throw new Error('Failed to save demo presentation details.');
+      if (!completeRes.ok) throw new Error('Failed to register demo step as complete.');
 
       setActiveStep(10);
       toast.success('Demo presentation script locked! Complete Phase 2 🎉');
@@ -1560,7 +1570,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
 
       {/* Scrollable container for the single active step content */}
       <div className={`flex-1 ${activeStep === 6 ? 'p-0 overflow-hidden h-[calc(100vh-140px)]' : 'overflow-y-auto px-4 py-6 md:px-12 md:py-8'} relative z-10 flex flex-col justify-start`}>
-        <div className={`w-full bg-white/70 backdrop-blur-md ${activeStep === 6 ? 'rounded-none border-none p-0 flex-1 flex flex-col h-full overflow-hidden' : 'rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 flex-1 flex flex-col overflow-y-auto'}`}>
+        <div className={`w-full bg-white/70 backdrop-blur-md ${activeStep === 6 ? 'rounded-none border-none p-0 flex-1 flex flex-col h-full overflow-hidden' : 'rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 h-auto overflow-visible'}`}>
           {activeStep !== 6 && (
             <div className="border-b border-slate-100 pb-4 mb-6">
               <h1 className="text-base font-bold text-slate-800 flex items-center gap-2">
