@@ -345,13 +345,13 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     if (isPhase2) {
       const [rowsAttempt]: any = await p.execute(
         'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number = ? ORDER BY attempted_at DESC LIMIT 1',
-        [req.user.userId, id, sectionNum]
+        [req.user.userId, Number(id), sectionNum]
       );
       latestAttempts = rowsAttempt;
     } else {
       const [rowsAttempt]: any = await p.execute(
         'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number IS NULL ORDER BY attempted_at DESC LIMIT 1',
-        [req.user.userId, id]
+        [req.user.userId, Number(id)]
       );
       latestAttempts = rowsAttempt;
     }
@@ -375,13 +375,13 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     if (isPhase2) {
       const [rowsBest]: any = await p.execute(
         'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number = ? ORDER BY score DESC, attempted_at DESC LIMIT 1',
-        [req.user.userId, id, sectionNum]
+        [req.user.userId, Number(id), sectionNum]
       );
       bestAttempt = rowsBest;
     } else {
       const [rowsBest]: any = await p.execute(
         'SELECT id, score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number IS NULL ORDER BY score DESC, attempted_at DESC LIMIT 1',
-        [req.user.userId, id]
+        [req.user.userId, Number(id)]
       );
       bestAttempt = rowsBest;
     }
@@ -613,8 +613,8 @@ Do not return any markdown, backticks (like \`\`\`json), or text before/after th
         if (sessions && sessions.length > 0) {
           const sessionId = sessions[0].id;
           const [existing]: any = await p.execute(
-            'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL))',
-            [actualPhase2Id, sessionId, sectionNum, sectionNum]
+            'SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id = ? AND section_number = ?',
+            [actualPhase2Id, sessionId, sectionNum]
           );
           if (existing && existing.length > 0) {
             rows = existing;
@@ -697,7 +697,7 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
     }
 
     if (rows.length === 0) {
-      const [staticRows]: any = await p.execute('SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL', [id]);
+      const [staticRows]: any = await p.execute('SELECT id, question, options FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL', [Number(id)]);
       rows = staticRows;
     }
 
@@ -711,7 +711,8 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
       isMissingBlueprint
     });
   } catch (err: any) {
-    res.status(500).json({ error: 'Failed to retrieve quiz questions' });
+    console.error('[ERROR] Failed to retrieve quiz questions:', err);
+    res.status(500).json({ error: 'Failed to retrieve quiz questions', details: err?.message || String(err) });
   }
 });
 
@@ -821,8 +822,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
       if (sessions && sessions.length > 0) {
         const sessionId = sessions[0].id;
         const [sessionQuestions]: any = await p.execute(
-          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id = ? AND (section_number = ? OR (? IS NULL AND section_number IS NULL))',
-          [actualPhase2Id, sessionId, sectionNum, sectionNum]
+          'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id = ? AND section_number = ?',
+          [actualPhase2Id, sessionId, sectionNum]
         );
         questions = sessionQuestions;
       }

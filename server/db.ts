@@ -577,12 +577,10 @@ export const getPool = async () => {
                 intro_completed_at = NOW()
             WHERE (ideation_completed = TRUE OR ideation_completed = 1) AND (intro_completed = FALSE OR intro_completed = 0)
           `);
+          console.log('[DEBUG] Completed initial safety migrations, continuing to full schema verification flow...');
         } catch (migErr: any) {
           console.error("Migration error inside already-initialized DB:", migErr);
         }
-
-        connection.release();
-        return pool;
       }
 
       

@@ -1597,7 +1597,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                 className="flex-1 flex flex-col"
               >
                 {/* Collapsible Expanded Component Content Section */}
-                <div className="p-6 md:p-8 space-y-6 bg-slate-100/10 rounded-2xl border border-slate-100/50">
+                <div className="space-y-6">
 
                       {/**********************************************************
                        * STEP 1: Blueprint Approver View
@@ -1940,18 +1940,15 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             {screens.map(scr => (
                               <div 
                                 key={scr.id}
-                                className="group rounded-2xl border border-slate-200 bg-white/65 overflow-hidden flex flex-col hover:border-[#2563eb]/35 transition-all"
+                                onClick={() => setSelectedScreen(scr)}
+                                className="group rounded-2xl border border-slate-200 bg-white/70 overflow-hidden flex flex-col hover:border-[#2563eb]/50 hover:shadow-md transition-all cursor-pointer"
                               >
                                 {/* Header */}
-                                <div className="p-4 border-b border-slate-200/60 flex items-center justify-between">
+                                <div className="p-4 border-b border-slate-200/60 flex items-center justify-between bg-slate-50/50">
                                   <h4 className="text-xs font-bold text-slate-800 truncate">{scr.screen_name}</h4>
-                                  <button 
-                                    onClick={() => setSelectedScreen(scr)}
-                                    className="p-1 hover:bg-white rounded text-[#2563eb] hover:text-slate-700 transition-colors"
-                                    title="View full preview"
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                  </button>
+                                  <span className="p-1.5 bg-slate-150 group-hover:bg-blue-50 rounded-lg text-slate-500 group-hover:text-[#2563eb] transition-colors">
+                                    <Eye className="w-3.5 h-3.5 animate-pulse" />
+                                  </span>
                                 </div>
 
                                 {/* Miniature Iframe Preview container */}
@@ -2963,14 +2960,14 @@ Handles routing via custom React layouts, templates, and server-side model groun
               exit={{ scale: 0.95, y: 15 }}
               className="bg-white border border-slate-200 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
             >
-              <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-white/65 shrink-0">
+              <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50/50 shrink-0">
                 <div>
-                  <h4 className="text-sm font-black uppercase text-[#2563eb] tracking-widest font-mono">Screen Preview</h4>
-                  <h3 className="text-lg font-bold text-white mt-1">{selectedScreen.screen_name}</h3>
+                  <h4 className="text-xs font-black uppercase text-[#2563eb] tracking-widest font-mono">Screen Preview</h4>
+                  <h3 className="text-lg font-bold text-slate-900 mt-1">{selectedScreen.screen_name}</h3>
                 </div>
                 <button 
                   onClick={() => setSelectedScreen(null)}
-                  className="px-4 py-2 border border-slate-200 hover:border-slate-200 text-slate-500 hover:text-white rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-all uppercase cursor-pointer"
                 >
                   Close ×
                 </button>
