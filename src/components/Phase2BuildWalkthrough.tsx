@@ -43,6 +43,7 @@ import {
   FileText
 } from 'lucide-react';
 import { EducationalAiBackground } from "./EducationalAiBackground";
+import { AILoader } from "./AILoader";
 
 interface BlueprintData {
   id?: number;
@@ -269,6 +270,7 @@ export default function Phase2BuildWalkthrough({
 
   // STEP 5 State: Loading cycling messages
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+  const [buildProgress, setBuildProgress] = useState(5);
 
   // STEP 6–10 States
   const [mvp, setMvp] = useState<any>(null);
@@ -650,12 +652,30 @@ Handles routing via custom React layouts, templates, and server-side model groun
   useEffect(() => {
     let interval: any;
     if (activeStep === 5) {
+      setLoadingMsgIdx((prev) => (prev + 1) % cyclingMessages.length);
       interval = setInterval(() => {
         setLoadingMsgIdx((prev) => (prev + 1) % cyclingMessages.length);
       }, 2000);
     }
     return () => clearInterval(interval);
   }, [activeStep, projectName]);
+
+  useEffect(() => {
+    let interval: any;
+    if (activeStep === 5) {
+      setBuildProgress(5);
+      const start = Date.now();
+      const duration = 24000; // estimated duration
+
+      interval = setInterval(() => {
+        const elapsed = Date.now() - start;
+        const ratio = Math.min(elapsed / duration, 1);
+        const nextProgress = Math.floor(5 + (93 * (1 - Math.pow(1 - ratio, 2))));
+        setBuildProgress(Math.min(nextProgress, 98));
+      }, 250);
+    }
+    return () => clearInterval(interval);
+  }, [activeStep]);
 
   // Load context on mount
   useEffect(() => {
@@ -1603,76 +1623,83 @@ Handles routing via custom React layouts, templates, and server-side model groun
                        * STEP 1: Blueprint Approver View
                        ***********************************************************/}
                       {item.step === 1 && (
-                        <div className="space-y-6">
-                          <p className="text-xs font-semibold text-slate-500 font-sans tracking-wide">
-                            Based on your Phase 1 ideation — review and confirm.
-                          </p>
+                        isSubmitting ? (
+                          <AILoader type="blueprint" />
+                        ) : (
+                          <div className="space-y-6">
+                            <p className="text-xs font-semibold text-slate-500 font-sans tracking-wide">
+                              Based on your Phase 1 ideation — review and confirm.
+                            </p>
 
-                          <div className="grid grid-cols-1 gap-5">
-                            {/* Project Name Field */}
-                            <div className="flex flex-col gap-2">
-                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Project Name</label>
-                              <input 
-                                type="text"
-                                value={projectName}
-                                onChange={(e) => setProjectName(e.target.value)}
-                                placeholder="Enter project name..."
-                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none transition-colors"
-                              />
+                            <div className="grid grid-cols-1 gap-5">
+                              {/* Project Name Field */}
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Project Name</label>
+                                <input 
+                                  type="text"
+                                  value={projectName}
+                                  onChange={(e) => setProjectName(e.target.value)}
+                                  placeholder="Enter project name..."
+                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none transition-colors"
+                                />
+                              </div>
+
+                              {/* Problem Statement Field */}
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Problem Statement</label>
+                                <textarea 
+                                  value={problemStatement}
+                                  onChange={(e) => setProblemStatement(e.target.value)}
+                                  rows={2}
+                                  placeholder="Describe the pain point..."
+                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                />
+                              </div>
+
+                              {/* Target Users Field */}
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Target Users</label>
+                                <textarea 
+                                  value={targetUsers}
+                                  onChange={(e) => setTargetUsers(e.target.value)}
+                                  rows={2}
+                                  placeholder="Who are your primary target users?"
+                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                />
+                              </div>
+
+                              {/* MVP Scope Field */}
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">MVP Scope</label>
+                                <textarea 
+                                  value={mvpScope}
+                                  onChange={(e) => setMvpScope(e.target.value)}
+                                  rows={3}
+                                  placeholder="What core features are inside the MVP?"
+                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                />
+                              </div>
                             </div>
 
-                            {/* Problem Statement Field */}
-                            <div className="flex flex-col gap-2">
-                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Problem Statement</label>
-                              <textarea 
-                                value={problemStatement}
-                                onChange={(e) => setProblemStatement(e.target.value)}
-                                rows={2}
-                                placeholder="Describe the pain point..."
-                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
-                              />
-                            </div>
-
-                            {/* Target Users Field */}
-                            <div className="flex flex-col gap-2">
-                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">Target Users</label>
-                              <textarea 
-                                value={targetUsers}
-                                onChange={(e) => setTargetUsers(e.target.value)}
-                                rows={2}
-                                placeholder="Who are your primary target users?"
-                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
-                              />
-                            </div>
-
-                            {/* MVP Scope Field */}
-                            <div className="flex flex-col gap-2">
-                              <label className="text-[10px] uppercase tracking-wider font-mono text-[#2563eb] font-semibold">MVP Scope</label>
-                              <textarea 
-                                value={mvpScope}
-                                onChange={(e) => setMvpScope(e.target.value)}
-                                rows={3}
-                                placeholder="What core features are inside the MVP?"
-                                className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
-                              />
+                            <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
+                              <Info className="w-4 h-4 text-[#2563eb] shrink-0" />
+                              <span>Verify your project blueprint. Once satisfied, click <strong>Confirm Blueprint</strong> in the footer below to lock in ideas and generate feature scopes!</span>
                             </div>
                           </div>
-
-                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
-                            <Info className="w-4 h-4 text-[#2563eb] shrink-0" />
-                            <span>Verify your project blueprint. Once satisfied, click <strong>Confirm Blueprint</strong> in the footer below to lock in ideas and generate feature scopes!</span>
-                          </div>
-                        </div>
+                        )
                       )}
 
                       {/**********************************************************
                        * STEP 2: Feature Discovery View
                        ***********************************************************/}
                       {item.step === 2 && (
-                        <div className="space-y-8">
-                          <p className="text-xs text-slate-500">
-                            Below are your product features generated which you can prioritize. Organize them across columns, include/exclude them, or add custom ones!
-                          </p>
+                        isSubmitting ? (
+                          <AILoader type="features" />
+                        ) : (
+                          <div className="space-y-8">
+                            <p className="text-xs text-slate-500">
+                              Below are your product features generated which you can prioritize. Organize them across columns, include/exclude them, or add custom ones!
+                            </p>
 
                           {/* 3 Columns Layout */}
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1869,16 +1896,20 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             <span>Confirm your prioritized feature scope, then click <strong>Confirm Features</strong> in the footer below to map out the User Journey!</span>
                           </div>
                         </div>
+                        )
                       )}
 
                       {/**********************************************************
                        * STEP 3: User Journey View
                        ***********************************************************/}
                       {item.step === 3 && (
-                        <div className="space-y-6">
-                          <p className="text-xs text-slate-500">
-                            This is how someone will use <strong className="text-slate-800">{projectName || 'your app'}</strong> from start to finish.
-                          </p>
+                        isSubmitting ? (
+                          <AILoader type="journey" />
+                        ) : (
+                          <div className="space-y-6">
+                            <p className="text-xs text-slate-500">
+                              This is how someone will use <strong className="text-slate-800">{projectName || 'your app'}</strong> from start to finish.
+                            </p>
 
                           {/* Horizontal Sequence Flow */}
                           {userJourney && userJourney.steps ? (
@@ -1924,6 +1955,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             <span>Read through the user journey steps. When everything looks accurate, click <strong>Approve Journey</strong> in the footer below to generate the product wireframes & screens!</span>
                           </div>
                         </div>
+                        )
                       )}
 
                       {/**********************************************************
@@ -2017,13 +2049,53 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             <Sparkles className="w-6 h-6 text-[#2563eb] absolute top-5 left-5 animate-pulse" />
                           </div>
 
-                          <div>
+                          <div className="w-full max-w-md">
                             <h2 className="font-bebas text-5xl tracking-widest text-[#2563eb] inline-block animate-pulse mb-3 leading-none">
                               BUILDING YOUR PRODUCT
                             </h2>
                             <p className="text-xs text-slate-500 font-mono tracking-wider max-w-sm mx-auto uppercase mt-2">
                               {cyclingMessages[loadingMsgIdx]}
                             </p>
+                            
+                            {/* Modern Progress HUD */}
+                            <div className="mt-5 space-y-2">
+                              <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-500">
+                                <span>COMPILING SANDBOX BUNDLE</span>
+                                <span className="text-[#2563eb]">{buildProgress}%</span>
+                              </div>
+                              <div className="w-full bg-slate-200/65 rounded-full h-2.5 overflow-hidden border border-slate-200/50 p-0.5">
+                                <div 
+                                  style={{ width: `${buildProgress}%` }} 
+                                  className="h-full bg-gradient-to-r from-[#2563eb] to-rose-500 rounded-full transition-all duration-300 ease-out"
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Interactive Developer Telemetry Log */}
+                          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 font-mono text-left space-y-2 shadow-inner">
+                            <div className="flex items-center justify-between text-[9px] text-slate-500 border-b border-slate-800 pb-2 mb-2">
+                              <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> VibeLab Compiler Cores</span>
+                              <span className="text-rose-400 font-bold uppercase animate-pulse">LIVE SYNTHESIS</span>
+                            </div>
+                            <div className="space-y-1.5 text-[10px]">
+                              <div className="text-slate-300 flex items-start gap-2">
+                                <span className="text-blue-500">▶</span> 
+                                <span>[system] Initializing Gemini AST structure parser... <span className="text-emerald-400 font-bold">Done</span></span>
+                              </div>
+                              <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 25 ? 'text-slate-300' : 'text-slate-600'}`}>
+                                <span className={buildProgress > 25 ? 'text-blue-500' : ''}>▶</span> 
+                                <span>[compiler] Processing screen routing paths & wiring layouts... {buildProgress > 25 ? <span className="text-emerald-400 font-bold">Done</span> : <span className="animate-pulse">Active</span>}</span>
+                              </div>
+                              <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 55 ? 'text-slate-300' : 'text-slate-600'}`}>
+                                <span className={buildProgress > 55 ? 'text-blue-500' : ''}>▶</span> 
+                                <span>[linker] Injecting custom styling classes & Tailwind modules... {buildProgress > 55 ? <span className="text-emerald-400 font-bold">Done</span> : (buildProgress > 25 ? <span className="text-amber-500 animate-pulse">Pending...</span> : <span className="text-slate-600">Waiting</span>)}</span>
+                              </div>
+                              <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 80 ? 'text-slate-300' : 'text-slate-600'}`}>
+                                <span className={buildProgress > 80 ? 'text-blue-500' : ''}>▶</span> 
+                                <span>[optimizer] Packaging standalone index.html interactive bundle... {buildProgress > 80 ? <span className="text-emerald-400 font-bold">Optimized</span> : (buildProgress > 55 ? <span className="text-amber-500 animate-pulse">Pending...</span> : <span className="text-slate-600">Waiting</span>)}</span>
+                              </div>
+                            </div>
                           </div>
 
                           <div className="p-4 bg-white/70 border border-slate-200/60 rounded-2xl max-w-md text-left flex gap-3">
