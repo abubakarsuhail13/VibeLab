@@ -73,11 +73,11 @@ router.get('/phase/:id', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
-    const [rows]: any = await p.execute('SELECT * FROM phases WHERE id = ?', [id]);
+    const [rows]: any = await p.execute('SELECT * FROM phases WHERE id = ?', [Number(id)]);
     if (rows.length === 0) return res.status(404).json({ error: 'Phase not found' });
 
     const phase = rows[0];
-    const [progress]: any = await p.execute('SELECT * FROM user_phase_progress WHERE user_id = ? AND phase_id = ?', [req.user.userId, id]);
+    const [progress]: any = await p.execute('SELECT * FROM user_phase_progress WHERE user_id = ? AND phase_id = ?', [req.user.userId, Number(id)]);
 
     res.json({
       ...phase,
@@ -96,7 +96,7 @@ router.get('/phase/:id/projects', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
-    const [projects]: any = await p.execute('SELECT * FROM phase_projects WHERE phase_id = ?', [id]);
+    const [projects]: any = await p.execute('SELECT * FROM phase_projects WHERE phase_id = ?', [Number(id)]);
     const [progress]: any = await p.execute(
       'SELECT project_id, completed_steps, is_completed, last_active_step, code_state FROM user_project_progress WHERE user_id = ?',
       [req.user.userId]
@@ -743,13 +743,13 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     if (isPhase2) {
       const [rowsAttempt]: any = await p.execute(
         'SELECT score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number = ? ORDER BY attempted_at DESC LIMIT 1',
-        [req.user.userId, id, sectionNum]
+        [req.user.userId, Number(id), sectionNum]
       );
       latestAttempts = rowsAttempt;
     } else {
       const [rowsAttempt]: any = await p.execute(
         'SELECT score, passed, attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND section_number IS NULL ORDER BY attempted_at DESC LIMIT 1',
-        [req.user.userId, id]
+        [req.user.userId, Number(id)]
       );
       latestAttempts = rowsAttempt;
     }
@@ -771,13 +771,13 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     if (isPhase2) {
       const [rowsPass]: any = await p.execute(
         'SELECT attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND passed = 1 AND section_number = ? ORDER BY attempted_at DESC LIMIT 1',
-        [req.user.userId, id, sectionNum]
+        [req.user.userId, Number(id), sectionNum]
       );
       latestPass = rowsPass;
     } else {
       const [rowsPass]: any = await p.execute(
         'SELECT attempted_at FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND passed = 1 AND section_number IS NULL ORDER BY attempted_at DESC LIMIT 1',
-        [req.user.userId, id]
+        [req.user.userId, Number(id)]
       );
       latestPass = rowsPass;
     }
@@ -832,7 +832,7 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     if (questions.length === 0) {
       const [staticQuestions]: any = await p.execute(
         'SELECT id, correct_index, explanation FROM quiz_questions WHERE phase_id = ? AND session_id IS NULL',
-        [id]
+        [Number(id)]
       );
       questions = staticQuestions;
     }
@@ -866,7 +866,7 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     
     await p.execute(
       'INSERT INTO quiz_attempts (user_id, phase_id, score, passed, section_number) VALUES (?, ?, ?, ?, ?)',
-      [req.user.userId, id, score, passed ? 1 : 0, sectionNum]
+      [req.user.userId, Number(id), score, passed ? 1 : 0, sectionNum]
     );
     
     res.json({
@@ -981,7 +981,7 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
 
     // Condition 1: Verify Minimum Required Project Submissions with valid GitHub URLs (Bypassed for Phase 2 Custom MVP Builder)
     if (orderIndex > 1 && orderIndex !== 2) {
-      const [allProjects]: any = await p.execute('SELECT id FROM phase_projects WHERE phase_id = ?', [id]);
+      const [allProjects]: any = await p.execute('SELECT id FROM phase_projects WHERE phase_id = ?', [Number(id)]);
       if (allProjects.length === 0) return res.status(400).json({ error: 'No projects found in this phase' });
 
       const projectIds = allProjects.map((ap: any) => ap.id);
@@ -1003,7 +1003,7 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
     // Condition 2: Verify Quiz Is Passed (score >= 70%)
     const [quizAttempt]: any = await p.execute(
       'SELECT score, passed FROM quiz_attempts WHERE user_id = ? AND phase_id = ? AND passed = 1 LIMIT 1',
-      [req.user.userId, id]
+      [req.user.userId, Number(id)]
     );
     if (quizAttempt.length === 0) {
       console.log(`[DEBUG] Certification Rejected: Quiz not passed.`);
@@ -1015,7 +1015,7 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
     // Condition 3: Topics Checklist Reviewed (stored in user_phase_progress checklist) - self-reported
     const [progressRow]: any = await p.execute(
       'SELECT topics_checklist FROM user_phase_progress WHERE user_id = ? AND phase_id = ?',
-      [req.user.userId, id]
+      [req.user.userId, Number(id)]
     );
     const checklist = progressRow.length > 0 && progressRow[0].topics_checklist ? JSON.parse(progressRow[0].topics_checklist) : [];
     if (orderIndex > 1 && (!Array.isArray(checklist) || checklist.length === 0)) {
@@ -1029,13 +1029,13 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
     const badgeNameStr = getBadgeName(orderIndex);
     await p.execute(
       'INSERT IGNORE INTO badges (user_id, phase_id) VALUES (?, ?)',
-      [req.user.userId, id]
+      [req.user.userId, Number(id)]
     );
 
     // Update Phase status to COMPLETED
     await p.execute(
       'INSERT INTO user_phase_progress (user_id, phase_id, status, progress_percentage) VALUES (?, ?, "completed", 100) ON DUPLICATE KEY UPDATE status = "completed", progress_percentage = 100',
-      [req.user.userId, id]
+      [req.user.userId, Number(id)]
     );
 
     console.log(`[DEBUG] Phase ${id} marked COMPLETED for User ${req.user.userId}`);
