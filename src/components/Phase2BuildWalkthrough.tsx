@@ -736,6 +736,26 @@ Handles routing via custom React layouts, templates, and server-side model groun
     return () => clearInterval(interval);
   }, [activeStep]);
 
+  // Keep the address bar URL path matching the active step
+  useEffect(() => {
+    const stepPaths: Record<number, string> = {
+      1: '/phase/2',
+      2: '/phase/2/features',
+      3: '/phase/2/journey',
+      4: '/phase/2/screens',
+      5: '/phase/2/building',
+      6: '/phase/2/review',
+      7: '/phase/2/description',
+      8: '/phase/2/explain',
+      9: '/phase/2/demo',
+      10: '/phase/2/complete',
+    };
+    const targetPath = stepPaths[activeStep];
+    if (targetPath && window.location.pathname !== targetPath) {
+      window.history.replaceState(null, '', targetPath);
+    }
+  }, [activeStep]);
+
   // Load context on mount
   useEffect(() => {
     fetchSessionAndProgress();

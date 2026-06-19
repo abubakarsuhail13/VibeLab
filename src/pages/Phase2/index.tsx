@@ -21,7 +21,7 @@ export default function Phase2Page({ onNavigate }: { onNavigate?: (page: string)
     if (path.includes('/explain')) return 8;
     if (path.includes('/demo')) return 9;
     if (path.includes('/complete')) return 10;
-    return 1;
+    return undefined;
   };
 
   return (
