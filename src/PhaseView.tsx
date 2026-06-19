@@ -2084,16 +2084,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
               );
             })() : phase?.order_index === 2 ? (
               <div className="space-y-8 select-none">
-                <div className="p-8 bg-slate-50 border border-slate-200/80 rounded-[2rem] text-center max-w-xl mx-auto space-y-4">
-                  <div className="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto animate-bounce">
-                    <Code2 className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-slate-800 text-base">Your Custom Builder Workspace</h3>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-md mx-auto">
-                    The interactive 10-step wizard is fully prepared with your co-created product specifications. Tap the "Launch Builder →" button above to get started.
-                  </p>
-                </div>
-                {false && (() => {
+                  {(() => {
                     const STEP_MAP_ORDER: Record<string, number> = {
                       'blueprint': 1,
                       'features': 2,
