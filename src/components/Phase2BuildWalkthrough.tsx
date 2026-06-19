@@ -138,7 +138,56 @@ const getInjectedMvpCode = (codeText: string) => {
 
   const scriptToInject = `
     <script>
+      // Capture and post state update to parent window
+      function captureAndPostState() {
+        try {
+          const inputs = Array.from(document.querySelectorAll('input, textarea, select')).map((el, idx) => ({
+            id: el.id,
+            name: el.name,
+            type: el.type,
+            value: el.type === 'checkbox' || el.type === 'radio' ? el.checked : el.value,
+            className: el.className,
+            index: idx
+          }));
+          
+          window.parent.postMessage({
+            type: 'SANDBOX_STATE_UPDATE',
+            state: {
+              inputs: inputs,
+              timestamp: Date.now()
+            }
+          }, '*');
+        } catch (err) {
+          console.warn('Failed to capture sandbox state:', err);
+        }
+      }
+
       window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'RESTORE_SANDBOX_STATE') {
+          const state = event.data.state;
+          if (state && Array.isArray(state.inputs)) {
+            const allInputs = Array.from(document.querySelectorAll('input, textarea, select'));
+            state.inputs.forEach(inputData => {
+              try {
+                let el = null;
+                if (inputData.id) el = document.getElementById(inputData.id);
+                if (!el && inputData.name) el = document.querySelector('[name="' + inputData.name + '"]');
+                if (!el && typeof inputData.index === 'number') el = allInputs[inputData.index];
+                
+                if (el) {
+                  if (inputData.type === 'checkbox' || inputData.type === 'radio') {
+                    el.checked = !!inputData.value;
+                  } else {
+                    el.value = inputData.value;
+                  }
+                  el.dispatchEvent(new Event('change', { bubbles: true }));
+                  el.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+              } catch (e) {}
+            });
+          }
+        }
+
         if (event.data && event.data.action === 'highlight') {
           const existing = document.getElementById('vibelab-highlight-overlay');
           if (existing) existing.remove();
@@ -185,7 +234,7 @@ const getInjectedMvpCode = (codeText: string) => {
             tag.style.top = '-25px';
             tag.style.left = '0';
             tag.style.backgroundColor = '#2563eb';
-            tag.style.color = '#000000';
+            tag.style.color = '#ffffff';
             tag.style.padding = '2px 8px';
             tag.style.borderRadius = '4px';
             tag.style.fontSize = '10px';
@@ -197,6 +246,16 @@ const getInjectedMvpCode = (codeText: string) => {
 
             document.body.appendChild(overlay);
           }
+        }
+      });
+
+      // Bind interaction listeners to DOM elements
+      document.addEventListener('input', captureAndPostState);
+      document.addEventListener('change', captureAndPostState);
+      document.addEventListener('click', (event) => {
+        const target = event.target;
+        if (target && (target.tagName === 'BUTTON' || target.closest('button') || target.tagName === 'A' || target.closest('a'))) {
+          setTimeout(captureAndPostState, 150);
         }
       });
     </script>
@@ -682,6 +741,44 @@ Handles routing via custom React layouts, templates, and server-side model groun
     fetchSessionAndProgress();
   }, []);
 
+  // Listen for sandbox state updates and write them to localStorage
+  useEffect(() => {
+    if (!session?.id) return;
+    
+    const handleSandboxMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'SANDBOX_STATE_UPDATE') {
+        localStorage.setItem(
+          `vibelab_sandbox_${session.id}`,
+          JSON.stringify(event.data.state)
+        );
+      }
+    };
+
+    window.addEventListener('message', handleSandboxMessage);
+    return () => {
+      window.removeEventListener('message', handleSandboxMessage);
+    };
+  }, [session?.id]);
+
+  const restoreSandboxState = (iframeId: string) => {
+    if (!session?.id) return;
+    const saved = localStorage.getItem(`vibelab_sandbox_${session.id}`);
+    if (saved) {
+      try {
+        const savedState = JSON.parse(saved);
+        const iframe = document.getElementById(iframeId) as HTMLIFrameElement;
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage(
+            { type: 'RESTORE_SANDBOX_STATE', state: savedState },
+            '*'
+          );
+        }
+      } catch (e) {
+        console.warn('Failed to parse and restore sandbox state', e);
+      }
+    }
+  };
+
   const fetchSessionAndProgress = async () => {
     setIsLoading(true);
     try {
@@ -702,12 +799,44 @@ Handles routing via custom React layouts, templates, and server-side model groun
           const mappedStep = initialStep || STEP_MAP_ORDER[data.session.current_step] || 1;
           setActiveStep(mappedStep);
 
+          let pName = '';
+          let pStatement = '';
+          let tUsers = '';
+          let mScope = '';
+
           if (data.blueprint) {
-            setProjectName(data.blueprint.project_name || '');
-            setProblemStatement(data.blueprint.problem_statement || '');
-            setTargetUsers(data.blueprint.target_users || '');
-            setMvpScope(data.blueprint.mvp_scope || '');
+            pName = data.blueprint.project_name || '';
+            pStatement = data.blueprint.problem_statement || '';
+            tUsers = data.blueprint.target_users || '';
+            mScope = data.blueprint.mvp_scope || '';
           }
+
+          // Fallback to the ideation endpoint data if fields are empty
+          if (!pName || !pStatement || !tUsers || !mScope) {
+            try {
+              const idRes = await fetch('/api/ideation/blueprint', {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+              if (idRes.ok) {
+                const ideationData = await idRes.json();
+                if (ideationData) {
+                  pName = pName || ideationData.product_name || ideationData.project_name || '';
+                  pStatement = pStatement || ideationData.problem_statement || '';
+                  tUsers = tUsers || ideationData.target_user_persona || ideationData.target_users || '';
+                  mScope = mScope || ideationData.mvp_definition || ideationData.mvp_scope || '';
+                }
+              }
+            } catch (fallbackErr) {
+              console.warn('Failed to load fallback blueprint state:', fallbackErr);
+            }
+          }
+
+          setProjectName(pName);
+          setProblemStatement(pStatement);
+          setTargetUsers(tUsers);
+          setMvpScope(mScope);
 
           if (data.features) {
             setFeatures(data.features);
@@ -2550,6 +2679,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                     sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
                                     srcDoc={getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || '')}
                                     className="w-full h-full border-none"
+                                    onLoad={() => restoreSandboxState('walkthrough-preview-iframe')}
                                   />
                                 ) : (
                                   <div className="w-full h-full bg-slate-50 flex flex-col justify-center items-center text-slate-500 gap-2">
@@ -3345,6 +3475,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
                             srcDoc={getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || '')}
                             className="w-full h-full border-none bg-white"
+                            onLoad={() => restoreSandboxState('showcase-simulator-iframe')}
                           />
                         </div>
                       </div>
@@ -3525,6 +3656,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                   sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
                   srcDoc={getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || '')}
                   className="w-full h-full border-none bg-white"
+                  onLoad={() => restoreSandboxState('full-screen-preview-iframe')}
                 />
               </div>
             </div>

@@ -188,7 +188,28 @@ router.get('/session', authenticateToken, async (req: any, res) => {
     const sessionId = session.id;
 
     const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [sessionId]);
-    const blueprint = bpRows && bpRows.length > 0 ? bpRows[0] : null;
+    let blueprint = bpRows && bpRows.length > 0 ? bpRows[0] : null;
+
+    if (!blueprint || !blueprint.project_name || !blueprint.problem_statement) {
+      const [projBpRows]: any = await p.execute(
+        `SELECT id, product_name, problem_statement, target_user_persona, mvp_definition 
+         FROM project_blueprints WHERE user_id = ? ORDER BY id DESC LIMIT 1`,
+        [userId]
+      );
+      if (projBpRows && projBpRows.length > 0) {
+        const pb = projBpRows[0];
+        blueprint = {
+          id: blueprint?.id || pb.id,
+          session_id: sessionId,
+          user_id: userId,
+          project_name: blueprint?.project_name || pb.product_name || '',
+          problem_statement: blueprint?.problem_statement || pb.problem_statement || '',
+          target_users: blueprint?.target_users || pb.target_user_persona || '',
+          mvp_scope: blueprint?.mvp_scope || pb.mvp_definition || '',
+          student_approved: blueprint?.student_approved || 0
+        };
+      }
+    }
 
     const [features]: any = await p.execute('SELECT * FROM product_features WHERE session_id = ?', [sessionId]);
 
