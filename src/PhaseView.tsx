@@ -2795,6 +2795,86 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                       </div>
                     </div>
 
+                    {/* Progress Overview Milestone Map */}
+                    <div className="space-y-4" id="p2-progress-overview-map-wrapper">
+                      <div className="flex items-center justify-between px-2">
+                        <h3 className="text-base font-extrabold text-slate-800 font-display flex items-center gap-2">
+                          🗺️ Core Curriculum Milestone Map
+                        </h3>
+                        <span className="text-[11px] text-slate-400 font-medium font-sans">
+                          Click any segment to jump to its specific builder workspace
+                        </span>
+                      </div>
+                      
+                      {/* Section Selection Grid for Progress section */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        {PHASE2_SECTIONS.map((sec) => {
+                          const isCompleted = isSessionCompleted || sec.step < currentStepVal;
+                          const isActiveStep = !isSessionCompleted && sec.step === currentStepVal;
+
+                          return (
+                            <motion.div
+                              key={sec.step}
+                              whileHover={{ scale: 1.015, y: -2 }}
+                              whileTap={{ scale: 0.985 }}
+                              onClick={() => {
+                                setSelectedPhase2Section(sec.step);
+                                setActiveTab('build');
+                                toast.success(`Jumping to Segment 0${sec.step}: ${sec.label}!`);
+                              }}
+                              className={`cursor-pointer group relative p-4 rounded-2xl transition-all flex flex-col justify-between min-h-[140px] select-none ${
+                                isActiveStep
+                                  ? 'bg-gradient-to-b from-indigo-50/20 to-white border-2 border-indigo-600 bg-white shadow-lg shadow-indigo-500/5 ring-4 ring-indigo-500/5'
+                                  : isCompleted
+                                  ? 'bg-emerald-50/20 border border-emerald-100 hover:border-emerald-200'
+                                  : 'bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-sm opacity-75 hover:opacity-100'
+                              }`}
+                            >
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                    isActiveStep ? 'bg-indigo-100/50 border border-indigo-200' : 'bg-slate-50 border border-slate-100'
+                                  }`}>
+                                    {getSectionIcon(sec.step)}
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5">
+                                    {isCompleted && (
+                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[8px] font-black border border-emerald-100">
+                                        <Check className="w-2 h-2" /> Done
+                                      </span>
+                                    )}
+                                    {isActiveStep && (
+                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[8px] font-black border border-amber-100 animate-pulse">
+                                        <Zap className="w-2 h-2 text-amber-500" /> Active
+                                      </span>
+                                    )}
+                                    {!isCompleted && !isActiveStep && (
+                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-50 text-slate-400 rounded-full text-[8px] font-bold border border-slate-100">
+                                        Locked
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-0.5">
+                                  <span className="font-mono text-[8px] font-black tracking-widest text-[#2563eb] uppercase block">
+                                    Section 0{sec.step}
+                                  </span>
+                                  <h4 className="text-xs font-black text-slate-900 group-hover:text-indigo-950 transition-colors leading-tight">
+                                    {sec.label}
+                                  </h4>
+                                  <p className="text-[10px] text-slate-400 leading-snug font-medium line-clamp-2 mt-1">
+                                    {sec.desc}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     <div className="grid lg:grid-cols-2 gap-8">
                       {/* Left: 10 vertical list of Steps with status indicators */}
                       <div className="glass p-8 md:p-10 rounded-[3rem] border-slate-200 bg-white shadow-sm overflow-hidden relative space-y-6" id="p2-progress-steps-list">
