@@ -2099,33 +2099,6 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     };
                     return (
                       <>
-                        {/* Phase 2 Introduction Card */}
-                        <div className="p-8 md:p-10 rounded-[3rem] border border-slate-200 bg-white shadow-sm relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-indigo-50/20 to-cyan-50/20 rounded-full blur-3xl pointer-events-none" />
-                          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div className="space-y-2">
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50/10 text-indigo-700 rounded-full text-[10px] font-black uppercase tracking-wider border border-indigo-100">
-                                <Sparkles className="w-3 h-3 text-indigo-500 animate-pulse" />
-                                Phase 2 Curriculum Map
-                              </div>
-                              <h2 className="text-3xl font-display font-bold text-slate-900 tracking-tight">
-                                Software Architecture & MVP Builder
-                              </h2>
-                              <p className="text-sm text-slate-500 max-w-2xl font-medium leading-relaxed">
-                                Your custom product co-created in Phase 1 is loaded! Select a section below to study its customized quiz challenge under the <strong>Learn</strong> tab. Once you are confident, click <strong>Launch Selected Session</strong> in the bottom bar to build the corresponding module!
-                              </p>
-                            </div>
-                            
-                            <button
-                              onClick={() => setShowDetailedBuilder(true)}
-                              className="px-6 py-4 bg-slate-900 border border-slate-800 text-white hover:bg-slate-800 rounded-2xl font-black text-xs shadow-lg transition-all active:scale-95 shrink-0 flex items-center gap-2"
-                            >
-                              <Zap className="w-4 h-4 text-amber-400" />
-                              Launch Full Builder Walkthrough
-                            </button>
-                          </div>
-                        </div>
-
                         {/* Section Selection Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {PHASE2_SECTIONS.map((sec) => {
@@ -2133,7 +2106,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                             const isCompleted = sec.step < currentSessionStep;
                             const isActiveStep = sec.step === currentSessionStep;
                             const isSelected = selectedPhase2Section === sec.step;
-
+ 
                             return (
                               <motion.div
                                 key={sec.step}
@@ -2156,7 +2129,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                     }`}>
                                       {getSectionIcon(sec.step)}
                                     </div>
-
+ 
                                     <div className="flex items-center gap-1.5">
                                       {isCompleted && (
                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[9px] font-bold border border-emerald-100">
@@ -2173,7 +2146,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                       </span>
                                     </div>
                                   </div>
-
+ 
                                   <div className="space-y-1">
                                     <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-950 transition-colors">
                                       {sec.label}
@@ -2187,47 +2160,6 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                             );
                           })}
                         </div>
-
-                        {/* Elegant Sticky Interactive Action Bar */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mt-8 p-5 md:p-6 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4"
-                        >
-                          <div>
-                            <span className="font-mono text-[9px] font-black text-indigo-400 tracking-widest uppercase">
-                              Configuration Focused
-                            </span>
-                            <h3 className="font-bold text-base text-white mt-0.5">
-                              Selected: Section {selectedPhase2Section} — {PHASE2_SECTIONS[selectedPhase2Section - 1]?.label}
-                            </h3>
-                            <p className="text-xs text-slate-400 mt-1 font-medium">
-                              {selectedPhase2Section === (STEP_MAP_ORDER[activeSession?.session?.current_step] || 1)
-                                ? "This is your active building section. Code and earn credit today!"
-                                : "Explore study topics or jump step-by-step into structural walkthrough sessions."}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
-                            <button
-                              onClick={() => {
-                                setActiveTab('learn');
-                              }}
-                              className="flex-1 md:flex-none px-4 py-2.5 bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold text-xs rounded-xl transition-all border border-slate-700/60"
-                            >
-                              Launch Quizzes
-                            </button>
-                            <button
-                              onClick={() => {
-                                setShowDetailedBuilder(true);
-                              }}
-                              className="flex-1 md:flex-none px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-1.5"
-                            >
-                              <Play className="w-3 h-3 fill-white" />
-                              Launch Selected Session
-                            </button>
-                          </div>
-                        </motion.div>
                       </>
                     );
                   })()}
