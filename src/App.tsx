@@ -1897,6 +1897,15 @@ const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 };
 
 const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
+  const user = (() => {
+    try {
+      const savedUser = localStorage.getItem('vibelab_user');
+      return savedUser && savedUser !== 'undefined' ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  })();
+
   return (
     <footer className="pt-16 pb-8 px-6 border-t border-slate-200 bg-white">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
@@ -1961,16 +1970,18 @@ const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           <button onClick={() => onNavigate('contact')} className="text-left text-slate-600 hover:text-cyan-655 transition-colors">Contact</button>
         </div>
 
-        <div className="flex flex-col gap-4 text-sm">
-          <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs mb-1">Admin</h4>
-          <button 
-            onClick={() => onNavigate('admin')}
-            className="text-left text-slate-600 hover:text-cyan-660 transition-colors"
-          >
-            Submissions
-          </button>
-          <a href="#" className="text-slate-600 hover:text-cyan-660 transition-colors">Internal Ops</a>
-        </div>
+        {user?.role === 'admin' && (
+          <div className="flex flex-col gap-4 text-sm">
+            <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs mb-1">Admin</h4>
+            <button 
+              onClick={() => onNavigate('admin')}
+              className="text-left text-slate-600 hover:text-cyan-660 transition-colors"
+            >
+              Submissions
+            </button>
+            <a href="#" className="text-slate-600 hover:text-cyan-660 transition-colors">Internal Ops</a>
+          </div>
+        )}
       </div>
       
       <div className="max-w-7xl mx-auto pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400">

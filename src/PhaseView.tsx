@@ -175,6 +175,48 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
   const [selectedPhase2Section, setSelectedPhase2Section] = useState(1);
   const [showDetailedBuilder, setShowDetailedBuilder] = useState(false);
 
+  const [user, setUser] = useState<any>(() => {
+    const savedUser = localStorage.getItem('vibelab_user');
+    if (savedUser && savedUser !== 'undefined') {
+      try {
+        return JSON.parse(savedUser);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const STEP_MAP_ORDER: Record<string, number> = {
+    'blueprint': 1,
+    'features': 2,
+    'journey': 3,
+    'user_journey': 3,
+    'screens': 4,
+    'build': 5,
+    'building': 5,
+    'walkthrough': 6,
+    'review': 6,
+    'pitch': 7,
+    'description': 7,
+    'ai_mechanics': 8,
+    'explain': 8,
+    'feature_explanation': 8,
+    'demo_script': 9,
+    'demo': 9,
+    'demo_prep': 9,
+    'approved': 10,
+    'complete': 10
+  };
+
+  const currentStepVal = activeSession?.session?.current_step 
+    ? (STEP_MAP_ORDER[activeSession.session.current_step] || 1)
+    : 1;
+
+  const isSessionCompleted = activeSession?.session?.status === 'completed' || 
+    activeSession?.session?.current_step === 'approved' || 
+    activeSession?.session?.current_step === 'complete';
+
   const PHASE2_SECTIONS = [
     { step: 1, label: 'Your Project Blueprint', desc: 'Confirming foundational MVP ideas and aligning product requirements.' },
     { step: 2, label: 'Feature Discovery', desc: 'Identifying and prioritizing must-haves, nice-to-haves, and future plans to prevent scope creep.' },
@@ -1022,6 +1064,18 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
     return optionsField;
   };
 
+  if (phase?.order_index === 2 && showDetailedBuilder) {
+    return (
+      <Phase2BuildWalkthrough 
+        initialStep={selectedPhase2Section || 1}
+        onClose={() => {
+          setShowDetailedBuilder(false);
+          fetchPhaseData();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <AnimatePresence>
@@ -1137,7 +1191,11 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           </div>
         </div>
         <div className="flex items-center flex-wrap gap-4">
-          {(!hasBadge && (phase.order_index === 1 || phase.order_index === 2 || phase.progress_percentage === 100)) && (
+          {(!hasBadge && (
+            (phase.order_index === 1 && user?.ideation_completed) || 
+            (phase.order_index === 2 && isSessionCompleted) ||
+            (phase.order_index !== 1 && phase.order_index !== 2 && phase.progress_percentage === 100)
+          )) && (
              <motion.button 
                whileHover={{ scale: 1.02 }}
                whileTap={{ scale: 0.98 }}
@@ -1157,7 +1215,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
           <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm shrink-0">
           {[
             { id: 'learn', label: 'Learn', icon: <BookOpen className="w-4 h-4" /> },
-            { id: 'build', label: phase?.order_index === 1 ? 'Review Ideation' : 'Build', icon: <Code2 className="w-4 h-4" /> },
+            { id: 'build', label: 'Build', icon: <Code2 className="w-4 h-4" /> },
             { id: 'progress', label: 'Progress', icon: <BarChart3 className="w-4 h-4" /> },
           ].map((tab) => (
             <button
@@ -1203,9 +1261,39 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             }}
             className="px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl font-bold text-sm shadow-lg transition-all active:scale-95 shrink-0 z-10 flex items-center gap-1.5"
           >
-            Launch Custom Builder <ChevronRight className="w-4 h-4" />
+            Launch Builder →
           </button>
         </motion.div>
+      )}
+
+      {/* Decorative Step Indicator */}
+      {phase?.order_index === 2 && (
+        <div className="mb-8 p-6 bg-slate-50 border border-slate-200/80 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse" />
+            <span className="text-xs font-bold text-slate-700 tracking-wide uppercase font-sans">
+              10 Steps &bull; From Idea to Working Product
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {Array.from({ length: 10 }).map((_, idx) => (
+              <div key={idx} className="flex items-center">
+                <div className={`w-7 h-7 rounded-xl flex items-center justify-center font-mono text-[10px] font-bold ${
+                  idx + 1 <= currentStepVal
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-200 text-slate-400 border border-slate-205'
+                }`}>
+                  {idx + 1}
+                </div>
+                {idx < 9 && (
+                  <div className={`w-3 sm:w-4 h-[2px] ${
+                    idx + 1 < currentStepVal ? 'bg-blue-600' : 'bg-slate-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       <AnimatePresence mode="wait">
@@ -1995,17 +2083,17 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                 </div>
               );
             })() : phase?.order_index === 2 ? (
-              showDetailedBuilder ? (
-                <Phase2BuildWalkthrough 
-                  initialStep={selectedPhase2Section || 1}
-                  onClose={() => {
-                    setShowDetailedBuilder(false);
-                    fetchPhaseData();
-                  }}
-                />
-              ) : (
-                <div className="space-y-8 select-none">
-                  {(() => {
+              <div className="space-y-8 select-none">
+                <div className="p-8 bg-slate-50 border border-slate-200/80 rounded-[2rem] text-center max-w-xl mx-auto space-y-4">
+                  <div className="w-12 h-12 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto animate-bounce">
+                    <Code2 className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base">Your Custom Builder Workspace</h3>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-md mx-auto">
+                    The interactive 10-step wizard is fully prepared with your co-created product specifications. Tap the "Launch Builder →" button above to get started.
+                  </p>
+                </div>
+                {false && (() => {
                     const STEP_MAP_ORDER: Record<string, number> = {
                       'blueprint': 1,
                       'features': 2,
@@ -2153,7 +2241,6 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     );
                   })()}
                 </div>
-              )
             ) : selectedProject ? (
               <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden sm:p-4">
                 {/* Header Bar */}
