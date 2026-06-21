@@ -225,8 +225,11 @@ router.get('/session', authenticateToken, async (req: any, res) => {
     const [mvpRows]: any = await p.execute('SELECT * FROM mvp_builds WHERE session_id = ?', [sessionId]);
     const mvp = mvpRows && mvpRows.length > 0 ? {
       ...mvpRows[0],
-      key_talking_points: safeParseJSON(mvpRows[0].key_talking_points, [])
+      key_talking_points: safeParseJSON(mvpRows[0].key_talking_points, []),
+      skills_learned: safeParseJSON(mvpRows[0].skills_learned, [])
     } : null;
+
+    const [components]: any = await p.execute('SELECT * FROM component_metadata WHERE session_id = ?', [sessionId]);
 
     res.json({
       session,
@@ -234,7 +237,8 @@ router.get('/session', authenticateToken, async (req: any, res) => {
       features: features || [],
       user_journey,
       screens: screens || [],
-      mvp
+      mvp,
+      component_metadata: components || []
     });
   } catch (error: any) {
     console.error('Failed to get product session:', error);
@@ -905,6 +909,19 @@ Rules:
 - Add footer: "Built with VibeLab 🚀"
 - Prototype quality — simple and clear, not complex
 
+ADDITIONAL REQUIREMENT — Component tagging:
+Every meaningful interactive element (buttons, forms, key sections, navigation, data displays) must include these HTML data attributes:
+  data-component-id="unique_id_here"
+  data-component-type="button | form | nav | display | input"
+  data-purpose="short description of what this does"
+
+Example:
+<button data-component-id="submit_attendance" data-component-type="button" data-purpose="Submits the student's attendance record">Submit</button>
+
+Tag only meaningful elements — not every single div or span.
+Aim for 8-15 tagged elements per product depending on complexity.
+You MUST write these attributes exactly adjacent to each other in this precise order: data-component-id="..." data-component-type="..." data-purpose="..." inside the HTML tags, with only spaces separating them.
+
 Return ONLY the complete HTML file.
 No markdown. No explanation. No code fences. Just the raw HTML.`;
 
@@ -955,7 +972,7 @@ No markdown. No explanation. No code fences. Just the raw HTML.`;
     </style>
 </head>
 <body class="bg-indigo-950/20 text-slate-150 min-h-screen flex flex-col font-sans">
-    <header class="bg-slate-900 border-b border-indigo-900/30 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <header data-component-id="app_header" data-component-type="nav" data-purpose="Application navigation and header summary" class="bg-slate-900 border-b border-indigo-900/30 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div class="flex items-center gap-3">
             <span class="text-xl">🚀</span>
             <div>
@@ -969,40 +986,40 @@ No markdown. No explanation. No code fences. Just the raw HTML.`;
     </header>
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-8">
-        <div class="bg-indigo-600/10 border border-indigo-500/20 rounded-2xl p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div data-component-id="target_demographics" data-component-type="display" data-purpose="Target demographics banner explaining solved problem statement and key user focus" class="bg-indigo-600/10 border border-indigo-500/20 rounded-2xl p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block mb-0.5">Focus Demographics</span>
                 <p class="text-sm font-semibold text-slate-200">Target Users: <span class="text-white font-extrabold">${bp.target_users}</span></p>
                 <p class="text-xs text-slate-400 line-clamp-1 mt-0.5">Unlocking solutions for: "${bp.problem_statement}"</p>
             </div>
-            <div class="bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-bold text-[10px] uppercase px-3 py-2 rounded-lg shrink-0">
+            <div data-component-id="prototype_badge" data-component-type="display" data-purpose="Static status badge labeling sandbox environments" class="bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-bold text-[10px] uppercase px-3 py-2 rounded-lg shrink-0">
                 MVP Prototype Kit
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 mb-6 border-b border-indigo-900/10 pb-4">
-            ${screenRows.map((s: any, idx: number) => `
-                <button onclick="switchScreen(${idx})" id="tab-${idx}" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${idx === 0 ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:text-slate-300'}">
-                    ${s.screen_name}
+        <div data-component-id="tab_navigation" data-component-type="nav" data-purpose="Control bar to switch views between designed screens inside the prototype" class="flex flex-wrap gap-2 mb-6 border-b border-indigo-900/10 pb-4">
+            \${screenRows.map((s, idx) => \`
+                <button onclick="switchScreen(\\\${idx})" id="tab-\\\${idx}" data-component-id="screen_tab_\\\${idx}" data-component-type="button" data-purpose="Switch active presentation view to \\\${s.screen_name}" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border \\\${idx === 0 ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:text-slate-300'\}">
+                    \\\${s.screen_name\}
                 </button>
-            `).join('')}
+            \`).join('')\}
         </div>
 
-        <div class="space-y-6">
-            ${screenRows.map((s: any, idx: number) => `
-                <div id="screen-${idx}" class="screen-view ${idx === 0 ? 'block' : 'hidden'}">
+        <div data-component-id="screen_views_group" data-component-type="display" data-purpose="Container rendering layout modules of active screen views" class="space-y-6">
+            \${screenRows.map((s, idx) => \`
+                <div id="screen-\\\${idx}" class="screen-view \\\${idx === 0 ? 'block' : 'hidden'\}">
                     <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-2xl">
                         <div class="mb-5 pb-3 border-b border-slate-800">
                             <h3 class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase mb-0.5">Visual Preview Model</h3>
-                            <h2 class="text-base font-bold text-white">${s.screen_name}</h2>
-                            <p class="text-xs text-slate-400 mt-1">${s.screen_description}</p>
+                            <h2 class="text-base font-bold text-white">\\\${s.screen_name\}</h2>
+                            <p class="text-xs text-slate-400 mt-1">\\\${s.screen_description\}</p>
                         </div>
-                        <div class="bg-slate-950/80 rounded-xl overflow-hidden p-3 border border-slate-800 shadow-inner">
-                            ${s.layout_html}
+                        <div data-component-id="rendered_layout_\\\${idx}" data-component-type="display" data-purpose="Actual presentation view showing widgets and controls of \\\${s.screen_name}" class="bg-slate-950/80 rounded-xl overflow-hidden p-3 border border-slate-800 shadow-inner">
+                            \\\${s.layout_html\}
                         </div>
                     </div>
                 </div>
-            `).join('')}
+            \`).join('')\}
         </div>
     </main>
 
@@ -1034,17 +1051,186 @@ No markdown. No explanation. No code fences. Just the raw HTML.`;
 </body>
 </html>`;
 
+      // Interpolate screen and feature arrays into fallback HTML correctly
+      const interpolatedFallback = fallbackHtml
+        .replace(/\\\${idx}/g, (_, i) => `idx`) // placeholder replace helper
+        .replace(/\\\${s\.screen_name}/g, screenRows[0]?.screen_name || 'Home')
+        .replace(/\${screenRows\.map\([\s\S]+?\}\.join\(''\)\}/g, screenRows.map((s: any, idx: number) => `
+          <button onclick="switchScreen(${idx})" id="tab-${idx}" data-component-id="screen_tab_${idx}" data-component-type="button" data-purpose="Switch active presentation view to ${s.screen_name}" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${idx === 0 ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:text-slate-300'}">
+              ${s.screen_name}
+          </button>
+        `).join(''))
+        .replace(/\${screenRows\.map\([\s\S]+?rendered_layout_\\\${idx}[\s\S]+?\}\.join\(''\)\}/g, screenRows.map((s: any, idx: number) => `
+          <div id="screen-${idx}" class="screen-view ${idx === 0 ? 'block' : 'hidden'}">
+              <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-2xl">
+                  <div class="mb-5 pb-3 border-b border-slate-800">
+                      <h3 class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase mb-0.5">Visual Preview Model</h3>
+                      <h2 class="text-base font-bold text-white">${s.screen_name}</h2>
+                      <p class="text-xs text-slate-400 mt-1">${s.screen_description}</p>
+                  </div>
+                  <div data-component-id="rendered_layout_${idx}" data-component-type="display" data-purpose="Actual presentation view showing widgets and controls of ${s.screen_name}" class="bg-slate-950/80 rounded-xl overflow-hidden p-3 border border-slate-800 shadow-inner">
+                      ${s.layout_html}
+                  </div>
+              </div>
+          </div>
+        `).join(''));
+
       parsedMvp = {
-        mvp_html: fallbackHtml,
+        mvp_html: interpolatedFallback,
         architecture_explanation: `🏗️ How It's Built\nConfigured as an elegant, interactive single-file browser prototype using self-contained HTML frame modules and tailored Tailwind component visuals.\n\n✨ What It Does\nSets up click-to-navigate live tabs mapping these designed views: ${screenRows.map((s: any) => s.screen_name).join(', ')}, equipped with status parameters and layout outlines.\n\n👥 Who It Helps\nEmpowers ${bp.target_users} to interactively review operational screens and validate workflow logic seamlessly.`
       };
     }
 
-    // Save to mvp_builds table
+    // Capture component attributes from generated build code matching requested regex list
+    const mvpHtml = parsedMvp.mvp_html;
+    const componentMatches = mvpHtml.matchAll(
+      /data-component-id="([^"]+)"\s+data-component-type="([^"]+)"\s+data-purpose="([^"]+)"/g
+    );
+
+    const components: Array<{ id: string; type: string; purpose: string }> = [];
+    const seenIds = new Set<string>();
+
+    for (const match of componentMatches) {
+      const id = match[1];
+      const type = match[2];
+      const purpose = match[3];
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        components.push({ id, type, purpose });
+      }
+    }
+
+    // Extra resilient backup element parser in case attributes were formatted with different spacing
+    if (components.length === 0) {
+      const fallbackRegex = /<[^>]+data-component-id="([^"]+)"[^>]*>/g;
+      const elementMatches = [...mvpHtml.matchAll(fallbackRegex)];
+      for (const em of elementMatches) {
+        const tagContent = em[0];
+        const idMatch = tagContent.match(/data-component-id="([^"]+)"/);
+        const typeMatch = tagContent.match(/data-component-type="([^"]+)"/);
+        const purposeMatch = tagContent.match(/data-purpose="([^"]+)"/);
+        if (idMatch && !seenIds.has(idMatch[1])) {
+          seenIds.add(idMatch[1]);
+          components.push({
+            id: idMatch[1],
+            type: typeMatch ? typeMatch[1] : 'display',
+            purpose: purposeMatch ? purposeMatch[1] : 'Interactive UI section'
+          });
+        }
+      }
+    }
+
+    // Absolute fallback: Ensure we always have metadata for explanations tab
+    if (components.length === 0) {
+      components.push({
+        id: 'app_header',
+        type: 'nav',
+        purpose: 'Top navigation to display product name'
+      });
+      screenRows.forEach((s: any, idx: number) => {
+        components.push({
+          id: `screen_tab_${idx}`,
+          type: 'button',
+          purpose: `Navigate to the ${s.screen_name} application page`
+        });
+      });
+    }
+
+    // Ask Gemini for Simple & Technical explanations + skills learned JSON + AI contribution summary in a single batch call.
+    let explanationsJson: any = {
+      components: [],
+      skills_learned: [],
+      ai_contribution_summary: ""
+    };
+
+    try {
+      const explanationPrompt = `
+        You are explaining parts of a student's own product in plain language.
+        Student's product: ${bp.project_name}
+        Problem it solves: ${bp.problem_statement}
+
+        For each component below, generate two explanations:
+        1. Simple — one sentence, no technical terms, for a beginner
+        2. Technical — one sentence, may use basic technical terms
+
+        Components:
+        ${components.map(c => `- ID: ${c.id}, Type: ${c.type}, Purpose: ${c.purpose}`).join('\n')}
+
+        In addition, based on the features the student approved (${featureRows.map((f: any) => f.feature_name).join(', ')}), infer 3-5 key skills learned (like "User Authentication", "State Management", "Data Display", "Form Handling") indicating if they were demonstrated (true/false) as well as a short 1-2 sentence AI contribution summary of how the AI helped build this applet.
+
+        Return ONLY a valid JSON object matching this schema, with no markdown backticks and no description outside the JSON:
+        {
+          "components": [
+            {
+              "component_id": "submit_attendance",
+              "business_reason": "why this exists in the product",
+              "simple_explanation": "...",
+              "technical_explanation": "..."
+            }
+          ],
+          "skills_learned": [
+            { "skill": "User Authentication", "demonstrated": true },
+            { "skill": "Form Handling", "demonstrated": true }
+          ],
+          "ai_contribution_summary": "..."
+        }
+      `;
+
+      const explRes = await getGeminiClient().models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: explanationPrompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+
+      const cleanExpl = parseGeminiResponse(explRes);
+      explanationsJson = JSON.parse(cleanExpl);
+    } catch (err) {
+      console.warn('Failed to generate explanations with Gemini, formulating programmatic high-quality fallback:', err);
+      explanationsJson.components = components.map(c => ({
+        component_id: c.id,
+        business_reason: `To facilitate interactive ${c.type} capabilities within the user interface.`,
+        simple_explanation: `This part of the app lets you: ${c.purpose}.`,
+        technical_explanation: `An interactive ${c.type} block that lets clients trigger state updates for ${c.purpose}.`
+      }));
+      explanationsJson.skills_learned = [
+        { skill: 'User Interface Construction', demonstrated: true },
+        { skill: 'Interactive Controller Bindings', demonstrated: true },
+        { skill: 'Responsive Page Layouts', demonstrated: true }
+      ];
+      explanationsJson.ai_contribution_summary = "Formulated the robust HTML mockup and registered responsive data-component hooks to enable hover inspectability and sandbox rendering.";
+    }
+
+    // Clean previous session component explanations
+    await p.execute('DELETE FROM component_metadata WHERE session_id = ?', [session_id]);
+
+    // Insert to component_metadata table
+    for (const comp of (explanationsJson.components || [])) {
+      const origComp = components.find(c => c.id === comp.component_id);
+      await p.execute(
+        `INSERT INTO component_metadata (session_id, component_id, component_type, purpose, business_reason, simple_explanation, technical_explanation)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          session_id,
+          comp.component_id,
+          origComp ? origComp.type : 'display',
+          origComp ? origComp.purpose : 'App action capability',
+          comp.business_reason || '',
+          comp.simple_explanation || '',
+          comp.technical_explanation || ''
+        ]
+      );
+    }
+
+    // Save to mvp_builds table with skills_learned and ai_contribution_summary included
+    const skillsJsonStr = JSON.stringify(explanationsJson.skills_learned || []);
+    const aiContribStr = explanationsJson.ai_contribution_summary || '';
+
     await p.execute(
-      `INSERT INTO mvp_builds (session_id, user_id, mvp_html, architecture_explanation, status)
-       VALUES (?, ?, ?, ?, 'ready_for_review')`,
-      [session_id, userId, parsedMvp.mvp_html, parsedMvp.architecture_explanation]
+      `INSERT INTO mvp_builds (session_id, user_id, mvp_html, architecture_explanation, status, skills_learned, ai_contribution_summary)
+       VALUES (?, ?, ?, ?, 'ready_for_review', ?, ?)`,
+      [session_id, userId, parsedMvp.mvp_html, parsedMvp.architecture_explanation, skillsJsonStr, aiContribStr]
     );
 
     // Update session current_step = 'review'
@@ -1133,15 +1319,74 @@ router.post('/mvp/approve', authenticateToken, async (req: any, res) => {
     }
 
     // Save deliverables, update status to approved, approved_at to NOW
+    // Fetch approved features
+    const [featureRows]: any = await p.execute(
+      `SELECT feature_name FROM product_features WHERE session_id = ? AND is_included = 1`,
+      [session_id]
+    );
+    const approved_features_list = featureRows.map((f: any) => f.feature_name).join(', ');
+
+    // Get recommended track / product type
+    const [sessionRows]: any = await p.execute(
+      `SELECT recommended_track FROM product_sessions WHERE id = ?`,
+      [session_id]
+    );
+    const recommended_track = sessionRows[0]?.recommended_track || 'Web Application';
+
+    const skillsPrompt = `
+      Based on these approved product features, analyze what this Grade 9-12 student demonstrated by building this product.
+      
+      Features: ${approved_features_list || 'Static Screen Design, Multi-screen Prototype'}
+      Product type: ${recommended_track}
+      
+      Return ONLY valid JSON, no markdown:
+      {
+        "skills_demonstrated": [
+          { "skill": "skill name", "demonstrated": true }
+        ],
+        "overall_skill_percentage": 65,
+        "next_skills": ["Authentication", "Search", "Data Storage"]
+      }
+    `;
+
+    let skillsJson = {
+      skills_demonstrated: [
+        { skill: 'HTML Structure & Layout', demonstrated: true },
+        { skill: 'Interactive Sandbox Elements', demonstrated: true },
+        { skill: 'Responsive Screen Design', demonstrated: true }
+      ],
+      overall_skill_percentage: 65,
+      next_skills: ["Authentication", "Search", "Data Storage"]
+    };
+
+    try {
+      const skillsRes = await getGeminiClient().models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: skillsPrompt,
+        config: {
+          responseMimeType: "application/json"
+        }
+      });
+      const cleanSkills = parseGeminiResponse(skillsRes);
+      skillsJson = JSON.parse(cleanSkills);
+    } catch (skillsError) {
+      console.warn('Failed to dynamically analyze skills via Gemini, utilizing tailored fallbacks:', skillsError);
+    }
+
+    const projectNameStr = bp.project_name || 'your product';
+    const ai_contribution_summary = `AI helped build the code structure and screens. You decided which features mattered most and how users would interact with ${projectNameStr}.`;
+
     await p.execute(
       `UPDATE mvp_builds
-       SET product_description = ?, demo_script = ?, key_talking_points = ?, builder_reflection = ?, status = 'approved', approved_at = CURRENT_TIMESTAMP
+       SET product_description = ?, demo_script = ?, key_talking_points = ?, builder_reflection = ?, status = 'approved', approved_at = CURRENT_TIMESTAMP, skills_learned = ?, ai_contribution_summary = ?
        WHERE session_id = ?`,
       [
         parsedDeliverables.product_description,
         parsedDeliverables.demo_script,
         JSON.stringify(parsedDeliverables.key_talking_points),
         builder_reflection,
+        JSON.stringify(skillsJson),
+        ai_contribution_summary,
         session_id
       ]
     );
@@ -1696,6 +1941,85 @@ router.post('/screens/save-requests', authenticateToken, async (req: any, res) =
   } catch (err: any) {
     console.error('Failed to save screen requests:', err);
     res.status(500).json({ error: 'Failed to save screen requests' });
+  }
+});
+
+router.post('/tutor/ask', authenticateToken, async (req: any, res) => {
+  const { session_id, component_id, question } = req.body;
+  if (!session_id || !question) {
+    return res.status(400).json({ error: 'Missing session_id or question' });
+  }
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // Fetch component details
+    const [compRows]: any = await p.execute(
+      `SELECT * FROM component_metadata WHERE session_id = ? AND component_id = ?`,
+      [session_id, component_id || '']
+    );
+
+    const comp = compRows && compRows.length > 0 ? compRows[0] : null;
+    const component_type = comp ? comp.component_type : 'UI Component';
+    const purpose = comp ? comp.purpose : 'Provide interactive sandbox features';
+    const business_reason = comp ? comp.business_reason : 'Facilitate user experience trials';
+
+    const prompt = `
+      You are a friendly AI tutor helping a student understand their own product. Answer their question about this specific component in 2-3 sentences. Simple language. Encouraging tone.
+      Component: ${component_type} — ${purpose}
+      Business reason: ${business_reason}
+      Student's question: ${question}
+    `;
+
+    const geminiRes = await getGeminiClient().models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt
+    });
+
+    const answer = parseGeminiResponse(geminiRes).trim();
+    res.json({ answer });
+  } catch (err: any) {
+    console.error('Failed to answer student question via tutor:', err);
+    res.status(500).json({ error: 'Failed to answer student question via tutor' });
+  }
+});
+
+// GET /api/product/components/:session_id
+router.get('/components/:session_id', authenticateToken, async (req: any, res) => {
+  const { session_id } = req.params;
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const [compRows]: any = await p.execute(
+      `SELECT * FROM component_metadata WHERE session_id = ?`,
+      [session_id]
+    );
+    res.json(compRows || []);
+  } catch (err: any) {
+    console.error('Failed to retrieve component metadata:', err);
+    res.status(500).json({ error: 'Failed to retrieve component metadata' });
+  }
+});
+
+// POST /api/product/screenshot/save
+router.post('/screenshot/save', authenticateToken, async (req: any, res) => {
+  const { session_id, screenshot_base64 } = req.body;
+  if (!session_id || !screenshot_base64) {
+    return res.status(400).json({ error: 'Missing session_id or screenshot_base64' });
+  }
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    await p.execute(
+      `UPDATE mvp_builds SET screenshot_url = ? WHERE session_id = ?`,
+      [screenshot_base64, session_id]
+    );
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error('Failed to save screenshot:', err);
+    res.status(500).json({ error: 'Failed to save screenshot' });
   }
 });
 

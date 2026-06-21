@@ -611,6 +611,21 @@ router.get('/blueprint/:vl_id', async (req: any, res) => {
     try { blueprint.learning_path = typeof blueprint.learning_path === 'string' ? JSON.parse(blueprint.learning_path) : blueprint.learning_path; } catch (_) {}
     try { blueprint.product_features = typeof blueprint.product_features === 'string' ? JSON.parse(blueprint.product_features) : blueprint.product_features; } catch (_) {}
 
+    const [mvpRows]: any = await p.execute(
+      `SELECT mb.screenshot_url, mb.skills_learned
+       FROM mvp_builds mb
+       JOIN product_sessions ps ON mb.session_id = ps.id
+       JOIN users u ON ps.user_id = u.id
+       WHERE u.vl_id = ? AND mb.status = 'approved'
+       ORDER BY mb.id DESC LIMIT 1`,
+      [vl_id]
+    );
+
+    if (mvpRows.length > 0) {
+      blueprint.screenshot_url = mvpRows[0].screenshot_url;
+      blueprint.skills_learned = mvpRows[0].skills_learned;
+    }
+
     res.json(blueprint);
   } catch (error: any) {
     console.error('Fetch Public Blueprint Error:', error);

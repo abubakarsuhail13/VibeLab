@@ -40,7 +40,13 @@ import {
   Minimize2,
   Layout,
   BookOpen,
-  FileText
+  FileText,
+  PlaySquare,
+  Type,
+  Grid,
+  BarChart3,
+  LayoutTemplate,
+  Box
 } from 'lucide-react';
 import { EducationalAiBackground } from "./EducationalAiBackground";
 import { AILoader } from "./AILoader";
@@ -89,6 +95,16 @@ interface ProductSession {
   current_step: string;
   status: string;
 }
+
+const getComponentIcon = (type?: string) => {
+  const t = (type || '').toLowerCase();
+  if (t === 'button') return <PlaySquare className="w-4 h-4" />;
+  if (t === 'form') return <Grid className="w-4 h-4" />;
+  if (t === 'nav') return <LayoutTemplate className="w-4 h-4" />;
+  if (t === 'display') return <BarChart3 className="w-4 h-4" />;
+  if (t === 'input') return <Type className="w-4 h-4" />;
+  return <Box className="w-4 h-4" />;
+};
 
 const findLinesForSection = (html: string, sectionIndex: number, f1: string, f2: string) => {
   if (!html) return { start: 1, end: 20 };
@@ -258,6 +274,33 @@ const getInjectedMvpCode = (codeText: string) => {
           setTimeout(captureAndPostState, 150);
         }
       });
+
+      // Hover Tooltip System for Component Explanations
+      function attachHoverListeners() {
+        document.querySelectorAll('[data-component-id]').forEach(el => {
+          if (el.dataset.hoverBound) return;
+          el.dataset.hoverBound = 'true';
+          el.addEventListener('mouseenter', (e) => {
+            const rect = el.getBoundingClientRect();
+            window.parent.postMessage({
+              type: 'COMPONENT_HOVER',
+              componentId: el.dataset.componentId,
+              rect: {
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height
+              }
+            }, '*');
+          });
+          el.addEventListener('mouseleave', () => {
+            window.parent.postMessage({ type: 'COMPONENT_HOVER_END' }, '*');
+          });
+        });
+      }
+
+      attachHoverListeners();
+      setInterval(attachHoverListeners, 1000);
     </script>
   `;
 
@@ -349,6 +392,30 @@ export default function Phase2BuildWalkthrough({
   const [featureRationales, setFeatureRationales] = useState<Record<number, string>>({});
   const [featureFeedback, setFeatureFeedback] = useState<Record<number, string>>({});
   const [featureSubmitting, setFeatureSubmitting] = useState<Record<number, boolean>>({});
+  const [selectedComponent8, setSelectedComponent8] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (session?.id && activeStep === 8) {
+      const fetchComponents8 = async () => {
+        try {
+          const token = localStorage.getItem('vibelab_token');
+          const res = await fetch(`/api/product/components/${session.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setComponentMetadata(data);
+            if (data.length > 0) {
+              setSelectedComponent8(data[0]);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to pre-fetch components for active Step 8 in walkthrough:', err);
+        }
+      };
+      fetchComponents8();
+    }
+  }, [session?.id, activeStep]);
 
   // STEP 9 State
   const [timerSeconds, setTimerSeconds] = useState<number>(180);
@@ -358,6 +425,56 @@ export default function Phase2BuildWalkthrough({
 
   // STEP 10 State
   const [showFullProductModal, setShowFullProductModal] = useState<boolean>(false);
+  const [screenshotUrl, setScreenshotUrl] = useState<string>('');
+  const [skillsLearnedJson, setSkillsLearnedJson] = useState<any | null>(null);
+  const [aiContributionSummary, setAiContributionSummary] = useState<string>('');
+
+  useEffect(() => {
+    if (activeStep === 10 && session?.id) {
+      const takeScreenshot = async () => {
+        try {
+          // Find the active walkthrough iframe elements in DOM
+          const iframe = document.getElementById('walkthrough-preview-iframe') as HTMLIFrameElement || document.querySelector('iframe');
+          let base64 = '';
+
+          if (iframe && iframe.contentWindow?.document?.body) {
+            const html2canvas = (await import('html2canvas')).default;
+            const canvas = await html2canvas(iframe.contentWindow.document.body, {
+              useCORS: true,
+              allowTaint: true,
+              scale: 0.85
+            });
+            base64 = canvas.toDataURL('image/png');
+          }
+
+          const token = localStorage.getItem('vibelab_token');
+          const res = await fetch('/api/product/screenshot/save', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              session_id: session.id,
+              screenshot_base64: base64 || 'DATA_MOCK_FALLBACK'
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.screenshot_url) {
+              setScreenshotUrl(data.screenshot_url);
+            }
+          }
+        } catch (err) {
+          console.warn('html2canvas iframe capture bypassed. Utilizing aesthetic fallback:', err);
+        }
+      };
+
+      const timeout = setTimeout(takeScreenshot, 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [activeStep, session?.id]);
 
   // Virtual Code Sandbox States for Step 6
   const [virtualFiles, setVirtualFiles] = useState<Record<string, string>>({});
@@ -375,6 +492,40 @@ export default function Phase2BuildWalkthrough({
   });
   const [showFullScreenPreview, setShowFullScreenPreview] = useState<boolean>(false);
   const [activeShowcaseTab, setActiveShowcaseTab] = useState<'dashboard' | 'emulator' | 'screens' | 'features' | 'pitch'>('dashboard');
+
+  // Step 6 hover and tutor states
+  const [explanationMode, setExplanationMode] = useState<'simple' | 'technical'>('simple');
+  const [componentMetadata, setComponentMetadata] = useState<any[]>([]);
+  const [hoveredComponent, setHoveredComponent] = useState<any | null>(null);
+  const [hoverRect, setHoverRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+
+  // Tutor chat states
+  const [isTutorExpanded, setIsTutorExpanded] = useState<boolean>(false);
+  const [tutorQuestion, setTutorQuestion] = useState<string>('');
+  const [tutorChatHistory, setTutorChatHistory] = useState<Array<{ sender: 'user' | 'tutor'; text: string }>>([]);
+  const [isTutorLoading, setIsTutorLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'COMPONENT_HOVER') {
+        const meta = componentMetadata.find(
+          c => c.component_id === event.data.componentId
+        );
+        if (meta) {
+          setHoveredComponent(meta);
+          if (event.data.rect) {
+            setHoverRect(event.data.rect);
+          }
+        }
+      }
+      if (event.data && event.data.type === 'COMPONENT_HOVER_END') {
+        setHoveredComponent(null);
+        setHoverRect(null);
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [componentMetadata]);
 
   const getInitialVirtualFiles = (pName: string, mvpCode: string) => {
     const projName = pName || projectName || 'Campaign Product';
@@ -870,10 +1021,27 @@ Handles routing via custom React layouts, templates, and server-side model groun
             setScreens(data.screens);
           }
 
+          if (data.component_metadata) {
+            setComponentMetadata(data.component_metadata);
+          }
+
           if (data.mvp) {
             setMvp(data.mvp);
             setProductDescription(data.mvp.product_description || '');
             setDemoScript(data.mvp.demo_script || '');
+            if (data.mvp.screenshot_url) {
+              setScreenshotUrl(data.mvp.screenshot_url);
+            }
+            if (data.mvp.skills_learned) {
+              try {
+                setSkillsLearnedJson(typeof data.mvp.skills_learned === 'string' ? JSON.parse(data.mvp.skills_learned) : data.mvp.skills_learned);
+              } catch (skillsParseError) {
+                console.warn('Could not parse database skills_learned field:', skillsParseError);
+              }
+            }
+            if (data.mvp.ai_contribution_summary) {
+              setAiContributionSummary(data.mvp.ai_contribution_summary);
+            }
             
             const initialRationales: Record<number, string> = {};
             const initialFeedback: Record<number, string> = {};
@@ -1369,6 +1537,74 @@ Handles routing via custom React layouts, templates, and server-side model groun
       setActiveStep(4); // Pull them back to Step 4 on error
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleAskTutor = async (questionText: string) => {
+    if (!hoveredComponent || !session?.id || isTutorLoading) return;
+    setIsTutorLoading(true);
+    setTutorQuestion('');
+    
+    // Add User Message to Chat History
+    setTutorChatHistory(prev => [...prev, { sender: 'user', text: questionText }]);
+    
+    try {
+      const token = localStorage.getItem('vibelab_token');
+      const res = await fetch('/api/product/tutor/ask', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          session_id: session.id,
+          component_id: hoveredComponent.component_id,
+          question: questionText
+        })
+      });
+      
+      if (res.ok) {
+        const resultData = await res.json();
+        setTutorChatHistory(prev => [...prev, { sender: 'tutor', text: resultData.answer }]);
+      } else {
+        setTutorChatHistory(prev => [...prev, { sender: 'tutor', text: "Hmm, I'm having trouble connecting right now. Please test again!" }]);
+      }
+    } catch (err) {
+      console.error(err);
+      setTutorChatHistory(prev => [...prev, { sender: 'tutor', text: "I couldn't contact my tutor brain. Please check your network connection!" }]);
+    } finally {
+      setIsTutorLoading(false);
+    }
+  };
+
+  const handleComponentClickStep8 = (comp: any) => {
+    setSelectedComponent8(comp);
+
+    const html = virtualFiles['index.html'] || mvp?.mvp_html || '';
+    if (!html) return;
+
+    const lines = html.split('\n');
+    const compAttr = `data-component-id="${comp.component_id}"`;
+    const lineIndex = lines.findIndex(l => l.includes(compAttr));
+
+    if (lineIndex !== -1 && editorRef.current && monacoRef.current) {
+      const editor = editorRef.current;
+      const monaco = monacoRef.current;
+      const startLine = lineIndex + 1;
+      const endLine = Math.min(startLine + 8, lines.length);
+      editor.revealLineInCenter(startLine);
+
+      const newDecorations = [
+        {
+          range: new monaco.Range(startLine, 1, endLine, 1),
+          options: {
+            isWholeLine: true,
+            className: 'monaco-highlight-gold',
+            marginClassName: 'monaco-margin-gold'
+          }
+        }
+      ];
+      decorationsRef.current = editor.deltaDecorations(decorationsRef.current || [], newDecorations);
     }
   };
 
@@ -2407,9 +2643,38 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                 <div className="text-[10px] font-bold text-[#2563eb] font-mono tracking-widest uppercase mb-1">
                                   YOUR PRODUCT GUIDE
                                 </div>
-                                <h4 className="text-sm font-bold text-slate-800 truncate">
+                                <h4 className="text-sm font-bold text-slate-800 truncate mb-3">
                                   {projectName || 'My Product'} — How It Works
                                 </h4>
+
+                                {/* Explanation Mode Toggle */}
+                                <div className="flex items-center justify-between bg-slate-100 p-1 rounded-xl border border-slate-200/60 mb-1">
+                                  <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 font-mono pl-1.5">Mode:</span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => setExplanationMode('simple')}
+                                      type="button"
+                                      className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase transition-all duration-150 border-none cursor-pointer ${
+                                        explanationMode === 'simple'
+                                          ? 'bg-[#2563eb] text-white shadow'
+                                          : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                      }`}
+                                    >
+                                      Simple
+                                    </button>
+                                    <button
+                                      onClick={() => setExplanationMode('technical')}
+                                      type="button"
+                                      className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase transition-all duration-150 border-none cursor-pointer ${
+                                        explanationMode === 'technical'
+                                          ? 'bg-[#2563eb] text-white shadow'
+                                          : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                      }`}
+                                    >
+                                      Technical
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
 
                               {/* Numbered tasks */}
@@ -2459,6 +2724,99 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                   <p className="text-[11px] text-slate-600 leading-relaxed pl-0.5 font-sans">
                                     {taskExplanations[selectedTaskIdx] || 'Think of this like your app\'s foundation. It defines the central shell that ensures your text, inputs, and screens have space to exist and flow perfectly!'}
                                   </p>
+                                )}
+                              </div>
+
+                              {/* Mini AI Tutor Chat widget */}
+                              <div className="border border-slate-200 rounded-xl bg-slate-50/50 overflow-hidden">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsTutorExpanded(!isTutorExpanded)}
+                                  className="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 flex items-center justify-between text-[11px] font-bold uppercase transition-all tracking-wider font-mono text-slate-700 border-none cursor-pointer"
+                                >
+                                  <span className="flex items-center gap-1.5">
+                                    <Sparkles className="w-3.5 h-3.5 text-[#2563eb] animate-pulse" />
+                                    {isTutorExpanded ? "Hide AI Tutor Guide" : "Ask about this part →"}
+                                  </span>
+                                  <span className="text-slate-400">{isTutorExpanded ? "▼" : "▲"}</span>
+                                </button>
+
+                                {isTutorExpanded && (
+                                  <div className="p-4 space-y-3.5 font-sans bg-white border-t border-slate-200">
+                                    {/* Display hovered/active component indicator */}
+                                    <div className="p-2.5 rounded-lg bg-[#2563eb]/5 border border-[#2563eb]/10">
+                                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest font-mono block">Selected Segment</span>
+                                      <span className="text-xs font-extrabold text-[#2563eb] leading-tight block">
+                                        {hoveredComponent ? (
+                                          `[${hoveredComponent.component_type}] ${hoveredComponent.component_id.replace(/_/g, ' ')}`
+                                        ) : (
+                                          "Hover over any element in the preview to analyze!"
+                                        )}
+                                      </span>
+                                    </div>
+
+                                    {/* Chat history list */}
+                                    {tutorChatHistory.length > 0 && (
+                                      <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1 scrollbar-thin">
+                                        {tutorChatHistory.map((msg, midx) => (
+                                          <div key={midx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                                            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">
+                                              {msg.sender === 'user' ? 'You' : 'AI Tutor'}
+                                            </span>
+                                            <div className={`p-2.5 rounded-xl text-xs leading-relaxed max-w-[90%] ${
+                                              msg.sender === 'user' 
+                                                ? 'bg-[#2563eb] text-white rounded-tr-none' 
+                                                : 'bg-slate-100 text-slate-700 rounded-tl-none border border-slate-200/50'
+                                            }`}>
+                                              {msg.text}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Suggestion Chips */}
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {["What is this?", "Why is this used?", "How is it built?"].map((chip) => (
+                                        <button
+                                          key={chip}
+                                          type="button"
+                                          disabled={!hoveredComponent || isTutorLoading}
+                                          onClick={() => handleAskTutor(chip)}
+                                          className="px-2.5 py-1.5 rounded-full text-[10px] font-bold border border-slate-200 hover:border-[#2563eb] bg-slate-50 hover:bg-[#2563eb]/5 text-slate-600 hover:text-[#2563eb] disabled:opacity-45 disabled:pointer-events-none transition-all cursor-pointer"
+                                        >
+                                          {chip}
+                                        </button>
+                                      ))}
+                                    </div>
+
+                                    {/* Input Form */}
+                                    <form 
+                                      onSubmit={(e) => {
+                                        e.preventDefault();
+                                        if (tutorQuestion.trim()) {
+                                          handleAskTutor(tutorQuestion);
+                                        }
+                                      }}
+                                      className="flex gap-2"
+                                    >
+                                      <input
+                                        type="text"
+                                        value={tutorQuestion}
+                                        onChange={(e) => setTutorQuestion(e.target.value)}
+                                        placeholder={hoveredComponent ? "Ask a question..." : "Hover over a part to ask..."}
+                                        disabled={!hoveredComponent || isTutorLoading}
+                                        className="flex-1 bg-white border border-slate-200 hover:border-slate-300 focus:border-[#2563eb] text-xs text-slate-800 px-3 py-2 rounded-xl outline-none transition-all disabled:opacity-50"
+                                      />
+                                      <button
+                                        type="submit"
+                                        disabled={!hoveredComponent || !tutorQuestion.trim() || isTutorLoading}
+                                        className="h-9 w-9 shrink-0 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white flex items-center justify-center border-none disabled:opacity-45 cursor-pointer text-xs font-bold"
+                                      >
+                                        {isTutorLoading ? "..." : "Ask"}
+                                      </button>
+                                    </form>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -2689,18 +3047,59 @@ Handles routing via custom React layouts, templates, and server-side model groun
 
                             {/* Iframe stage rendering container */}
                             <div className="flex-1 bg-slate-100 flex flex-col justify-center items-center p-4 relative overflow-hidden">
-                              <div className={`transition-all duration-300 shadow-2xl h-full border border-slate-200/60 rounded-2xl overflow-hidden bg-white ${
+                              <div className={`transition-all duration-300 shadow-2xl h-full border border-slate-200/60 rounded-2xl overflow-hidden bg-white relative ${
                                 previewDevice === 'mobile' ? 'w-[290px]' : previewDevice === 'tablet' ? 'w-[440px]' : 'w-full'
                               }`}>
                                 {virtualFiles['index.html'] !== undefined ? (
-                                  <iframe
-                                    id="walkthrough-preview-iframe"
-                                    title="Campaign MVP code interactive walkthrough and emulator"
-                                    sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
-                                    srcDoc={getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || '')}
-                                    className="w-full h-full border-none"
-                                    onLoad={() => restoreSandboxState('walkthrough-preview-iframe')}
-                                  />
+                                  <>
+                                    <iframe
+                                      id="walkthrough-preview-iframe"
+                                      title="Campaign MVP code interactive walkthrough and emulator"
+                                      sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
+                                      srcDoc={getInjectedMvpCode(virtualFiles['index.html'] || mvp?.mvp_html || '')}
+                                      className="w-full h-full border-none"
+                                      onLoad={() => restoreSandboxState('walkthrough-preview-iframe')}
+                                    />
+
+                                    {/* Hover element target highlighter */}
+                                    {hoveredComponent && hoverRect && (
+                                      <div 
+                                        className="absolute pointer-events-none border-2 border-[#2563eb] rounded bg-[#2563eb]/5 z-40 transition-all duration-150 animate-pulse"
+                                        style={{
+                                          top: hoverRect.top + 'px',
+                                          left: hoverRect.left + 'px',
+                                          width: hoverRect.width + 'px',
+                                          height: hoverRect.height + 'px'
+                                        }}
+                                      />
+                                    )}
+
+                                    {/* Floating explanation tooltip */}
+                                    {hoveredComponent && hoverRect && (
+                                      <div 
+                                        className="absolute z-50 bg-slate-900 text-white rounded-xl shadow-2xl p-3 border border-slate-800 text-[11px] leading-relaxed select-none pointer-events-none animate-in fade-in zoom-in-95 duration-150 max-w-[240px]"
+                                        style={{
+                                          top: (hoverRect.top + hoverRect.height + 6) + 'px',
+                                          left: Math.min(Math.max(6, hoverRect.left), 200) + 'px'
+                                        }}
+                                      >
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                          <span className="text-[9px] font-mono uppercase bg-[#2563eb] px-1.5 py-0.5 rounded text-white font-extrabold tracking-wider shrink-0">
+                                            {hoveredComponent.component_type}
+                                          </span>
+                                          <span className="text-[9px] text-slate-400 font-mono truncate font-bold">
+                                            ID: {hoveredComponent.component_id}
+                                          </span>
+                                        </div>
+                                        <p className="font-semibold text-slate-100 font-sans">
+                                          {explanationMode === 'simple' 
+                                            ? hoveredComponent.simple_explanation || hoveredComponent.purpose 
+                                            : hoveredComponent.technical_explanation || hoveredComponent.purpose
+                                          }
+                                        </p>
+                                      </div>
+                                    )}
+                                  </>
                                 ) : (
                                   <div className="w-full h-full bg-slate-50 flex flex-col justify-center items-center text-slate-500 gap-2">
                                     <RefreshCw className="w-6 h-6 animate-spin text-[#2563eb]" />
@@ -2760,73 +3159,152 @@ Handles routing via custom React layouts, templates, and server-side model groun
                        * STEP 8: Explain Your Features
                        ***********************************************************/}
                       {item.step === 8 && (
-                        <div className="p-6 md:p-8 space-y-6">
+                        <div className="p-6 md:p-8 space-y-6 animate-fade-in text-left">
                           <div>
                             <span className="px-2.5 py-1 bg-[#2563eb]/10 text-[#2563eb] text-[10px] font-black uppercase tracking-widest rounded-md border border-[#2563eb]/20 font-mono">
-                              System Mechanics
+                              Under the hood
                             </span>
                             <h3 className="font-bebas text-4xl tracking-widest text-[#2563eb] mt-3 uppercase leading-none">
-                              EXPLAIN YOUR FEATURES
+                              Explore System Components
                             </h3>
                             <p className="text-xs text-slate-500 mt-1 pl-0.5">
-                              Startup founders must explain *why* every must-have feature serves user value. Fill out your rationales below, and click away to get real-time encouragement from your startup mentor!
+                              Understand exactly how each individual system component was built, what its business rationale is, and how the underlying tech mechanics function. Click any component below to highlight its source code range!
                             </p>
                           </div>
 
-                          {/* Render cards for must-have features */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            {features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true)).map((feat) => (
-                              <div 
-                                key={feat.id}
-                                className="p-5 rounded-2xl bg-white/50 border border-slate-200/85 flex flex-col justify-between space-y-4"
-                              >
-                                <div className="space-y-1">
-                                  <h4 className="text-sm font-bold text-white flex items-center gap-1.5 font-sans">
-                                    <span className="w-2 h-2 rounded-full bg-[#2563eb]"></span>
-                                    {feat.feature_name}
-                                  </h4>
-                                  <p className="text-xs text-slate-500 leading-relaxed font-sans">
-                                    {feat.feature_description}
-                                  </p>
+                          {/* Split layout: left side list, right side details */}
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            {/* Component Selector List (5 cols) */}
+                            <div className="lg:col-span-5 space-y-2 max-h-[460px] overflow-y-auto pr-2 scrollbar-thin">
+                              <span className="text-[10px] font-mono font-black uppercase text-slate-400 tracking-wider block mb-1">
+                                System Components ({componentMetadata.length})
+                              </span>
+                              {componentMetadata.length === 0 ? (
+                                <div className="p-8 border border-slate-200 border-dashed rounded-2xl text-center text-xs text-slate-500 font-sans">
+                                  No system components analyzed yet. Submit your screens to compile!
                                 </div>
-
-                                <div className="space-y-2">
-                                  <label className="text-[10px] font-bold text-slate-500 font-mono uppercase tracking-wider">
-                                    Why did you include this feature?
-                                  </label>
-                                  <textarea
-                                    value={featureRationales[feat.id] || ''}
-                                    onChange={(e) => setFeatureRationales(prev => ({ ...prev, [feat.id]: e.target.value }))}
-                                    onBlur={() => handleExplainFeatureStep8(feat.id, featureRationales[feat.id] || '')}
-                                    rows={2.5}
-                                    placeholder="e.g. Because students lose track of paper schedules, putting this dynamic log on their phone helps them remember..."
-                                    className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-xs text-slate-700 px-4 py-3 rounded-xl outline-none"
-                                  />
-                                </div>
-
-                                {/* AI Gold Feedback Bubble */}
-                                {(featureFeedback[feat.id] || featureSubmitting[feat.id]) && (
-                                  <div className="p-3.5 rounded-xl bg-[#2563eb]/5 border border-[#2563eb]/15 flex items-start gap-2 relative overflow-hidden">
-                                    <Sparkles className="w-4 h-4 text-[#2563eb] shrink-0 mt-0.5" />
-                                    {featureSubmitting[feat.id] ? (
-                                      <div className="flex items-center gap-1.5">
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#2563eb]" />
-                                        <span className="text-[10px] text-slate-500 uppercase font-mono tracking-widest animate-pulse">Consulting AI Mentor...</span>
+                              ) : (
+                                componentMetadata.map((comp) => {
+                                  const isSelected = selectedComponent8?.id === comp.id;
+                                  return (
+                                    <button
+                                      key={comp.id}
+                                      type="button"
+                                      onClick={() => handleComponentClickStep8(comp)}
+                                      className={`w-full p-4 rounded-xl flex items-center justify-between text-left transition-all border cursor-pointer ${
+                                        isSelected
+                                          ? 'bg-[#2563eb]/5 border-[#2563eb] shadow-sm'
+                                          : 'bg-white border-slate-200/80 hover:border-slate-300'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <div className={`p-2.5 rounded-lg shrink-0 ${isSelected ? 'bg-[#2563eb] text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                          {getComponentIcon(comp.component_type)}
+                                        </div>
+                                        <div className="min-w-0">
+                                          <h4 className="text-xs font-black text-slate-800 leading-tight truncate">
+                                            {comp.component_id.replace(/_/g, ' ')}
+                                          </h4>
+                                          <span className="text-[9px] font-mono uppercase font-black text-slate-400 tracking-wider">
+                                            {comp.component_type}
+                                          </span>
+                                        </div>
                                       </div>
-                                    ) : (
-                                      <p className="text-[11px] text-[#2563eb] italic font-sans pl-0.5 leading-normal">
-                                        "{featureFeedback[feat.id]}"
+                                      <span className="text-xs text-slate-400 font-bold shrink-0 pl-1">
+                                        {isSelected ? "▶" : " "}
+                                      </span>
+                                    </button>
+                                  );
+                                })
+                              )}
+                            </div>
+
+                            {/* Detailed Explanation Display (7 cols) */}
+                            <div className="lg:col-span-7">
+                              {selectedComponent8 ? (
+                                <div className="p-6 rounded-2xl bg-white border border-slate-200 h-full flex flex-col justify-between space-y-5">
+                                  <div className="space-y-4">
+                                    {/* Component Tag details */}
+                                    <div className="flex items-center justify-between border-b border-slate-150 pb-3">
+                                      <div>
+                                        <span className="text-[9px] font-mono bg-[#2563eb] px-2 py-0.5 rounded text-white font-black tracking-widest uppercase">
+                                          {selectedComponent8.component_type || 'Component'}
+                                        </span>
+                                        <h3 className="text-sm font-bold text-slate-800 mt-1.5 font-sans">
+                                          ID: {selectedComponent8.component_id}
+                                        </h3>
+                                      </div>
+
+                                      {/* Explanation Mode Switcher in Right Header */}
+                                      <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200/50 scale-90 origin-right">
+                                        <button
+                                          type="button"
+                                          onClick={() => setExplanationMode('simple')}
+                                          className={`px-2 py-1 rounded-md text-[9px] font-black uppercase transition-all duration-150 border-none cursor-pointer ${
+                                            explanationMode === 'simple'
+                                              ? 'bg-white text-[#2563eb] shadow-sm font-bold'
+                                              : 'text-slate-500 bg-transparent'
+                                          }`}
+                                        >
+                                          Simple
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setExplanationMode('technical')}
+                                          className={`px-2 py-1 rounded-md text-[9px] font-black uppercase transition-all duration-150 border-none cursor-pointer ${
+                                            explanationMode === 'technical'
+                                              ? 'bg-white text-[#2563eb] shadow-sm font-bold'
+                                              : 'text-slate-500 bg-transparent'
+                                          }`}
+                                        >
+                                          Technical
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {/* Business Reason */}
+                                    <div className="space-y-1 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                                      <span className="text-[9px] font-mono font-black uppercase text-slate-400 tracking-wider block">
+                                        Business Reason & User Value
+                                      </span>
+                                      <p className="text-xs text-slate-705 leading-relaxed font-semibold font-sans pl-0.5">
+                                        {selectedComponent8.business_reason || 'To establish intuitive, friction-free interaction workflows.'}
                                       </p>
-                                    )}
+                                    </div>
+
+                                    {/* Explanation Body */}
+                                    <div className="space-y-2">
+                                      <span className="text-[9px] font-mono font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                                        <Sparkles className="w-3.5 h-3.5 text-[#2563eb]" />
+                                        {explanationMode === 'simple' ? 'Simple Clarification (Beginner-Friendly)' : 'Technical Architecture Detail'}
+                                      </span>
+                                      <div className="p-4 rounded-xl border border-[#2563eb]/10 bg-[#2563eb]/5">
+                                        <p className="text-xs text-[#1e3a8a] leading-relaxed font-sans font-medium">
+                                          {explanationMode === 'simple'
+                                            ? selectedComponent8.simple_explanation || selectedComponent8.purpose
+                                            : selectedComponent8.technical_explanation || selectedComponent8.purpose
+                                          }
+                                        </p>
+                                      </div>
+                                    </div>
                                   </div>
-                                )}
-                              </div>
-                            ))}
+
+                                  <div className="text-[10px] text-slate-400 font-mono text-center flex items-center justify-center gap-1">
+                                    <Info className="w-3.5 h-3.5 text-[#2563eb]" /> Monaco editor has highlighted the code matching this component.
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="h-full border border-slate-200 border-dashed rounded-2xl flex flex-col justify-center items-center p-8 text-center text-slate-400 text-xs min-h-[250px] bg-slate-50/50">
+                                  <Box className="w-8 h-8 opacity-40 mb-2 text-[#2563eb]" />
+                                  Please select a component from the list on the left to see explanations.
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
                             <Info className="w-4.5 h-4.5 text-[#2563eb] shrink-0" />
-                            <span>Explain your rationales for each must-have feature above, then click <strong>Confirm Feature Explanations</strong> in the footer below to proceed!</span>
+                            <span>Take notes of how your components function to ace your upcoming product landing and presentation rehearsal demo!</span>
                           </div>
                         </div>
                       )}
@@ -2975,6 +3453,94 @@ Handles routing via custom React layouts, templates, and server-side model groun
                               You completed <strong>{projectName || 'your project'}</strong>! Your initial campaign MVP and pitching collateral have compiled flawlessly.
                             </p>
                           </div>
+
+                          {/* Screenshot Capture Section */}
+                          <div className="max-w-md mx-auto relative group overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-md hover:shadow-lg transition-all">
+                            <span className="absolute top-4 left-4 z-10 bg-slate-900/80 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-[#2563eb] rounded-lg font-mono">
+                              Automatic Page Capture
+                            </span>
+                            {screenshotUrl ? (
+                              <img 
+                                src={screenshotUrl} 
+                                alt="Product Screenshot"
+                                className="w-full h-44 object-cover object-top rounded-xl"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-full h-44 rounded-xl bg-gradient-to-br from-slate-900 to-[#1e293b] flex flex-col justify-center items-center text-center p-4">
+                                <Monitor className="w-8 h-8 text-[#2563eb] animate-pulse mb-2" />
+                                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Generating Digital Capture...</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Skills & Mastery Summary */}
+                          {skillsLearnedJson && (
+                            <div className="max-w-2xl mx-auto p-6 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-4">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
+                                <div>
+                                  <h4 className="text-xs font-black text-slate-800 font-sans uppercase tracking-wider">
+                                    🎓 Course Skill-Tree Mastery
+                                  </h4>
+                                  <p className="text-[10px] text-slate-500 mt-0.5 font-medium leading-relaxed font-sans">
+                                    Your verified technical execution rating mapped directly to Grade 10-12 Computer Science Standards.
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xl font-mono font-black text-[#2563eb]">
+                                    {skillsLearnedJson.overall_skill_percentage || 65}%
+                                  </span>
+                                  <span className="text-[10px] font-mono uppercase bg-[#2563eb]/10 text-[#2563eb] px-2 py-0.5 rounded font-black">
+                                    Rating
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Progress Bar */}
+                              <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-[#2563eb] to-blue-500 rounded-full transition-all duration-1000"
+                                  style={{ width: `${skillsLearnedJson.overall_skill_percentage || 65}%` }}
+                                />
+                              </div>
+
+                              {/* Demonstrated Skills List */}
+                              <div className="space-y-2">
+                                <span className="text-[9px] font-mono font-black uppercase text-slate-400 tracking-wider block">
+                                  Skills Demonstrated:
+                                </span>
+                                <div className="flex flex-wrap gap-2">
+                                  {skillsLearnedJson.skills_demonstrated?.map((sk: any, sIdx: number) => (
+                                    <span 
+                                      key={sIdx}
+                                      className="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wide rounded-full border border-emerald-200 shadow-sm flex items-center gap-1 font-sans"
+                                    >
+                                      ✓ {sk.skill}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Next recommended skills */}
+                              {skillsLearnedJson.next_skills && (
+                                <div className="space-y-2 pt-1">
+                                  <span className="text-[9px] font-mono font-black uppercase text-slate-400 tracking-wider block">
+                                    Future Learning Recommendations:
+                                  </span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {skillsLearnedJson.next_skills.map((next: string, nIdx: number) => (
+                                      <span 
+                                        key={nIdx}
+                                        className="px-3 py-1 bg-transparent text-slate-500 text-[10px] font-semibold uppercase tracking-wide rounded-full border border-slate-350 border-dashed flex items-center gap-1 font-sans"
+                                      >
+                                        ✦ {next}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                           {/* Deliverables Grid (2x4) */}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-left max-w-2xl mx-auto select-none pt-2">
@@ -3144,7 +3710,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                   disabled={isSubmitting}
                   className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer border-none"
                 >
-                  {isSubmitting ? 'Compiling...' : 'Confirm Feature Explanations'} <ArrowRight className="w-3.5 h-3.5" />
+                  {isSubmitting ? 'Saving...' : 'Confirm Technical Exploration'} <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
               {activeStep === 9 && (
@@ -3296,6 +3862,33 @@ Handles routing via custom React layouts, templates, and server-side model groun
                 {/* 1. OVERVIEW TAB PANEL */}
                 {activeShowcaseTab === 'overview' && (
                   <div className="space-y-6">
+                    {/* Live Screenshot Hero */}
+                    {screenshotUrl && (
+                      <div className="p-3 bg-white border border-slate-200 shadow-sm rounded-2xl">
+                        <span className="text-[9px] font-mono uppercase bg-slate-900 text-[#2563eb] px-2.5 py-1 rounded-md font-black tracking-widest block mb-1 text-center">
+                          Interactive Live Demo Screen Captured
+                        </span>
+                        <img 
+                          src={screenshotUrl} 
+                          alt="Product Live Screen Capture" 
+                          className="w-full max-h-[350px] object-cover object-top rounded-xl border border-slate-100 mt-2"
+                        />
+                      </div>
+                    )}
+
+                    {/* AI Contribution & Student Agency Breakdown */}
+                    <div className="p-6 rounded-2xl bg-[#2563eb]/5 border border-[#2563eb]/20 space-y-3 shadow-inner">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-[#2563eb]" />
+                        <h4 className="text-xs font-black text-[#2563eb] font-mono uppercase tracking-wider">
+                          AI COLLABORATION & INTELLECTUAL CONTRIBUTIONS
+                        </h4>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed font-sans font-medium">
+                        {aiContributionSummary || `AI assisted the core development of screen assets and code synthesis during Phase 2 walkthroughs. The founder maintained complete structural authority over critical features, target audiences, and design intent.`}
+                      </p>
+                    </div>
+
                     {/* Project Blueprint */}
                     <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-4">
                       <div className="flex items-center justify-between border-b border-slate-100 pb-2">

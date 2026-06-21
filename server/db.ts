@@ -919,6 +919,21 @@ export const getPool = async () => {
           )
         `);
 
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS component_metadata (
+            id                    INT PRIMARY KEY AUTO_INCREMENT,
+            session_id            INT NOT NULL,
+            component_id          VARCHAR(100) NOT NULL,
+            component_type        VARCHAR(100),
+            purpose               TEXT,
+            business_reason       TEXT,
+            simple_explanation    TEXT,
+            technical_explanation TEXT,
+            created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (session_id) REFERENCES product_sessions(id) ON DELETE CASCADE
+          )
+        `);
+
         // Safe, isolated column generator for all tables
         const addColumnIfNeeded = async (tableName: string, columnName: string, columnDef: string) => {
           try {
@@ -980,6 +995,11 @@ export const getPool = async () => {
         // Migrate User Project Progress Columns
         await addColumnIfNeeded('user_project_progress', 'last_active_step', 'INT DEFAULT 0');
         await addColumnIfNeeded('user_project_progress', 'code_state', 'JSON');
+
+        // Migrate MVP Builds Columns for Step 6 Self-explaining layers
+        await addColumnIfNeeded('mvp_builds', 'skills_learned', 'JSON');
+        await addColumnIfNeeded('mvp_builds', 'ai_contribution_summary', 'TEXT');
+        await addColumnIfNeeded('mvp_builds', 'screenshot_url', 'LONGTEXT');
 
         // Migrate Phase Projects Columns
         await addColumnIfNeeded('phase_projects', 'tutorial_data', 'JSON');

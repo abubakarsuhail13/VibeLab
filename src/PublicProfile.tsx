@@ -405,35 +405,78 @@ export default function PublicProfile({ userId, currentUser }: PublicProfileProp
           {/* Sidebar Area */}
           <div className="lg:col-span-4 space-y-12">
             
-            {blueprint && (
-              <section className="bg-white p-6 rounded-[2.5rem] border border-slate-200/60 shadow-sm relative overflow-hidden">
-                <div className="space-y-3">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Project Blueprint</p>
-                  
-                  {/* Row 1 */}
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="font-bold text-slate-900">{blueprint.product_name}</span>
-                    <span className="text-slate-300">•</span>
-                    <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 rounded-lg text-[9px] font-black uppercase tracking-wider border border-cyan-100">
-                      {blueprint.complexity || 'Basic'}
-                    </span>
-                    <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-lg text-[9px] font-black uppercase tracking-wider border border-indigo-100">
-                      {blueprint.recommended_track || 'AI'}
-                    </span>
+            {blueprint && (() => {
+              let skillsJson: any = null;
+              if (blueprint.skills_learned) {
+                try {
+                  skillsJson = typeof blueprint.skills_learned === 'string' 
+                    ? JSON.parse(blueprint.skills_learned) 
+                    : blueprint.skills_learned;
+                } catch(e) {}
+              }
+              return (
+                <section className="bg-white p-6 rounded-[2.5rem] border border-slate-200/60 shadow-sm relative overflow-hidden">
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phase 2: Product Build Spec</p>
+                    
+                    {/* Public Profile: Show screenshot thumbnail next to project name */}
+                    <div className="flex gap-3 items-start border-b border-slate-100 pb-3">
+                      {blueprint.screenshot_url && (
+                        <div className="w-16 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                          <img 
+                            src={blueprint.screenshot_url} 
+                            alt="MVP Thumbnail" 
+                            className="w-full h-full object-cover object-top"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        {/* Title & Complexity badges */}
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                          <span className="font-extrabold text-slate-900 text-sm">{blueprint.product_name}</span>
+                          <span className="px-1.5 py-0.2 bg-cyan-50 text-cyan-700 rounded-md text-[8px] font-black uppercase tracking-wider border border-cyan-100/60 font-mono">
+                            {blueprint.complexity || 'Basic'}
+                          </span>
+                        </div>
+                        <p className="text-[9px] font-mono text-indigo-600 uppercase font-black tracking-widest mt-0.5 font-sans">
+                          {blueprint.recommended_track || 'AI & Cloud Infrastructure'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Problem Statement */}
+                    <p className="text-xs text-slate-505 font-medium leading-relaxed">
+                      <span className="font-bold text-slate-700">Problem:</span> {blueprint.problem_statement}
+                    </p>
+
+                    {/* Public Profile: Display demonstrated skills as pills below the problem statement */}
+                    {skillsJson && skillsJson.skills_demonstrated && (
+                      <div className="space-y-1.5 pt-1">
+                        <span className="text-[8px] font-mono font-black uppercase text-slate-400 tracking-wider block">
+                          Verified Skills Demonstrated:
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {skillsJson.skills_demonstrated.map((sk: any, sIdx: number) => (
+                            <span 
+                              key={sIdx}
+                              className="px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-bold uppercase tracking-wide font-sans shadow-sm"
+                            >
+                              ✓ {sk.skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Solution Statement */}
+                    <p className="text-xs text-slate-505 font-medium leading-relaxed pt-2 border-t border-slate-100">
+                      <span className="font-bold text-slate-700">Solution:</span> {blueprint.solution_concept}
+                    </p>
                   </div>
-
-                  {/* Row 2 */}
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                    <span className="font-bold text-slate-700">Problem:</span> {blueprint.problem_statement}
-                  </p>
-
-                  {/* Row 3 */}
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                    <span className="font-bold text-slate-700">Solution:</span> {blueprint.solution_concept}
-                  </p>
-                </div>
-              </section>
-            )}
+                </section>
+              );
+            })()}
 
             {/* Academic & Verification Profile CARD */}
             {(profile.account_type || profile.institution_name) && (
