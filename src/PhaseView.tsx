@@ -1480,24 +1480,37 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                     </button>
                   </div>
                 ) : (
-                  quizActive ? (
+                  (quizActive || hasBadge) ? (
                     /* Active Quiz Simulation Container */
                     <div className="space-y-8 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
                       <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
                         <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                           {phase?.order_index === 1 ? "Your Reflection Sheets" : "Question Quiz Sheet"}
                         </span>
-                        <button 
-                          onClick={() => {
-                            setQuizActive(false);
-                            setSelectedQuizAnswers({});
-                            setQuizResult(null);
-                          }}
-                          className="text-xs font-bold text-rose-600 hover:underline"
-                        >
-                          Cancel
-                        </button>
+                        {!hasBadge ? (
+                          <button 
+                            onClick={() => {
+                              setQuizActive(false);
+                              setSelectedQuizAnswers({});
+                              setQuizResult(null);
+                            }}
+                            className="text-xs font-bold text-rose-600 hover:underline"
+                          >
+                            Cancel
+                          </button>
+                        ) : (
+                          <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                            <Lock className="w-3.5 h-3.5" /> Certified Locked
+                          </span>
+                        )}
                       </div>
+
+                      {hasBadge && (
+                        <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Assessment Certified & Saved: You have successfully completed this phase challenge. The assessment sheet is locked in read-only viewing mode for verification.</span>
+                        </div>
+                      )}
 
                       {quizQuestions.length > 0 ? (
                         <div className="space-y-8">
@@ -1527,13 +1540,15 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                       }
                                     } else if (isSelected) {
                                       buttonStyle = 'bg-indigo-500 text-white border-indigo-500 shadow-md shadow-indigo-500/10';
+                                    } else if (hasBadge) {
+                                      buttonStyle = 'bg-slate-50/50 text-slate-600 border-slate-200 cursor-not-allowed opacity-80';
                                     }
 
                                     return (
                                       <button
                                         key={optIdx}
                                         type="button"
-                                        disabled={!!qDetails}
+                                        disabled={!!qDetails || hasBadge}
                                         onClick={() => setSelectedQuizAnswers(prev => ({ ...prev, [qIndex.id]: optIdx }))}
                                         className={`p-4 rounded-xl border text-left text-sm font-medium transition-all ${buttonStyle}`}
                                       >
@@ -1585,11 +1600,17 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                     </p>
                                     <button
                                       onClick={handleCertify}
-                                      disabled={isCertifying}
-                                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-indigo-600/10 flex items-center justify-center gap-2"
+                                      disabled={isCertifying || hasBadge}
+                                      className={`px-6 py-3 font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 ${
+                                        hasBadge 
+                                          ? 'bg-slate-300 text-slate-600 border border-slate-400/20 cursor-not-allowed shadow-none'
+                                          : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/10'
+                                      }`}
                                     >
                                       {isCertifying ? (
                                         <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                      ) : hasBadge ? (
+                                        "Certificate Claimed 🏆"
                                       ) : (
                                         "Claim Phase 1 Certificate 🎓"
                                       )}
@@ -1630,19 +1651,26 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                 ? "Complete your personalized assessment based on your project blueprint to pass." 
                                 : "All answers are validated automatically on our Node.js servers."}
                             </p>
-                            <button
-                              type="button"
-                              disabled={quizSubmitting || Object.keys(selectedQuizAnswers).length < quizQuestions.length}
-                              onClick={handleQuizSubmitFinal}
-                              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-550 font-bold text-white text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-40 active:scale-95 flex items-center gap-2"
-                            >
-                              {quizSubmitting ? (
-                                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                              ) : (
-                                <CheckCircle2 className="w-4 h-4" />
-                              )}
-                              {phase?.order_index === 1 ? "Submit Reflection Responses" : "Grade Quiz"}
-                            </button>
+                            {!hasBadge ? (
+                              <button
+                                type="button"
+                                disabled={quizSubmitting || Object.keys(selectedQuizAnswers).length < quizQuestions.length}
+                                onClick={handleQuizSubmitFinal}
+                                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-550 font-bold text-white text-sm rounded-xl transition-all shadow-lg shadow-indigo-500/15 disabled:opacity-40 active:scale-95 flex items-center gap-2"
+                              >
+                                {quizSubmitting ? (
+                                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="w-4 h-4" />
+                                )}
+                                {phase?.order_index === 1 ? "Submit Reflection Responses" : "Grade Quiz"}
+                              </button>
+                            ) : (
+                              <div className="px-4 py-2 bg-emerald-100/70 border border-emerald-250 text-emerald-800 text-xs font-black uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-sm">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Verified Passed ✅</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (
@@ -2085,6 +2113,11 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                               Cancel
                             </button>
                           </div>
+                        </div>
+                      ) : hasBadge ? (
+                        <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-250 text-emerald-900 text-xs font-semibold flex items-center gap-2">
+                          <Lock className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>This product blueprint is finalized and certified. It is locked in read-only mode for your global portfolio history.</span>
                         </div>
                       ) : (
                         <button

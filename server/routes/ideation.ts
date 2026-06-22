@@ -640,6 +640,20 @@ router.put('/blueprint', authenticateToken, async (req: any, res) => {
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
     const userId = req.user.userId;
+
+    // Check if Phase 1 has been certified (hasBadge is true for Phase 1)
+    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
+    if (p1Rows && p1Rows.length > 0) {
+      const p1Id = p1Rows[0].id;
+      const [certified]: any = await p.execute(
+        'SELECT id FROM badges WHERE user_id = ? AND phase_id = ?',
+        [userId, p1Id]
+      );
+      if (certified.length > 0) {
+        return res.status(400).json({ error: 'Certified Idea Blueprint Locked: This idea is certified as part of your certified Phase 1 portfolio and cannot be modified.' });
+      }
+    }
+
     const { product_name, problem_statement, target_user_persona, solution_concept } = req.body;
 
     // First check if there is an existing blueprint

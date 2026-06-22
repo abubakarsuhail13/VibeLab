@@ -974,6 +974,12 @@ router.post('/phase/:id/certify', authenticateToken, async (req: any, res) => {
 
     console.log(`[DEBUG] Starting Certification for User ${req.user.userId}, Phase ${id}`);
 
+    // Verify duplicate certification safeguard
+    const [existingBadge]: any = await p.execute('SELECT id FROM badges WHERE user_id = ? AND phase_id = ?', [req.user.userId, Number(id)]);
+    if (existingBadge.length > 0) {
+      return res.status(400).json({ error: 'Certification already claimed and recorded on your public portfolio.' });
+    }
+
     // Retrieve phase sequence details
     const [currentPhase]: any = await p.execute('SELECT name, order_index FROM phases WHERE id = ?', [id]);
     if (currentPhase.length === 0) return res.status(404).json({ error: 'Phase not found' });
