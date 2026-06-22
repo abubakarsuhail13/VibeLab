@@ -336,6 +336,10 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     
+    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
+    const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
+    const isPhase1 = Number(id) === actualPhase1Id;
+
     const [p2Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 2');
     const actualPhase2Id = p2Rows && p2Rows.length > 0 ? p2Rows[0].id : 2;
     const isPhase2 = Number(id) === actualPhase2Id;
@@ -356,7 +360,7 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
       latestAttempts = rowsAttempt;
     }
 
-    if (latestAttempts.length > 0 && !latestAttempts[0].passed) {
+    if (!isPhase1 && latestAttempts.length > 0 && !latestAttempts[0].passed) {
       const lastAttemptTime = new Date(latestAttempts[0].attempted_at).getTime();
       const now = Date.now();
       const diffHours = (now - lastAttemptTime) / (1000 * 60 * 60);
@@ -386,8 +390,6 @@ router.get('/phase/:id/quiz', authenticateToken, async (req: any, res) => {
       bestAttempt = rowsBest;
     }
 
-    const [p1Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 1');
-    const actualPhase1Id = p1Rows && p1Rows.length > 0 ? p1Rows[0].id : 1;
     const [p3Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 3');
     const actualPhase3Id = p3Rows && p3Rows.length > 0 ? p3Rows[0].id : 3;
     const [p4Rows]: any = await p.execute('SELECT id FROM phases WHERE order_index = 4');
@@ -702,7 +704,6 @@ Return ONLY the valid JSON array. Do not wrap in markdown or backticks.
     }
 
     // Retrieve up to 10 randomized quiz questions - skip random shuffling for Phase 1 to preserve narrative order
-    const isPhase1 = Number(id) === actualPhase1Id;
     const shuffled = isPhase1 ? rows : rows.sort(() => 0.5 - Math.random()).slice(0, 10);
     
     res.json({
@@ -860,8 +861,8 @@ router.post('/phase/:id/quiz/submit', authenticateToken, async (req: any, res) =
     let passed = score >= 70;
     
     if (isPhase1) {
-      score = 100;
-      passed = true;
+      score = Math.round((correctCount / totalQuestions) * 100);
+      passed = score >= 80;
     }
     
     await p.execute(
@@ -955,7 +956,7 @@ function getRequiredSubmissionsCount(orderIndex: number): number {
 }
 
 function getBadgeName(orderIndex: number): string {
-  if (orderIndex === 1) return 'Python Builder';
+  if (orderIndex === 1) return 'Discovery & Ideation Certificate';
   if (orderIndex === 2) return 'LLM Fundamentalist';
   if (orderIndex === 3) return 'AI Maker';
   if (orderIndex === 4) return 'Agent Architect';

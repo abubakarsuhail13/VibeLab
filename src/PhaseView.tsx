@@ -1554,35 +1554,37 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                           })}
 
                           {quizResult && (
-                            <div className="p-6 rounded-3xl border-2 bg-emerald-50/80 border-emerald-250 text-emerald-900 shadow-sm">
+                            <div className={`p-6 rounded-3xl border-2 shadow-sm ${quizResult.passed ? 'bg-emerald-50/80 border-emerald-250 text-emerald-900' : 'bg-rose-50/80 border-rose-250 text-rose-900'}`}>
                               <h4 className="font-black text-xl tracking-tight mb-2">
-                                {phase?.order_index === 1 ? '🎉 Reflection Complete!' : (quizResult.passed ? '🎉 Challenge Passed!' : '😢 Attempt Unsuccessful')}
+                                {quizResult.passed ? '🎉 Challenge Passed!' : '😢 Attempt Unsuccessful'}
                               </h4>
                               <p className="text-sm leading-relaxed mb-4 font-medium">
-                                {phase?.order_index === 1 ? (
-                                  <span>You have beautifully expressed your co-creation learning process. Excellent! You have successfully completed Phase 1 Theory requirements.</span>
-                                ) : (
-                                  <span>You scored <strong className="font-black">{quizResult.score}%</strong> ({quizResult.correctCount} of {quizResult.totalQuestions} questions correct).</span>
-                                )}
+                                <span>You scored <strong className="font-black">{quizResult.score}%</strong> ({quizResult.correctCount} of {quizResult.totalQuestions} questions correct).</span>
                               </p>
                               
                               {phase?.order_index === 1 ? (
-                                <div className="space-y-4">
-                                  <p className="text-xs text-slate-600 font-normal leading-relaxed">
-                                    Your response profiles have been saved to your digital learner profile. Let's claim your official badge and phase certification now!
+                                quizResult.passed ? (
+                                  <div className="space-y-4">
+                                    <p className="text-xs text-slate-600 font-normal leading-relaxed">
+                                      Your response profiles have been saved to your digital learner profile. Let's claim your official badge and phase certification now!
+                                    </p>
+                                    <button
+                                      onClick={handleCertify}
+                                      disabled={isCertifying}
+                                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-indigo-600/10 flex items-center justify-center gap-2"
+                                    >
+                                      {isCertifying ? (
+                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                      ) : (
+                                        "Claim Phase 1 Certificate 🎓"
+                                      )}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs font-semibold text-rose-700">
+                                    You must score 80% or higher (at least 4 out of 5 questions correct) to pass. Please try again!
                                   </p>
-                                  <button
-                                    onClick={handleCertify}
-                                    disabled={isCertifying}
-                                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md shadow-indigo-600/10 flex items-center justify-center gap-2"
-                                  >
-                                    {isCertifying ? (
-                                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                    ) : (
-                                      "Claim Phase 1 Certificate 🎓"
-                                    )}
-                                  </button>
-                                </div>
+                                )
                               ) : phase?.order_index === 2 ? (
                                 <div className="p-4 bg-white/70 rounded-2xl border border-white/60 text-sm font-bold text-slate-800">
                                   {quizResult.passed ? (
@@ -1610,7 +1612,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                           <div className="pt-4 border-t border-slate-200/65 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <p className="text-xs text-slate-500 font-medium font-display">
                               {phase?.order_index === 1 
-                                ? "This AI-assisted self-reflection has no failing marks. Complete to certify." 
+                                ? "Complete your personalized assessment based on your project blueprint to pass." 
                                 : "All answers are validated automatically on our Node.js servers."}
                             </p>
                             <button
