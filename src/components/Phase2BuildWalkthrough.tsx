@@ -46,7 +46,8 @@ import {
   Grid,
   BarChart3,
   LayoutTemplate,
-  Box
+  Box,
+  Code2
 } from 'lucide-react';
 import { EducationalAiBackground } from "./EducationalAiBackground";
 import { AILoader } from "./AILoader";
@@ -491,6 +492,8 @@ export default function Phase2BuildWalkthrough({
     'config': false
   });
   const [showFullScreenPreview, setShowFullScreenPreview] = useState<boolean>(false);
+  const [workspaceLayout, setWorkspaceLayout] = useState<'split' | 'code' | 'preview'>('split');
+  const [isGuideHidden, setIsGuideHidden] = useState<boolean>(false);
   const [activeShowcaseTab, setActiveShowcaseTab] = useState<'dashboard' | 'emulator' | 'screens' | 'features' | 'pitch'>('dashboard');
 
   // Step 6 hover and tutor states
@@ -846,11 +849,13 @@ Handles routing via custom React layouts, templates, and server-side model groun
       localStorage.setItem(`vibelab_workspace_${session.id}_preview_device`, previewDevice);
       localStorage.setItem(`vibelab_workspace_${session.id}_sidebar_hidden`, String(isSidebarHidden));
       localStorage.setItem(`vibelab_workspace_${session.id}_expanded_folders`, JSON.stringify(expandedFolders));
+      localStorage.setItem(`vibelab_workspace_${session.id}_workspace_layout`, workspaceLayout);
+      localStorage.setItem(`vibelab_workspace_${session.id}_guide_hidden`, String(isGuideHidden));
       if (Object.keys(virtualFiles).length > 0) {
         localStorage.setItem(`vibelab_workspace_${session.id}_code_changes`, JSON.stringify(virtualFiles));
       }
     }
-  }, [activeFile, openTabs, previewDevice, isSidebarHidden, expandedFolders, virtualFiles, session?.id]);
+  }, [activeFile, openTabs, previewDevice, isSidebarHidden, expandedFolders, virtualFiles, session?.id, workspaceLayout, isGuideHidden]);
 
   const cyclingMessages = [
     'Turning your idea into reality...',
@@ -1063,6 +1068,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
             const storedPreviewDevice = localStorage.getItem(`vibelab_workspace_${data.session.id}_preview_device`);
             const storedSidebarHidden = localStorage.getItem(`vibelab_workspace_${data.session.id}_sidebar_hidden`);
             const storedExpandedFolders = localStorage.getItem(`vibelab_workspace_${data.session.id}_expanded_folders`);
+            const storedLayout = localStorage.getItem(`vibelab_workspace_${data.session.id}_workspace_layout`);
+            const storedGuideHidden = localStorage.getItem(`vibelab_workspace_${data.session.id}_guide_hidden`);
 
             if (storedCodeChanges) {
               try {
@@ -1095,6 +1102,12 @@ Handles routing via custom React layouts, templates, and server-side model groun
               try {
                 setExpandedFolders(JSON.parse(storedExpandedFolders));
               } catch (e) {}
+            }
+            if (storedLayout) {
+              setWorkspaceLayout(storedLayout as any || 'split');
+            }
+            if (storedGuideHidden) {
+              setIsGuideHidden(storedGuideHidden === 'true');
             }
           } else {
             // Setup fallback default empty workspace if MVP is not loaded
@@ -2496,10 +2509,103 @@ Handles routing via custom React layouts, templates, and server-side model groun
                        * STEP 6: Understand Your Code (Interactive 3-Panel Walkthrough)
                        ***********************************************************/}
                       {item.step === 6 && (
-                        <div className="flex-1 flex flex-col lg:flex-row h-full w-full bg-white overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
-                          
-                          {/* Left Panel 0: Collapsible File Tree Sidebar (Pages, Components, Assets, etc.) */}
-                          {!isSidebarHidden && (
+                        <div className="flex-1 flex flex-col h-full w-full bg-white overflow-hidden">
+                          {/* Modern Google AI Studio-style Workspace Control Toolbar */}
+                          <div className="h-11 px-4 border-b border-slate-200 bg-slate-50/80 backdrop-blur-sm flex items-center justify-between shrink-0 select-none text-[11px] font-sans">
+                            <div className="flex items-center gap-2 text-slate-600 truncate">
+                              <span className="font-bold text-[#2563eb] tracking-wide uppercase flex items-center gap-1.5 shrink-0 font-sans">
+                                <Box className="w-4 h-4 text-[#2563eb]" /> Workspace:
+                              </span>
+                              <span className="font-mono bg-slate-200/60 px-1.5 py-0.5 rounded text-slate-700 truncate font-semibold">
+                                vibelab-sandbox / {projectName || 'app'} / {activeFile}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              {/* Sidebar Toggle */}
+                              <div className="flex items-center gap-1 bg-white border border-slate-200 p-0.5 rounded-lg shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsSidebarHidden(prev => !prev)}
+                                  className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition-all flex items-center gap-1 border-none cursor-pointer ${
+                                    !isSidebarHidden 
+                                      ? 'bg-blue-50 text-[#2563eb]' 
+                                      : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                  }`}
+                                  title={isSidebarHidden ? "Show Files Sidebar" : "Hide Files Sidebar"}
+                                >
+                                  <Columns className="w-3 h-3" />
+                                  <span className="hidden sm:inline font-sans">Files</span>
+                                </button>
+
+                                {/* Guide Panel Toggle */}
+                                <button
+                                  type="button"
+                                  onClick={() => setIsGuideHidden(prev => !prev)}
+                                  className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition-all flex items-center gap-1 border-none cursor-pointer ${
+                                    !isGuideHidden 
+                                      ? 'bg-blue-50 text-[#2563eb]' 
+                                      : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                  }`}
+                                  title={isGuideHidden ? "Show Guide Panel" : "Hide Guide Panel"}
+                                >
+                                  <BookOpen className="w-3 h-3" />
+                                  <span className="hidden sm:inline font-sans">Guide</span>
+                                </button>
+                              </div>
+
+                              <div className="w-px h-4 bg-slate-200" />
+
+                              {/* Workspace View Presets */}
+                              <div className="flex items-center gap-1 bg-white border border-slate-200 p-0.5 rounded-lg shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setWorkspaceLayout('split')}
+                                  className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wide flex items-center gap-1 transition-all border-none cursor-pointer ${
+                                    workspaceLayout === 'split' 
+                                      ? 'bg-[#2563eb] text-white font-extrabold' 
+                                      : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                  }`}
+                                >
+                                  <Columns className="w-3 h-3" />
+                                  <span className="hidden sm:inline font-sans">Split View</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setWorkspaceLayout('code');
+                                    setIsGuideHidden(true); // default to hide guide for full code space
+                                  }}
+                                  className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wide flex items-center gap-1 transition-all border-none cursor-pointer ${
+                                    workspaceLayout === 'code' 
+                                      ? 'bg-[#2563eb] text-white font-extrabold' 
+                                      : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                  }`}
+                                >
+                                  <Code2 className="w-3 h-3" />
+                                  <span className="hidden sm:inline font-sans">Code Only</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setWorkspaceLayout('preview')}
+                                  className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wide flex items-center gap-1 transition-all border-none cursor-pointer ${
+                                    workspaceLayout === 'preview' 
+                                      ? 'bg-[#2563eb] text-white font-extrabold' 
+                                      : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                  }`}
+                                >
+                                  <PlaySquare className="w-3 h-3" />
+                                  <span className="hidden sm:inline font-sans">Preview Only</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Outer Flex Container for Step 6 Panels */}
+                          <div className="flex-1 flex flex-col lg:flex-row h-full w-full bg-white overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+                            
+                            {/* Left Panel 0: Collapsible File Tree Sidebar (Pages, Components, Assets, etc.) */}
+                            {!isSidebarHidden && workspaceLayout !== 'preview' && (
                             <div className="w-full lg:w-[230px] border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0 font-sans transition-all duration-300 select-none">
                               <div className="p-3 border-b border-slate-200 bg-[#f8fafc] flex justify-between items-center text-[10px] text-slate-500 font-mono shrink-0 uppercase tracking-widest font-black">
                                 <span className="flex items-center gap-1.5"><Columns className="w-3.5 h-3.5 text-[#2563eb]" /> Sandbox Files</span>
@@ -2637,7 +2743,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           )}
 
                           {/* Left Panel 1: Guide (300px width, scrollable description guides) */}
-                          <div className="w-full lg:w-[300px] p-5 flex flex-col justify-between bg-white shrink-0 overflow-y-auto scrollbar-thin">
+                          {!isGuideHidden && workspaceLayout !== 'preview' && (
+                            <div className="w-full lg:w-[300px] p-5 flex flex-col justify-between bg-white shrink-0 overflow-y-auto scrollbar-thin">
                             <div className="space-y-4">
                               <div>
                                 <div className="text-[10px] font-bold text-[#2563eb] font-mono tracking-widest uppercase mb-1">
@@ -2828,9 +2935,11 @@ Handles routing via custom React layouts, templates, and server-side model groun
                               </div>
                             </div>
                           </div>
+                          )}
 
                           {/* Center Panel 2: Code Editor (flex-1 to expand beautifully) */}
-                          <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden h-full">
+                          {(workspaceLayout === 'split' || workspaceLayout === 'code') && (
+                            <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden h-full">
                             {/* Tab Bar Utilities header */}
                             <div className="flex items-center justify-between px-2 bg-slate-900 border-b border-slate-800 font-mono text-[10px] shrink-0 select-none overflow-x-auto scrollbar-none h-[38px] w-full">
                               <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-none h-full">
@@ -2977,9 +3086,11 @@ Handles routing via custom React layouts, templates, and server-side model groun
                               <span className="flex items-center gap-1"><Check className="w-3 h-3 text-emerald-500" /> Auto-Saved</span>
                             </div>
                           </div>
+                          )}
 
                           {/* Right Panel 3: Live Interactive Preview (flex-1 to expand beautifully) */}
-                          <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden h-full">
+                          {(workspaceLayout === 'split' || workspaceLayout === 'preview') && (
+                            <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden h-full">
                             {/* Device controls header */}
                             <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white shrink-0 select-none">
                               <div className="flex items-center gap-2">
@@ -3108,6 +3219,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                 )}
                               </div>
                             </div>
+                          </div>
+                          )}
                           </div>
                         </div>
                       )}
