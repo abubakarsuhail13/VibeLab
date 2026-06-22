@@ -1,4 +1,5 @@
 import express from 'express';
+import { GoogleGenAI } from '@google/genai';
 import { getPool } from '../db.js';
 import { sendMail } from '../mail.js';
 
@@ -356,6 +357,138 @@ router.get('/health', async (req, res) => {
     res.json({ status: 'ok', db: true, count: (rows as any)[0].count });
   } catch (err: any) {
     res.json({ status: 'error', db: false, error: err.message });
+  }
+});
+
+// Setup Gemini Client for pre-login mini-ideation
+let aiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured in the server environment settings.');
+  }
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
+  }
+  return aiClient;
+}
+
+// In-memory rate limiting for mini-ideation playground (5 requests per IP per hour)
+const miniIdeationRateLimit = new Map<string, number[]>();
+
+router.post('/public/mini-ideation', async (req, res) => {
+  const { idea } = req.body;
+  if (!idea || typeof idea !== 'string' || !idea.trim()) {
+    return res.status(400).json({ error: "Please enter some idea details!" });
+  }
+
+  const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+
+  let timestamps = miniIdeationRateLimit.get(ip) || [];
+  timestamps = timestamps.filter(t => now - t < oneHour);
+  if (timestamps.length >= 5) {
+    return res.status(429).json({ 
+      error: "You have reached the playground limit of 5 submissions per hour. Please sign up for a free VibeLab account to build unlimited projects!" 
+    });
+  }
+  timestamps.push(now);
+  miniIdeationRateLimit.set(ip, timestamps);
+
+  try {
+    const ai = getGeminiClient();
+    const prompt = `A visitor describes a problem they want to solve: "${idea.trim()}"
+In 2-3 sentences, describe what an AI-built product solving this could look like. Be specific and exciting. End with: "This is what VibeLab could build for you in Phase 2."`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+    });
+
+    const preview_description = response.text || "An exciting product specialized to solve your problem is just one click away. This is what VibeLab could build for you in Phase 2.";
+    res.json({ preview_description });
+  } catch (err: any) {
+    console.error("Mini-ideation error:", err);
+    res.status(500).json({ error: "Failed to generate playground idea. Please try again or create a free account!" });
+  }
+});
+
+router.get('/public/stats', async (req, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // 1. total_products_built: count from mvp_builds where status='approved'
+    const [mvpRows]: any = await p.execute(
+      "SELECT COUNT(*) as count FROM mvp_builds WHERE status = 'approved'"
+    );
+    const total_products_built = mvpRows[0]?.count || 0;
+
+    // 2. total_ideation_sessions: count from ideation_sessions
+    const [ideationRows]: any = await p.execute(
+      "SELECT COUNT(*) as count FROM ideation_sessions"
+    );
+    const total_ideation_sessions = ideationRows[0]?.count || 0;
+
+    // 3. active_students_this_week: count from users with activity in last 7 days
+    const [activeUsersRows]: any = await p.execute(
+      "SELECT COUNT(*) as count FROM users WHERE created_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 7 DAY)"
+    );
+    const active_students_this_week = activeUsersRows[0]?.count || 0;
+
+    res.json({
+      total_products_built,
+      total_ideation_sessions,
+      active_students_this_week: active_students_this_week > 0 ? active_students_this_week : 3
+    });
+  } catch (error: any) {
+    console.error('Failed to fetch public stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/public/showcase', async (req, res) => {
+  try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    const query = `
+      SELECT 
+        pb.project_name, 
+        mb.screenshot_url, 
+        pbp.recommended_track, 
+        u.vl_id
+      FROM mvp_builds mb
+      JOIN product_sessions ps ON mb.session_id = ps.id
+      JOIN users u ON mb.user_id = u.id
+      LEFT JOIN product_blueprints pb ON pb.session_id = ps.id
+      LEFT JOIN project_blueprints pbp ON ps.ideation_session_id = pbp.session_id
+      WHERE mb.status = 'approved' AND mb.screenshot_url IS NOT NULL AND mb.screenshot_url != ''
+      ORDER BY mb.generated_at DESC
+      LIMIT 12
+    `;
+
+    const [rows]: any = await p.execute(query);
+    
+    const showcase = rows.map((r: any) => ({
+      project_name: r.project_name || 'VibeLab Web App',
+      screenshot_url: r.screenshot_url,
+      recommended_track: r.recommended_track || 'Software + AI',
+      vl_id: r.vl_id
+    }));
+
+    res.json(showcase);
+  } catch (error: any) {
+    console.error('Failed to fetch public showcase:', error);
+    res.json([]);
   }
 });
 

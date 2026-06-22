@@ -31,7 +31,7 @@ import {
   ExternalLink,
   ArrowUpRight
 } from "lucide-react";
-import { useState, useRef, useEffect, FormEvent } from "react";
+import React, { useState, useRef, useEffect, FormEvent } from "react";
 import { Toaster } from "react-hot-toast";
 import { Routes, Route, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import AboutPage from "./About";
@@ -757,40 +757,45 @@ const LaunchAnimation = () => {
   );
 };
 
-const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+const BrowserFrame = ({ children }: { children: React.ReactNode }) => (
+  <div className="w-full bg-slate-950 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden text-left flex flex-col h-[340px] md:h-[380px] font-sans">
+    {/* Browser Header Bar */}
+    <div className="flex items-center justify-between px-4 py-2.5 bg-slate-950 border-b border-slate-800">
+      <div className="flex items-center gap-1.5 select-none">
+        <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+        <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+      </div>
+      <div className="bg-slate-900 border border-slate-800/80 rounded-md px-3 py-0.5 text-[11px] text-slate-400 font-mono w-40 text-center select-none truncate">
+        vibelab.app/sandbox
+      </div>
+      <div className="w-8" />
+    </div>
+    {/* Client Area */}
+    <div className="p-5 flex-grow bg-slate-950 text-slate-100 overflow-y-auto relative flex flex-col select-none">
+      {children}
+    </div>
+  </div>
+);
 
-  const handleWaitlistJoin = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      if (response.ok) {
-        setSubmitted(true);
-        setEmail("");
-      }
-    } catch (error) {
-      console.error("Waitlist error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
+  const [activeFrame, setActiveFrame] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveFrame((prev) => (prev + 1) % 4);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <section className="relative pt-48 pb-32 px-6 overflow-hidden min-h-screen flex flex-col items-center justify-center hero-gradient">
+    <section className="relative pt-44 pb-28 px-6 overflow-hidden hero-gradient min-h-[92vh] flex items-center justify-center">
       {/* Background Glows */}
-      <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] -z-10 animate-pulse" />
-      <div className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] -z-10" />
+      <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-[120px] -z-10 animate-pulse" />
+      <div className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px] -z-10" />
 
-      <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center w-full relative z-10">
+        {/* Content Side */}
         <motion.div 
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -799,80 +804,49 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-600 mb-8 uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Join the build revolution</span>
+            <span>FOR GRADE 9–12 STUDENTS</span>
           </div>
           
-          <h1 className="font-display text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 leading-[1.05] text-slate-900">
-            Learn AI & Code. <br />
-            <span className="gradient-text">Through 7 Phases.</span>
+          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-slate-900">
+            Your Idea. <br />
+            <span className="gradient-text">Built by AI.</span> <br />
+            Owned by You.
           </h1>
           
-          <p className="text-xl text-slate-600 max-w-xl mb-12 leading-relaxed">
-            Master software engineering and AI systems through a project-driven 7-phase journey. From Python foundations to certified AI agent developers and cloud-ready architects.
+          <p className="text-lg md:text-xl text-slate-600 max-w-xl mb-10 leading-relaxed font-semibold">
+            VibeLab guides students from a raw idea to a working product through a 5-phase AI-powered journey. No coding experience required.
           </p>
 
-          <form onSubmit={handleWaitlistJoin} className="flex flex-col sm:flex-row gap-3 mb-8 max-w-lg">
-            <div className="relative flex-grow">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-6 text-slate-900 focus:outline-none focus:border-cyan-500 transition-colors shadow-sm"
-                required
-              />
-            </div>
+          <div className="flex flex-col sm:flex-row items-center gap-4 max-w-lg mb-8">
             <button 
-              type="submit"
-              disabled={isSubmitting || submitted}
-              className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all whitespace-nowrap shadow-xl shadow-slate-200 disabled:opacity-70"
+              onClick={() => onNavigate('signup')}
+              className="w-full sm:w-auto bg-slate-900 text-white px-8 py-4.5 rounded-2xl font-black text-sm hover:bg-slate-800 hover:scale-[1.01] transition-all whitespace-nowrap shadow-xl shadow-slate-200 flex items-center justify-center gap-2 cursor-pointer"
             >
-              {submitted ? "Joined!" : isSubmitting ? "Joining..." : "Join Early Access"}
+              Start Building Free <ArrowRight className="w-4 h-4" />
             </button>
-          </form>
-
-          <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Early Access Open</span>
-            </div>
-            <button 
-              onClick={() => onNavigate('contact')}
-              className="flex items-center gap-3 text-slate-900 font-bold px-8 py-4 rounded-2xl border border-slate-200 hover:bg-slate-100 transition-all text-sm group"
+            <a 
+              href="#schools"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 text-slate-700 font-bold px-8 py-4.5 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all text-sm"
             >
-              <School className="w-5 h-5 text-cyan-600 group-hover:scale-110 transition-transform" />
-              For Schools
-            </button>
+              <School className="w-4 h-4 text-cyan-600" />
+              For Schools & Educators
+            </a>
           </div>
 
-          <div className="mt-16 flex items-center gap-6">
-            <div className="flex -space-x-4">
-              {[1, 2, 3, 4].map((i) => (
-                <img 
-                  key={i}
-                  src={`https://i.pravatar.cc/100?img=${i + 15}`} 
-                  alt="User" 
-                  className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                  referrerPolicy="no-referrer"
-                />
-              ))}
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 font-medium">Trusted by leading schools and students</p>
-            </div>
+          <div className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Enrollment Open for Summer 2026</span>
           </div>
         </motion.div>
 
+        {/* Showcase side */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="relative hidden lg:block"
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="relative block"
         >
           <LaunchAnimation />
-          <div className="absolute -top-10 -right-10 w-40 h-40 border-2 border-cyan-500/20 rounded-full -z-10 animate-[spin_10s_linear_infinite]" />
-          <div className="absolute -bottom-10 -left-10 w-60 h-60 border-2 border-blue-500/10 rounded-full -z-10 animate-[spin_15s_linear_infinite_reverse]" />
         </motion.div>
       </div>
     </section>
@@ -2052,6 +2026,8 @@ const LearningPathSection = () => {
     </section>
   );
 };
+
+
 
 const PublicProfileWrapper = ({ currentUser }: { currentUser: any }) => {
   const { id } = useParams<{ id: string }>();
