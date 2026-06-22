@@ -1928,6 +1928,11 @@ export default function App() {
   const [loadingSession, setLoadingSession] = useState(true);
 
   const handleNavigate = (page: string) => {
+    if (page.startsWith('/')) {
+      navigate(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     const routeMap: Record<string, string> = {
       home: '/',
       dashboard: '/dashboard',

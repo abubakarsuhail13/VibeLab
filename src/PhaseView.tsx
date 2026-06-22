@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { usePhase1Reflection } from "./hooks/usePhase1Reflection";
 import Phase2BuildWalkthrough from "./components/Phase2BuildWalkthrough";
@@ -126,11 +126,26 @@ export function formatPhaseNameForUI(name: string): string {
 
 export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const phase1Reflection = usePhase1Reflection();
   const [phase, setPhase] = useState<Phase | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'learn' | 'build' | 'progress'>('build');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('startQuiz') === 'true') {
+      setActiveTab('learn');
+      setQuizActive(true);
+      setTimeout(() => {
+        const element = document.getElementById("quiz-challenge-section");
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 600);
+    }
+  }, [location.search]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [submission, setSubmission] = useState<Submission>({ github_url: '', live_url: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);

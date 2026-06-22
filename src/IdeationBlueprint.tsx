@@ -416,10 +416,10 @@ export default function IdeationBlueprint({ onNavigate, onUpdateUser }: Ideation
             className="pt-6 flex flex-col sm:flex-row gap-4 w-full"
           >
             <button
-              onClick={() => onNavigate("dashboard")}
+              onClick={() => onNavigate("/phase/1?startQuiz=true")}
               className="flex-grow bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-base px-8 py-4.5 rounded-2xl transition-all shadow-xl shadow-slate-950/10 active:scale-[0.98] select-none text-center cursor-pointer"
             >
-              Unlock Phase 2 — Start Building →
+              Take Assessment Quiz & Unlock Phase 2 →
             </button>
             <button
               onClick={handleShare}
