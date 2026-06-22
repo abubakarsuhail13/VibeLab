@@ -1328,7 +1328,10 @@ router.post('/mvp/approve', authenticateToken, async (req: any, res) => {
 
     // Get recommended track / product type
     const [sessionRows]: any = await p.execute(
-      `SELECT recommended_track FROM product_sessions WHERE id = ?`,
+      `SELECT pb.recommended_track 
+       FROM product_sessions ps
+       LEFT JOIN project_blueprints pb ON ps.ideation_session_id = pb.session_id
+       WHERE ps.id = ?`,
       [session_id]
     );
     const recommended_track = sessionRows[0]?.recommended_track || 'Web Application';

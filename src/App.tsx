@@ -471,292 +471,6 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
   );
 };
 
-const LaunchAnimation = () => {
-  const [isLaunching, setIsLaunching] = useState(false);
-
-  // Cycle animation every 6 seconds
-  useState(() => {
-    const interval = setInterval(() => {
-      setIsLaunching(prev => !prev);
-    }, 6000);
-    return () => clearInterval(interval);
-  });
-
-  return (
-    <div className="relative w-full aspect-[4/5] flex items-center justify-center">
-      {/* Background Atmosphere */}
-      <motion.div 
-        animate={{ 
-          scale: isLaunching ? 1.2 : 1,
-          opacity: isLaunching ? 0.8 : 0.4
-        }}
-        className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-transparent rounded-[3rem] blur-3xl"
-      />
-
-      {/* The "App" being built/launched with infinitely looping float and responsive shift */}
-      <motion.div
-        animate={{ 
-          y: isLaunching ? [-35, -42, -35] : [0, -10, 0],
-          scale: isLaunching ? 1.05 : 1,
-          rotateX: isLaunching ? 4 : 0
-        }}
-        transition={{ 
-          y: { 
-            repeat: Infinity, 
-            duration: 4.5, 
-            ease: "easeInOut" 
-          },
-          scale: { type: "spring", stiffness: 100 },
-          rotateX: { type: "spring", stiffness: 100 }
-        }}
-        className="relative z-20 w-72 md:w-80 glass p-6 rounded-[2.5rem] border-cyan-500/20 shadow-2xl overflow-hidden"
-      >
-        {/* App Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-400/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-amber-400/50" />
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/50" />
-          </div>
-          <motion.div 
-            animate={{ opacity: isLaunching ? 1 : 0, x: isLaunching ? 0 : 10 }}
-            className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-[10px] font-bold text-emerald-600 uppercase tracking-wider"
-          >
-            Live
-          </motion.div>
-        </div>
-
-        {/* App Content Area */}
-        <div className="space-y-4">
-          <div className="h-44 rounded-2xl bg-slate-950 border border-slate-800 shadow-inner flex items-center justify-center overflow-hidden relative">
-            {/* Custom Code Grid Background */}
-            <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:14px_14px] pointer-events-none" />
-            
-            {!isLaunching ? (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center gap-2 text-center p-2 relative z-10 w-full h-full justify-center"
-              >
-                {/* Side-by-Side Floating Tech stack representing educational/coding process */}
-                <div className="flex items-center justify-center gap-3 relative">
-                  {/* Laptop Emoji */}
-                  <motion.div
-                    animate={{ y: [0, -6, 0], rotate: [0, -2, 0] }}
-                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                    className="relative w-14 h-14 flex items-center justify-center"
-                  >
-                    <img 
-                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Laptop.png" 
-                      alt="Laptop" 
-                      className="w-12 h-12 object-contain"
-                      referrerPolicy="no-referrer"
-                    />
-                  </motion.div>
-
-                  {/* Connecting Digital Spark Pulsing */}
-                  <div className="h-0.5 w-6 bg-gradient-to-r from-blue-500 to-cyan-400 animate-pulse relative">
-                    <span className="absolute -top-1 left-1/2 w-2.5 h-2.5 bg-cyan-400 rounded-full animate-ping" />
-                  </div>
-
-                  {/* Technologist Emoji */}
-                  <motion.div
-                    animate={{ y: [0, -8, 0], rotate: [0, 2, 0] }}
-                    transition={{ repeat: Infinity, duration: 3, delay: 0.5, ease: "easeInOut" }}
-                    className="relative w-14 h-14 flex items-center justify-center"
-                  >
-                    <img 
-                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/People%20with%20professions/Man%20Technologist%20Medium%20Light%20Skin%20Tone.png" 
-                      alt="Coder" 
-                      className="w-12 h-12 object-contain"
-                      referrerPolicy="no-referrer"
-                    />
-                  </motion.div>
-                </div>
-
-                {/* Micro educational feedback console displaying live Vibe compilation */}
-                <div className="flex flex-col items-center w-full px-4">
-                  <span className="text-[10px] font-mono text-cyan-400 font-extrabold uppercase tracking-widest bg-cyan-950/60 px-2.5 py-1 rounded-full border border-cyan-800/40 animate-pulse">
-                    ⚡ Vibe compiling App
-                  </span>
-                  
-                  {/* Floating Code Snippets with Framer Motion */}
-                  <div className="absolute inset-x-0 bottom-1 flex justify-around gap-1 pointer-events-none opacity-40 px-2">
-                    <motion.span 
-                      animate={{ y: [15, -60], opacity: [0, 1, 0] }}
-                      transition={{ repeat: Infinity, duration: 2.2, ease: "linear" }}
-                      className="font-mono text-[9px] text-cyan-400 font-bold bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-800/20"
-                    >
-                      npm run dev
-                    </motion.span>
-                    <motion.span 
-                      animate={{ y: [15, -60], opacity: [0, 1, 0] }}
-                      transition={{ repeat: Infinity, duration: 2.2, delay: 0.8, ease: "linear" }}
-                      className="font-mono text-[9px] text-indigo-400 font-bold bg-indigo-950/30 px-1.5 py-0.5 rounded border border-indigo-800/20"
-                    >
-                      {"<VibeCode />"}
-                    </motion.span>
-                    <motion.span 
-                      animate={{ y: [15, -60], opacity: [0, 1, 0] }}
-                      transition={{ repeat: Infinity, duration: 2.2, delay: 1.4, ease: "linear" }}
-                      className="font-mono text-[9px] text-emerald-400 font-bold bg-emerald-950/30 px-1.5 py-0.5 rounded border border-emerald-800/20"
-                    >
-                      Gemini.vibe()
-                    </motion.span>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center gap-3 text-center relative z-10 w-full h-full justify-center"
-              >
-                {/* Animated Flying Rocket Deploy */}
-                <div className="relative w-18 h-18 flex items-center justify-center">
-                  <motion.div
-                    animate={{ 
-                      y: [-4, 4, -4],
-                      x: [-2, 2, -2]
-                    }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                  >
-                    <img 
-                      src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" 
-                      alt="Rocket" 
-                      className="w-14 h-14 object-contain filter drop-shadow-[0_0_12px_rgba(59,130,246,0.6)]"
-                      referrerPolicy="no-referrer"
-                    />
-                  </motion.div>
-                  {/* Floating Sparkles backdrop */}
-                  <img 
-                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Sparkles.png" 
-                    alt="Sparkles" 
-                    className="absolute -top-2 -right-2 w-6 h-6 object-contain animate-spin"
-                    style={{ animationDuration: '6s' }}
-                    referrerPolicy="no-referrer"
-                  />
-                  {/* Glowing core engine circle behind the rocket */}
-                  <span className="absolute bottom-1 w-8 h-8 bg-blue-500/30 rounded-full blur-md animate-pulse" />
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-[11px] font-mono text-emerald-400 font-extrabold uppercase tracking-widest bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800/40">
-                    🚀 App Live on VibeLab
-                  </span>
-                </div>
-              </motion.div>
-            )}
-            
-            {/* Floating Cybernetic Code Particles during compilation/launch */}
-            <div className="absolute inset-0 pointer-events-none">
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ y: 80, x: 0, opacity: 0 }}
-                  animate={{ y: -120, x: (i - 4) * 22, opacity: [0, 0.8, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.6, delay: i * 0.15 }}
-                  className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-gradient-to-t from-cyan-400 to-blue-500 rounded-full"
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="h-2 w-3/4 bg-slate-200 rounded-full" />
-            <div className="h-2 w-1/2 bg-slate-200 rounded-full" />
-          </div>
-
-          <motion.button
-            animate={{ 
-              backgroundColor: isLaunching ? "#0891b2" : "#f1f5f9",
-              color: isLaunching ? "#ffffff" : "#64748b"
-            }}
-            className="w-full py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2"
-          >
-            {isLaunching ? <CheckCircle2 className="w-4 h-4" /> : <Cpu className="w-4 h-4" />}
-            {isLaunching ? "Deployment Successful" : "Building App..."}
-          </motion.button>
-        </div>
-
-        {/* Decorative Glow */}
-        <motion.div 
-          animate={{ 
-            opacity: isLaunching ? [0.2, 0.5, 0.2] : 0,
-          }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute inset-0 bg-cyan-400/20 pointer-events-none"
-        />
-      </motion.div>
-
-      {/* Floating Elements around the app */}
-      <div className="absolute inset-0 pointer-events-none">
-        <motion.div
-          animate={{ 
-            y: [0, -20, 0],
-            rotate: [0, 10, 0],
-            opacity: isLaunching ? 0 : 1
-          }}
-          transition={{ repeat: Infinity, duration: 4 }}
-          className="absolute top-1/4 right-10 glass p-3 rounded-2xl border-cyan-500/20 shadow-xl"
-        >
-          <Layers className="w-6 h-6 text-cyan-500" />
-        </motion.div>
-
-        <motion.div
-          animate={{ 
-            y: [0, 20, 0],
-            rotate: [0, -10, 0],
-            opacity: isLaunching ? 1 : 0,
-            scale: isLaunching ? 1 : 0.5
-          }}
-          transition={{ repeat: Infinity, duration: 5 }}
-          className="absolute bottom-1/4 left-10 glass p-3 rounded-2xl border-blue-500/20 shadow-xl"
-        >
-          <Globe className="w-6 h-6 text-blue-600" />
-        </motion.div>
-
-        {/* Sparkles on Launch */}
-        {isLaunching && (
-          <>
-            <motion.div 
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="absolute top-20 left-20"
-            >
-              <Sparkles className="w-8 h-8 text-amber-400 animate-bounce" />
-            </motion.div>
-            <motion.div 
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="absolute bottom-20 right-20"
-            >
-              <Sparkles className="w-6 h-6 text-cyan-400 animate-pulse" />
-            </motion.div>
-          </>
-        )}
-      </div>
-
-      {/* Student Representation (Simplified) */}
-      <motion.div 
-        animate={{ 
-          x: isLaunching ? 100 : 0,
-          opacity: isLaunching ? 0 : 1
-        }}
-        className="absolute -bottom-10 -left-10 z-30 flex items-center gap-4 glass p-4 rounded-3xl border-slate-200 shadow-2xl"
-      >
-        <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-cyan-500">
-          <img src="https://i.pravatar.cc/100?img=11" alt="Student" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-        </div>
-        <div>
-          <p className="text-xs font-bold text-slate-900">Alex is building...</p>
-          <p className="text-[10px] text-slate-500">AI Portfolio App</p>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
 const BrowserFrame = ({ children }: { children: React.ReactNode }) => (
   <div className="w-full bg-slate-950 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden text-left flex flex-col h-[340px] md:h-[380px] font-sans">
     {/* Browser Header Bar */}
@@ -843,10 +557,153 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.8 }}
           className="relative block"
         >
-          <LaunchAnimation />
+          <BrowserFrame>
+            <AnimatePresence mode="wait">
+              {activeFrame === 0 && (
+                <motion.div
+                  key="frame-0"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex flex-col h-full justify-between"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                      <span className="text-xs font-bold text-slate-400 font-mono">Step 1: AI Ideation Chat</span>
+                    </div>
+                    <div className="flex items-start gap-3 max-w-[90%] font-sans">
+                      <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold text-xs shrink-0 font-sans">AI</div>
+                      <div className="bg-slate-900/80 border border-slate-800/80 p-3.5 rounded-2xl text-xs text-slate-300 leading-relaxed font-semibold">
+                        What problem or frustration do you face often?
+                      </div>
+                    </div>
+                    <motion.div 
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 }}
+                      className="flex items-start gap-3 max-w-[90%] ml-auto flex-row-reverse"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs shrink-0 font-sans">Me</div>
+                      <div className="bg-cyan-600 p-3.5 rounded-2xl text-xs text-white leading-relaxed font-medium shadow-lg shadow-cyan-950/20">
+                        I hate forgetting homework deadlines and manually linking them to my calendar.
+                      </div>
+                    </motion.div>
+                  </div>
+                  <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center justify-between text-xs text-slate-400 mt-4 font-medium">
+                    <span>Analyzing constraints... generating blueprint segments</span>
+                    <div className="w-4 h-4 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+                  </div>
+                </motion.div>
+              )}
+
+              {activeFrame === 1 && (
+                <motion.div
+                  key="frame-1"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex flex-col h-full justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                      <span className="text-xs font-bold text-slate-400 font-mono">Step 2: Interactive Blueprint</span>
+                    </div>
+                    <div className="space-y-2.5 bg-slate-900/40 p-4 rounded-xl border border-slate-900">
+                      <div>
+                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">PROJECT INSTANCE</h4>
+                        <p className="text-sm font-extrabold text-white">SmartCalendar Assistant</p>
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">PROBLEM STATEMENT</h4>
+                        <p className="text-xs text-slate-300 font-medium leading-relaxed">Secondary school students lack a streamlined way to balance tasks and class periods.</p>
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">CORE PROPOSED VALUE</h4>
+                        <p className="text-xs text-slate-300 font-medium leading-relaxed">An elegant, automated calendar allocation loop styled for modern mobile browsers.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-xl text-xs font-semibold text-center mt-3">
+                     ✓ Draft approved by Student Accelerator
+                  </div>
+                </motion.div>
+              )}
+
+              {activeFrame === 2 && (
+                <motion.div
+                  key="frame-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex flex-col h-full justify-between font-sans"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                      <span className="text-xs font-bold text-slate-400 font-mono">Step 3: Direct Feature Approval</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="p-3 bg-slate-900 rounded-xl border border-slate-850 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-extrabold text-white">Smart Homework Parser</p>
+                          <p className="text-[10px] text-slate-500 font-medium leading-relaxed">Parses teacher assignments dynamically</p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/20 font-mono">Approved</span>
+                      </div>
+                      <div className="p-3 bg-slate-900 rounded-xl border border-slate-850 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-extrabold text-white">Focus Segment Allocator</p>
+                          <p className="text-[10px] text-slate-500 font-medium leading-relaxed">Auto-books task periods based on density</p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/20 font-mono">Approved</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-slate-500 text-center font-semibold mt-3">
+                    Every element verified by VibeLab's linter engine
+                  </div>
+                </motion.div>
+              )}
+
+              {activeFrame === 3 && (
+                <motion.div
+                  key="frame-3"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex flex-col h-full justify-between"
+                >
+                  <div className="text-center p-3.5 bg-slate-900/60 rounded-xl border border-slate-850 space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/10 mx-auto flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-950/20">
+                      <Rocket className="w-5 h-5 animate-bounce" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-white">SmartCalendar is LIVE & ACTIVE!</h4>
+                      <p className="text-xs text-slate-400 font-mono">Deployed securely at <span className="text-cyan-400 underline font-mono select-all">smartcal.vibelab.app</span></p>
+                    </div>
+                    <div className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20 text-[9px] font-black text-emerald-400 tracking-wider uppercase select-none">
+                      BUILT BY AI, SHIPPED BY ME
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <div className="p-2.5 bg-slate-900/40 rounded-lg">Response: 14ms</div>
+                    <div className="p-2.5 bg-slate-900/40 rounded-lg font-mono">Cloud Run</div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </BrowserFrame>
+          <div className="absolute -top-10 -right-10 w-40 h-40 border-2 border-cyan-500/5 rounded-full -z-10 animate-[spin_10s_linear_infinite]" />
+          <div className="absolute -bottom-10 -left-10 w-60 h-60 border-2 border-blue-500/5 rounded-full -z-10 animate-[spin_15s_linear_infinite_reverse]" />
         </motion.div>
       </div>
     </section>
