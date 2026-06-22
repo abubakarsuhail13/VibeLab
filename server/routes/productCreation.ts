@@ -956,7 +956,58 @@ No markdown. No explanation. No code fences. Just the raw HTML.`;
       });
 
       const clean = parseGeminiResponse(geminiRes);
-      parsedMvp = JSON.parse(clean);
+      try {
+        parsedMvp = JSON.parse(clean);
+      } catch (parseErr) {
+        console.warn('JSON.parse failed on Gemini response, attempting custom regex-based robust parsing extraction...', parseErr);
+        
+        let extractedHtml = '';
+        const htmlBlockMatch = clean.match(/(<!DOCTYPE[\s\S]*?<\/html>|<html[\s\S]*?<\/html>)/i);
+        if (htmlBlockMatch) {
+          extractedHtml = htmlBlockMatch[0];
+          if (extractedHtml.includes('\\"')) {
+            extractedHtml = extractedHtml
+              .replace(/\\"/g, '"')
+              .replace(/\\n/g, '\n')
+              .replace(/\\t/g, '\t')
+              .replace(/\\\\/g, '\\');
+          }
+        }
+        
+        let extractedArch = '';
+        const archMatch = clean.match(/"architecture_explanation"\s*:\s*"([\s\S]*?)"\s*(?:,|\s*})/i);
+        if (archMatch) {
+          extractedArch = archMatch[1];
+          if (extractedArch.includes('\\"')) {
+            extractedArch = extractedArch
+              .replace(/\\"/g, '"')
+              .replace(/\\n/g, '\n')
+              .replace(/\\t/g, '\t')
+              .replace(/\\\\/g, '\\');
+          }
+        } else {
+          const alternativeArchMatch = clean.match(/architecture_explanation[\s\S]*?:\s*"([\s\S]*?)"/i);
+          if (alternativeArchMatch) {
+            extractedArch = alternativeArchMatch[1];
+            if (extractedArch.includes('\\"')) {
+              extractedArch = extractedArch
+                .replace(/\\"/g, '"')
+                .replace(/\\n/g, '\n')
+                .replace(/\\t/g, '\t')
+                .replace(/\\\\/g, '\\');
+            }
+          }
+        }
+        
+        if (extractedHtml) {
+          parsedMvp = {
+            mvp_html: extractedHtml,
+            architecture_explanation: extractedArch || `🏗️ Custom-Built MVP\n\n✨ Features Loaded\nRendered customized pages and styled panels dynamically leveraging system templates.\n\n👥 Audience\nBuilt for the specified target demographic users.`
+          };
+        } else {
+          throw parseErr;
+        }
+      }
     } catch (geminiError) {
       console.warn('Failed to dynamically draft custom MVP HTML via Gemini, compiling click-to-cycle tab prototype local fallback:', geminiError);
       

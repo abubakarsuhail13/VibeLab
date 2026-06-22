@@ -937,11 +937,11 @@ export const getPool = async () => {
         // Safe, isolated column generator for all tables
         const addColumnIfNeeded = async (tableName: string, columnName: string, columnDef: string) => {
           try {
-            const [cols]: any = await connection.execute(`SHOW COLUMNS FROM ${tableName}`);
+            const [cols]: any = await connection.execute(`SHOW COLUMNS FROM \`${tableName}\``);
             const names = cols.map((c: any) => c.Field);
             if (!names.includes(columnName)) {
               console.log(`DB Migration: Adding column ${columnName} to ${tableName}...`);
-              await connection.execute(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDef}`);
+              await connection.execute(`ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${columnDef}`);
             }
           } catch (err: any) {
             console.error(`DB Migration Warn: Failed adding ${columnName} to ${tableName}:`, err.message);
