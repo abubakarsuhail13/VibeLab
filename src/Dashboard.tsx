@@ -30,7 +30,8 @@ import {
   X,
   Plus,
   Trash2,
-  BrainCircuit
+  BrainCircuit,
+  Menu
 } from "lucide-react";
 import PhaseView from "./PhaseView";
 import Leaderboard from "./Leaderboard";
@@ -112,6 +113,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [settingsError, setSettingsError] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Teacher Workspace State Parameters
   const [cohortStudents, setCohortStudents] = useState<any[]>([]);
@@ -142,6 +144,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
   const navigate = useNavigate();
 
   useEffect(() => {
+    setIsMobileMenuOpen(false);
     const path = location.pathname;
     if (path === '/dashboard') {
       setActiveView('overview');
@@ -507,10 +510,25 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <div className="w-72 bg-white border-r border-slate-200 hidden lg:flex flex-col p-6 pt-20 sticky top-0 h-screen">
+  const renderSidebarContent = (isMobile: boolean = false) => {
+    return (
+      <div className="flex flex-col h-full">
+        {isMobile && (
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-150">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-sm">V</div>
+              <span className="font-display font-bold text-lg text-slate-900">VibeLab</span>
+            </div>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        )}
+        
         <div className="relative group mb-6">
           <div className="flex items-center gap-3.5 px-3 py-2.5 bg-slate-50/50 rounded-xl border border-slate-100/50 overflow-hidden">
             <div 
@@ -531,13 +549,6 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                 </div>
               )}
             </div>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileChange} 
-              className="hidden" 
-              accept="image/*"
-            />
             <div className="truncate">
               <p className="font-bold text-slate-900 text-sm truncate">{user?.name || 'User'}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
@@ -562,7 +573,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
           {user?.role === "teacher" ? (
             <>
               <button 
-                onClick={() => { navigate('/dashboard'); fetchTeacherData(); }}
+                onClick={() => { navigate('/dashboard'); fetchTeacherData(); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'overview' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -572,7 +583,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => { navigate('/dashboard/grading'); fetchTeacherData(); }}
+                onClick={() => { navigate('/dashboard/grading'); fetchTeacherData(); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'grading' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -582,7 +593,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => { navigate('/dashboard/support'); fetchTeacherData(); }}
+                onClick={() => { navigate('/dashboard/support'); fetchTeacherData(); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'support' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -592,7 +603,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => { navigate('/leaderboard'); fetchDashboardData(); }}
+                onClick={() => { navigate('/leaderboard'); fetchDashboardData(); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -602,7 +613,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => navigate('/settings')}
+                onClick={() => { navigate('/settings'); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -614,7 +625,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
           ) : (
             <>
               <button 
-                onClick={() => navigate('/dashboard')}
+                onClick={() => { navigate('/dashboard'); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'overview' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -624,7 +635,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => navigate('/dashboard/blueprints')}
+                onClick={() => { navigate('/dashboard/blueprints'); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'blueprints' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -634,7 +645,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => navigate('/dashboard/submissions')}
+                onClick={() => { navigate('/dashboard/submissions'); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'submissions' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -644,7 +655,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => navigate('/dashboard/certificates')}
+                onClick={() => { navigate('/dashboard/certificates'); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'certificates' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -654,7 +665,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => navigate('/leaderboard')}
+                onClick={() => { navigate('/leaderboard'); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -664,7 +675,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => navigate('/settings')}
+                onClick={() => { navigate('/settings'); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -685,7 +696,6 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                 </div>
               ) : (
                 <>
-                  {/* Phase 1: Discovery & Ideation */}
                   <button
                     onClick={() => {
                       if (user?.ideation_completed) {
@@ -699,6 +709,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                           navigate('/ideation');
                         }
                       }
+                      if (isMobile) setIsMobileMenuOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
                       (activeView === 'ideation' || (activeView === 'phase' && selectedPhaseId === 1))
@@ -721,7 +732,6 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                     let displayStatus = phase.status;
                     let displayName = formatPhaseNameForUI(phase.name);
                     
-                    // If Phase 1 (ideation_completed) is done, Phase 2 is automatically unlocked
                     if (phase.order_index === 2 && user?.ideation_completed) {
                       if (displayStatus === 'locked') {
                         displayStatus = 'active';
@@ -733,7 +743,10 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                     return (
                       <button 
                         key={phase.id}
-                        onClick={() => handlePhaseClick(phase.id)}
+                        onClick={() => {
+                          handlePhaseClick(phase.id);
+                          if (isMobile) setIsMobileMenuOpen(false);
+                        }}
                         disabled={isLocked}
                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold transition-all group ${
                           activeView === 'phase' && selectedPhaseId === phase.id
@@ -796,13 +809,76 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
            </div>
            
            <button 
-            onClick={onLogout}
+            onClick={() => {
+              onLogout();
+              if (isMobile) setIsMobileMenuOpen(false);
+            }}
             className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50/50 transition-all"
           >
             <LogOut className="w-4 h-4" />
             Log Out
           </button>
         </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      {/* Invisible file input for Avatar Uploading */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        className="hidden" 
+        accept="image/*"
+      />
+
+      {/* Sticky Top Mobile Header (only visible on mobile/tablets) */}
+      <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-35 w-full shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-black text-sm">V</div>
+          <span className="font-display font-bold text-lg text-slate-900">VibeLab</span>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="p-2 text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Animated Sliding Menu Drawer Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 lg:hidden"
+            />
+            
+            {/* Slide-over Drawer */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.35 }}
+              className="fixed inset-y-0 left-0 w-80 bg-white border-r border-slate-200 z-50 lg:hidden flex flex-col p-6 overflow-y-auto"
+            >
+              {renderSidebarContent(true)}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar */}
+      <div className="w-72 bg-white border-r border-slate-200 hidden lg:flex flex-col p-6 pt-20 sticky top-0 h-screen shrink-0">
+        {renderSidebarContent(false)}
       </div>
 
       {/* Main Content */}
@@ -1140,7 +1216,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
 
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[600px] bg-white rounded-[3rem] border border-slate-200 overflow-hidden shadow-sm">
                     {/* Conversations list sidebar */}
-                    <div className="col-span-4 border-r border-slate-100 h-full flex flex-col font-display">
+                    <div className="lg:col-span-4 col-span-1 border-r border-slate-100 h-full flex flex-col font-display">
                       <div className="p-6 border-b border-slate-100 bg-slate-50/50">
                         <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Active Channels</span>
                       </div>
@@ -1176,7 +1252,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                     </div>
 
                     {/* Chat communication portal */}
-                    <div className="col-span-8 h-full flex flex-col justify-between bg-slate-50/20">
+                    <div className="lg:col-span-8 col-span-1 h-full flex flex-col justify-between bg-slate-50/20">
                       {activeSessionStudent ? (
                         <>
                           {/* Thread header */}

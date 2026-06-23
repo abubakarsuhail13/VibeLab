@@ -940,7 +940,7 @@ const StudentTicker = () => {
             <h2 className="text-3xl md:text-4xl font-display font-extrabold text-slate-900 mt-2 tracking-tight">Live Student Launches &amp; Certifications</h2>
           </div>
           <p className="text-slate-500 text-sm max-w-md font-medium leading-relaxed">
-            Real achievements built and validated on VibeLab, showcasing verified MVPs and expert-level AI credentials. Click any card to expand and review their full stack and codebase.
+            Real achievements built and validated on VibeLab, showcasing verified product concepts and expert-level AI credentials. Click any card to expand and review their full project blueprint.
           </p>
         </div>
       </div>
@@ -1508,25 +1508,25 @@ const Testimonials = () => {
     {
       text: "The AI-driven roadmap was a game-changer. It identified exactly where I was struggling and provided targeted exercises that actually worked.",
       name: "Sarah Jenkins",
-      role: "Data Scientist at Meta",
+      role: "Product Strategist at Meta",
       img: "https://i.pravatar.cc/150?img=32"
     },
     {
       text: "I've tried many platforms, but the immersive labs here are on another level. It's the closest thing to real-world experience you can get online.",
       name: "David Chen",
-      role: "Security Analyst at Google",
+      role: "Innovation Lead at Google",
       img: "https://i.pravatar.cc/150?img=12"
     },
     {
-      text: "VibeLab's project-based approach helped me land my first role as a Junior Dev in just 4 months. The community is incredibly supportive.",
+      text: "VibeLab's project-based approach helped me launch my first local community solution in just 4 months. The community is incredibly supportive.",
       name: "Elena Rodriguez",
-      role: "Frontend Developer at Vercel",
+      role: "Product Specialist at Vercel",
       img: "https://i.pravatar.cc/150?img=45"
     },
     {
-      text: "The ability to build production-ready apps while learning the fundamentals is what sets VibeLab apart. It's the future of education.",
+      text: "The ability to build real-world solutions while learning the fundamentals is what sets VibeLab apart. It's the future of education.",
       name: "Marcus Thorne",
-      role: "Fullstack Engineer at Stripe",
+      role: "Innovation Consultant at Stripe",
       img: "https://i.pravatar.cc/150?img=68"
     }
   ];
@@ -1831,7 +1831,7 @@ const LearningPathSection = () => {
   ];
 
   return (
-    <section id="path" className="py-40 px-6 bg-slate-900 text-white relative overflow-hidden">
+    <section id="how-it-works" className="py-40 px-6 bg-slate-900 text-white relative overflow-hidden">
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[120px] -z-0" />
       
       <div className="max-w-7xl mx-auto relative z-10">
@@ -1839,8 +1839,8 @@ const LearningPathSection = () => {
           <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 leading-tight text-white">
             The 6-Phase <span className="text-cyan-400">Journey.</span>
           </h2>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-            A step-by-step innovation pathway designed to empower every student, regardless of prior technical background.
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-semibold">
+            From curious student to confident innovator — a step-by-step pathway designed to empower every learner, regardless of background.
           </p>
         </div>
 
