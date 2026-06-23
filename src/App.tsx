@@ -29,7 +29,12 @@ import {
   Menu,
   X,
   ExternalLink,
-  ArrowUpRight
+  ArrowUpRight,
+  Heart,
+  Sprout,
+  Leaf,
+  Briefcase,
+  Building2
 } from "lucide-react";
 import React, { useState, useRef, useEffect, FormEvent } from "react";
 import { Toaster } from "react-hot-toast";
@@ -518,17 +523,16 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-600 mb-8 uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>FOR GRADE 9–12 STUDENTS</span>
+            <span>AN AI-POWERED INNOVATION PLATFORM FOR STUDENTS</span>
           </div>
           
           <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-slate-900">
-            Your Idea. <br />
-            <span className="gradient-text">Built by AI.</span> <br />
-            Owned by You.
+            Turning Student Ideas <br />
+            <span className="gradient-text">Into Real-World Solutions.</span>
           </h1>
           
           <p className="text-lg md:text-xl text-slate-600 max-w-xl mb-10 leading-relaxed font-semibold">
-            VibeLab guides students from a raw idea to a working product through a 5-phase AI-powered journey. No coding experience required.
+            VibeLab combines AI, entrepreneurship, and project-based learning to help students identify problems, design solutions, and build real innovations — no coding background required.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 max-w-lg mb-8">
@@ -536,14 +540,14 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
               onClick={() => onNavigate('signup')}
               className="w-full sm:w-auto bg-slate-900 text-white px-8 py-4.5 rounded-2xl font-black text-sm hover:bg-slate-800 hover:scale-[1.01] transition-all whitespace-nowrap shadow-xl shadow-slate-200 flex items-center justify-center gap-2 cursor-pointer"
             >
-              Start Building Free <ArrowRight className="w-4 h-4" />
+              Start the Journey <ArrowRight className="w-4 h-4" />
             </button>
             <a 
-              href="#schools"
+              href="#audience-section"
               className="w-full sm:w-auto flex items-center justify-center gap-2 text-slate-700 font-bold px-8 py-4.5 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all text-sm"
             >
               <School className="w-4 h-4 text-cyan-600" />
-              For Schools & Educators
+              For Schools & Government →
             </a>
           </div>
 
@@ -574,12 +578,12 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
                       <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      <span className="text-xs font-bold text-slate-400 font-mono">Step 1: AI Ideation Chat</span>
+                      <span className="text-xs font-bold text-slate-400 font-mono">Phase 1: Identify the Problem</span>
                     </div>
                     <div className="flex items-start gap-3 max-w-[90%] font-sans">
-                      <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold text-xs shrink-0 font-sans">AI</div>
-                      <div className="bg-slate-900/80 border border-slate-800/80 p-3.5 rounded-2xl text-xs text-slate-300 leading-relaxed font-semibold">
-                        What problem or frustration do you face often?
+                      <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs shrink-0">Student</div>
+                      <div className="bg-slate-900 border border-slate-850 p-3.5 rounded-2xl text-xs text-slate-300 leading-relaxed font-semibold">
+                        How can we help small neighborhood food stores reduce organic waste?
                       </div>
                     </div>
                     <motion.div 
@@ -588,14 +592,14 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
                       transition={{ delay: 0.8 }}
                       className="flex items-start gap-3 max-w-[90%] ml-auto flex-row-reverse"
                     >
-                      <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs shrink-0 font-sans">Me</div>
-                      <div className="bg-cyan-600 p-3.5 rounded-2xl text-xs text-white leading-relaxed font-medium shadow-lg shadow-cyan-950/20">
-                        I hate forgetting homework deadlines and manually linking them to my calendar.
+                      <div className="w-7 h-7 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold text-xs shrink-0">AI</div>
+                      <div className="bg-cyan-900/50 border border-cyan-500/20 p-3.5 rounded-2xl text-xs text-slate-200 leading-relaxed font-medium shadow-lg shadow-cyan-950/20">
+                        Excellent problem. Let's design a solution concept that analyzes perishability and matches excess stock with buyer demand in real time.
                       </div>
                     </motion.div>
                   </div>
                   <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center justify-between text-xs text-slate-400 mt-4 font-medium">
-                    <span>Analyzing constraints... generating blueprint segments</span>
+                    <span>Structuring problem dynamics and local constraints...</span>
                     <div className="w-4 h-4 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
                   </div>
                 </motion.div>
@@ -613,25 +617,25 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
                       <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      <span className="text-xs font-bold text-slate-400 font-mono">Step 2: Interactive Blueprint</span>
+                      <span className="text-xs font-bold text-slate-400 font-mono">Phase 2: Idea & Strategy Shaping</span>
                     </div>
                     <div className="space-y-2.5 bg-slate-900/40 p-4 rounded-xl border border-slate-900">
                       <div>
-                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">PROJECT INSTANCE</h4>
-                        <p className="text-sm font-extrabold text-white">SmartCalendar Assistant</p>
+                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">PROJECT CONCEPT</h4>
+                        <p className="text-sm font-extrabold text-white">SaveFeed Waste Advisor</p>
                       </div>
                       <div>
-                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">PROBLEM STATEMENT</h4>
-                        <p className="text-xs text-slate-300 font-medium leading-relaxed">Secondary school students lack a streamlined way to balance tasks and class periods.</p>
+                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">COMMUNITY PROBLEM</h4>
+                        <p className="text-xs text-slate-300 font-medium leading-relaxed">Small neighborhood vendors discard over 15% of fresh fruits and vegetables daily due to stock mismatch.</p>
                       </div>
                       <div>
-                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">CORE PROPOSED VALUE</h4>
-                        <p className="text-xs text-slate-300 font-medium leading-relaxed">An elegant, automated calendar allocation loop styled for modern mobile browsers.</p>
+                        <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider font-mono">PROPOSED SOLUTION</h4>
+                        <p className="text-xs text-slate-300 font-medium leading-relaxed">An intuitive visual assistant that predicts customer demand and schedules automated community alerts in Urdu & English.</p>
                       </div>
                     </div>
                   </div>
                   <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-xl text-xs font-semibold text-center mt-3">
-                     ✓ Draft approved by Student Accelerator
+                     ✓ Solution roadmap approved by Innovation Advisor
                   </div>
                 </motion.div>
               )}
@@ -648,27 +652,27 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 border-b border-slate-900 pb-3">
                       <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      <span className="text-xs font-bold text-slate-400 font-mono">Step 3: Direct Feature Approval</span>
+                      <span className="text-xs font-bold text-slate-400 font-mono">Phase 3: Interactive Prototyping</span>
                     </div>
                     <div className="space-y-2">
                       <div className="p-3 bg-slate-900 rounded-xl border border-slate-850 flex items-center justify-between">
                         <div>
-                          <p className="text-xs font-extrabold text-white">Smart Homework Parser</p>
-                          <p className="text-[10px] text-slate-500 font-medium leading-relaxed">Parses teacher assignments dynamically</p>
+                          <p className="text-xs font-extrabold text-white">Interactive Voice Input</p>
+                          <p className="text-[10px] text-slate-500 font-medium leading-relaxed">Enables Urdu and English narration for shopkeepers</p>
                         </div>
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/20 font-mono">Approved</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/20 font-mono">Verified</span>
                       </div>
                       <div className="p-3 bg-slate-900 rounded-xl border border-slate-850 flex items-center justify-between">
                         <div>
-                          <p className="text-xs font-extrabold text-white">Focus Segment Allocator</p>
-                          <p className="text-[10px] text-slate-500 font-medium leading-relaxed">Auto-books task periods based on density</p>
+                          <p className="text-xs font-extrabold text-white">Demand Estimation Engine</p>
+                          <p className="text-[10px] text-slate-500 font-medium leading-relaxed">Suggests smart, time-bound discounts for neighbors</p>
                         </div>
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/20 font-mono">Approved</span>
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase border border-emerald-500/20 font-mono">Verified</span>
                       </div>
                     </div>
                   </div>
                   <div className="text-[11px] text-slate-500 text-center font-semibold mt-3">
-                    Every element verified by VibeLab's linter engine
+                    Every feature validated through real-world simulation
                   </div>
                 </motion.div>
               )}
@@ -684,19 +688,19 @@ const Hero = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
                 >
                   <div className="text-center p-3.5 bg-slate-900/60 rounded-xl border border-slate-850 space-y-3">
                     <div className="w-12 h-12 rounded-full bg-emerald-500/10 mx-auto flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-950/20">
-                      <Rocket className="w-5 h-5 animate-bounce" />
+                      <Trophy className="w-5 h-5 animate-bounce" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-white">SmartCalendar is LIVE & ACTIVE!</h4>
-                      <p className="text-xs text-slate-400 font-mono">Deployed securely at <span className="text-cyan-400 underline font-mono select-all">smartcal.vibelab.app</span></p>
+                      <h4 className="text-sm font-black text-white">SaveFeed Waste Advisor is LIVE!</h4>
+                      <p className="text-xs text-slate-400 font-mono">Published and active on the student showcase platform</p>
                     </div>
                     <div className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20 text-[9px] font-black text-emerald-400 tracking-wider uppercase select-none">
-                      BUILT BY AI, SHIPPED BY ME
+                      Verified Portfolio Achievement
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    <div className="p-2.5 bg-slate-900/40 rounded-lg">Response: 14ms</div>
-                    <div className="p-2.5 bg-slate-900/40 rounded-lg font-mono">Cloud Run</div>
+                    <div className="p-2.5 bg-slate-900/40 rounded-lg">Impact: 400kg saved</div>
+                    <div className="p-2.5 bg-slate-900/40 rounded-lg font-mono">VibeLab Network</div>
                   </div>
                 </motion.div>
               )}
@@ -750,153 +754,77 @@ const SUCCESS_ITEMS: SuccessItem[] = [
     id: 1,
     type: "project",
     name: "Alex Rivera",
-    role: "Stanford Tech Lab",
-    title: "NeuroDoc AI",
-    metric: "1,500+ Active Beta Users",
-    desc: "AI assistant for clinicians to pre-screen medical imaging documents safely.",
-    badge: "Built in 4 Days",
-    tag: "Beta Launch",
+    role: "High School Innovator",
+    title: "SmartCal Study Assistant",
+    metric: "250+ Active Classmates",
+    desc: "AI study planner that helps high school students balance exam prep and personal projects without stress.",
+    badge: "Created in 4 Days",
+    tag: "Student Launch",
     color: "cyan",
     icon: "Cpu",
     timeAgo: "2h ago",
-    bio: "Alex Rivera is a medical researcher at Stanford Tech Lab who wanted to bridge the gap between AI and radiology. Utilizing modern pipeline architectures, he spent four days designing and implementing NeuroDoc AI, which parses MRI and CT scans to produce pre-screen diagnostic reports, helping clinics manage extreme patient overload.",
-    techStack: ["React", "Node.js", "Gemini API", "Pinecone Vector Store", "Tailwind CSS"],
-    linkUrl: "https://github.com/alexrivera/neurodoc-ai-demo",
-    linkLabel: "View GitHub Repository",
-    quote: "VibeLab broke open the black box of full-stack AI development. Being able to connect persistent vector stores and design secure APIs directly within one weekend is a game-changer."
+    bio: "Alex Rivera, a high school student, wanted to help classmates manage board exam prep. He designed SmartCal to automatically allocate study blocks based on student commitments and goals, making prep simple and personalized.",
+    techStack: ["Artificial Intelligence", "Product Design", "Problem Solving", "Time Management"],
+    linkUrl: "#",
+    linkLabel: "View Project Profile",
+    quote: "VibeLab helped me take a frustration from my daily life and build a real solution. Seeing my classmates use it to study smarter is incredibly rewarding."
   },
   {
     id: 2,
     type: "certification",
     name: "Sarah Jenkins",
-    role: "High School Innovator",
-    title: "Advanced AI Architect",
-    metric: "Score: 98% (Phase 3 Completed)",
-    desc: "Validated skill in full-stack cloud architecture and vector database integration.",
+    role: "VibeLab Fellow",
+    title: "Responsible AI & Ethics",
+    metric: "Score: 98% (Completed)",
+    desc: "Validated understanding of ethical AI design, data privacy, and inclusive technology solutions.",
     badge: "Faculty Approved",
     tag: "Certified",
     color: "amber",
     icon: "GraduationCap",
     timeAgo: "Just now",
-    bio: "Sarah is a self-driven junior high-school student with a deep passion for cognitive systems. Over three weeks of rigorous training, she completed the full developer path, maintaining a 98% score on complex architectural validation challenges. She programmed three distinct autonomous agent systems to pass her final faculty review.",
-    techStack: ["System Security", "Prompt Chains", "Vector Embeddings", "Firestore Rules"],
-    linkUrl: "https://certs.vibelab.edu/verify/sarah-jenkins-advanced-ai-98c",
+    bio: "Sarah is a junior high-school student passionate about the societal impact of AI. Over three weeks of hands-on learning, she mastered ethical design principles and built three community-focused product concepts to pass her final review.",
+    techStack: ["Digital Literacy", "Critical Thinking", "Responsible AI", "User Experience"],
+    linkUrl: "#",
     linkLabel: "Verify Certificate Credentials",
-    quote: "This platform challenged me beyond simple hello-world templates. The system reviews your rules and forces you to build real, secure, and production-tested data schemas."
+    quote: "This wasn't about memorizing definitions. VibeLab challenged me to think deeply about how technologies impact real people and how to design responsibly."
   },
   {
     id: 3,
     type: "project",
     name: "Marcus K.",
-    role: "MIT Hackathon Winner",
-    title: "EcoSave Agent",
-    metric: "Optimized Carbon Index by 22%",
-    desc: "A smart scheduler using historical power-grid signals to automate high-load compute tasks.",
-    badge: "1st Place Award",
-    tag: "Greentech MVP",
+    role: "Youth Innovation Champion",
+    title: "SaveFeed waste optimizer",
+    metric: "Saved 400kg of Food Waste",
+    desc: "A smart advisor helping local market vendors predict daily stock needs to prevent organic waste.",
+    badge: "1st Place Community Award",
+    tag: "GreenTech Initiative",
     color: "emerald",
     icon: "Zap",
     timeAgo: "15m ago",
-    bio: "Marcus, an electrical engineering undergrad, won first place at our regional MIT Hackathon. His project, EcoSave Agent, monitors real-time carbon intensity indices across major regional power grids and schedules heavy machine learning training jobs or computational Docker containers during optimal renewable energy hours.",
-    techStack: ["IoT Gateways", "D3.js Grid Charts", "Node Cron", "PostgreSQL", "OAuth 2.0"],
-    linkUrl: "https://github.com/marcus-k/ecosave-smart-agent",
-    linkLabel: "View GitHub Repository",
-    quote: "I wanted to build an agent that actually impacts hardware. Coupling VibeLab's server hooks with live power grid APIs was smooth and incredibly rewarding."
+    bio: "Marcus, an aspiring entrepreneur, designed SaveFeed to help local grocery vendors optimize inventory. The AI assistant predicts daily customer traffic and demands, helping small shops reduce waste and improve margins.",
+    techStack: ["Problem Solving", "Entrepreneurship", "Data Literacy", "Sustainability"],
+    linkUrl: "#",
+    linkLabel: "View Project Profile",
+    quote: "I wanted to create an impact in my immediate neighborhood. VibeLab gave me the tools to design an AI system that small businesses can easily use."
   },
   {
     id: 4,
     type: "project",
-    name: "Elena Rostova",
-    role: "Caltech Bootcamper",
-    title: "LingoFlow",
-    metric: "Acquired by Language Hub",
-    desc: "Real-time speech translation proxy with state-of-the-art latency-budget routing.",
-    badge: "Acquired MVP",
-    tag: "Acquisition",
+    name: "Chloe Dupont",
+    role: "High School Creator",
+    title: "SmartSign Urdu",
+    metric: "Used by 80+ Families",
+    desc: "Voice-based learning aid designed to generate visual educational aids from Urdu narration.",
+    badge: "Inclusion Award",
+    tag: "Accessibility",
     color: "indigo",
     icon: "Globe",
     timeAgo: "1h ago",
-    bio: "Elena participated in the Caltech AI Bootcamp and built LingoFlow, a premium real-time speech translation proxy. It utilizes speculative audio chunking to achieve latency-budget speech synthesis and instant routing, allowing multi-language voice streams in under 300 milliseconds.",
-    techStack: ["WebSockets", "Vite/React", "Gemini Realtime API", "Whisper TTS"],
-    linkUrl: "https://github.com/elenares/lingoflow-realtime-speech",
-    linkLabel: "View GitHub Repository",
-    quote: "Handling audio chunking over WebSockets is notoriously difficult, but the step-by-step state visualization helped me isolate latency issues immediately. The code was acquired just 2 weeks after launch!"
-  },
-  {
-    id: 5,
-    type: "certification",
-    name: "Devon Patel",
-    role: "Self-Taught Developer",
-    title: "Full-Stack MVP Architect",
-    metric: "Completed 5 Live Launches",
-    desc: "Credential on rigorous server-side SDK deployment & database security validation.",
-    badge: "Professional Level",
-    tag: "Certified",
-    color: "rose",
-    icon: "Trophy",
-    timeAgo: "3h ago",
-    bio: "Devon Patel transitioned from a self-taught enthusiast to a certified MVP Architect by building and pushing 5 distinct production-grade applications under strict cloud-native schemas. His final capstone evaluated his database rules, multi-tenant workspace routing, and clean API resilience.",
-    techStack: ["API Resiliency", "Multi-Tenant Architecture", "User Isolation", "Node.js ESM"],
-    linkUrl: "https://certs.vibelab.edu/verify/devon-patel-mvparchitect-202",
-    linkLabel: "Verify Certificate Credentials",
-    quote: "The credentials on VibeLab aren't just badges. They are backed by real, working applications that third-party developers can inspect and verify in real time."
-  },
-  {
-    id: 6,
-    type: "project",
-    name: "Chloe Dupont",
-    role: "Sorbonne AI Fellow",
-    title: "Artisanal AI",
-    metric: "$4,200 MRR in first week",
-    desc: "SaaS engine dynamically generating customized marketing storefront graphics on-demand.",
-    badge: "SaaS Launch",
-    tag: "Launch Success",
-    color: "violet",
-    icon: "Sparkles",
-    timeAgo: "4d ago",
-    bio: "Chloe transformed her visual arts fellowship into a high-growth SaaS business. Artisanal AI automatically scans digital products, matches them with brand style grids, and generates high-converting social media collateral and landing layouts on-demand.",
-    techStack: ["Tailwind UX", "Gemini Image Gen", "Next.js Dev Server", "Stripe API"],
-    linkUrl: "https://github.com/chloe-dupont/artisanal-ai-saas",
-    linkLabel: "View GitHub Repository",
-    quote: "As a designer, I had zero backend experience. VibeLab guided me through writing my first Stripe endpoint and securing user content using Firestore rule isolation."
-  },
-  {
-    id: 7,
-    type: "certification",
-    name: "Akiro Sato",
-    role: "Tokyo Tech Graduate",
-    title: "Database Security & Scale",
-    metric: "Scored 100% on Rules Audit",
-    desc: "Expertise in secure firestore rules, multi-user isolation patterns and resilient data blueprints.",
-    badge: "Verified Profile",
-    tag: "Certified",
-    color: "blue",
-    icon: "ShieldCheck",
-    timeAgo: "5m ago",
-    bio: "Akiro is a cyber-security graduate from Tokyo Tech. To earn this elite certification, he underwent automated vulnerability injection checks, developing custom backend mitigations against script attacks and maintaining perfect security structures across multiple environments.",
-    techStack: ["Firebase Auth", "Firestore Sec Rules", "Data Masking", "CORS Auditing"],
-    linkUrl: "https://certs.vibelab.edu/verify/akiro-sato-security-scale-auditor",
-    linkLabel: "Verify Certificate Credentials",
-    quote: "Securing student profiles while sharing live dashboard states is tricky. The sandbox testbed gave me instant metrics on rules leakage, resulting in bulletproof coverage."
-  },
-  {
-    id: 8,
-    type: "project",
-    name: "Elena G.",
-    role: "Georgetown Innovator",
-    title: "Apex Fin-LLM",
-    metric: "12,000 real-time API queries",
-    desc: "Sub-second summarization engine extracting structural signal vectors from major trade feeds.",
-    badge: "Active Utility",
-    tag: "High Volume",
-    color: "teal",
-    icon: "BarChart3",
-    timeAgo: "52m ago",
-    bio: "Elena holds a finance degree from Georgetown. She built Apex Fin-LLM to automatically parse structural financial vectors out of quarterly 10-K files and match them against major real-time trade feeds, enabling teams to query complex indexes within milliseconds.",
-    techStack: ["Vector DB", "Recharts Visuals", "Financial Parsing", "Gemini Active Search"],
-    linkUrl: "https://github.com/elenag-fintech/apex-fin-llm",
-    linkLabel: "View GitHub Repository",
-    quote: "Financial texts contain thousands of tables. By building a high-fidelity parsing chunker, our teams can extract visual insights in seconds. The MVP handles over 12,000 live queries now!"
+    bio: "Chloe realized that young students in her community struggled with English-only educational apps. She built SmartSign Urdu, which lets parents speak in Urdu to instantly generate interactive visual spelling and vocabulary cards.",
+    techStack: ["Urdu & Voice Design", "Product Design", "Inclusion", "Creativity"],
+    linkUrl: "#",
+    linkLabel: "View Project Profile",
+    quote: "Ensuring every child has access to quality education regardless of language was my goal. VibeLab made it possible to bring my voice-first idea to life."
   }
 ];
 
@@ -1222,57 +1150,68 @@ const StudentTicker = () => {
 };
 
 
-const Problem = () => {
-  const gaps = [
-    { title: "Theory vs. Practice", desc: "Students consume endless tutorials but rarely build anything from scratch, leading to 'tutorial hell'." },
-    { title: "Lack of Real-World Experience", desc: "Most coding platforms use toy problems instead of production-grade architectures used in tech teams." },
-    { title: "No Structured Learning Path", desc: "Traditional education lacks a cohesive journey from zero to deploying real-world AI applications." }
-  ];
-
+const WhyVibeLab = () => {
   return (
-    <section id="problem" className="py-40 px-6 relative overflow-hidden bg-white">
+    <section id="why-vibelab" className="py-40 px-6 relative overflow-hidden bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-24 items-center">
-          <div className="relative order-2 lg:order-1">
-            <div className="glass p-10 rounded-[3rem] border-slate-200 shadow-2xl relative z-10 bg-slate-50/50">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center">
-                  <Zap className="text-red-500 w-7 h-7" />
-                </div>
-                <h3 className="text-3xl font-bold text-slate-900 leading-tight">The Build Gap</h3>
-              </div>
-              <div className="space-y-8">
-                {gaps.map((gap, i) => (
-                  <div key={i} className="flex gap-6 group">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-50/50 flex items-center justify-center text-red-500 font-bold border border-red-100 group-hover:bg-red-500 group-hover:text-white transition-all">
-                      !
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 mb-2 text-lg">{gap.title}</h4>
-                      <p className="text-slate-600 leading-relaxed">{gap.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="absolute -top-10 -left-10 w-64 h-64 bg-red-500/5 rounded-full blur-[100px] -z-10" />
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-600 mb-6 uppercase tracking-widest">
+            <span>THE SHIFT IN PARADIGM</span>
           </div>
-          <div className="order-1 lg:order-2">
-            <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 text-slate-900 leading-[1.1]">
-              Why Learning <br />
-              <span className="text-red-500">Doesn't Mean Building.</span>
-            </h2>
-            <p className="text-xl text-slate-600 mb-10 leading-relaxed">
-              Consuming content is passive. Mastering a skill requires active creation. VibeLab bridges the gap between watching and doing.
-            </p>
-            <ul className="space-y-6">
+          <h2 className="font-display text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+            Education Teaches Answers. <br />
+            <span className="gradient-text">VibeLab Teaches Creation.</span>
+          </h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto mt-6 leading-relaxed font-semibold">
+            Traditional learning focuses on memorization. VibeLab is a future-skills platform teaching students to identify problems, build solutions, and use AI responsibly to create value.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-12 items-stretch max-w-5xl mx-auto">
+          {/* Traditional Education */}
+          <div className="p-10 rounded-[3rem] border border-slate-200/80 bg-slate-50/50 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-slate-200/30 rounded-full blur-2xl -z-10" />
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-slate-200 flex items-center justify-center text-slate-500 mb-8 font-black font-mono text-lg">01</div>
+              <h3 className="text-3xl font-extrabold mb-6 text-slate-400 tracking-tight">Traditional Education</h3>
+              <p className="text-slate-500 leading-relaxed font-medium mb-10">
+                Focuses primarily on structured pathways built around memory retrieval and standardized testing rather than hands-on innovation.
+              </p>
+            </div>
+            <ul className="space-y-4">
               {[
-                "Tutorials create a false sense of mastery",
-                "Degrees often lack practical engineering skills",
-                "Industry demands a portfolio of real projects"
+                "Answering questions on tests",
+                "Memorizing theoretical content",
+                "Individual competitive assessments"
               ].map((item, i) => (
-                <li key={i} className="flex items-center gap-4 text-slate-700 font-medium">
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                <li key={i} className="flex items-center gap-3 text-slate-400 font-bold text-sm">
+                  <div className="w-2 h-2 rounded-full bg-slate-300" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* VibeLab Innovation */}
+          <div className="p-10 rounded-[3rem] border border-cyan-500/20 bg-cyan-50/20 flex flex-col justify-between shadow-lg shadow-cyan-500/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-400/20 rounded-full blur-2xl -z-10 animate-pulse" />
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-cyan-600 flex items-center justify-center text-white mb-8 shadow-md">
+                <BrainCircuit className="w-6 h-6" />
+              </div>
+              <h3 className="text-3xl font-extrabold mb-6 text-slate-900 tracking-tight">VibeLab Innovation</h3>
+              <p className="text-slate-600 leading-relaxed font-medium mb-10">
+                A hands-on environment where students design real solutions, acquire practical digital literacy, and understand technological workflows.
+              </p>
+            </div>
+            <ul className="space-y-4">
+              {[
+                "Identifying real-world local problems",
+                "Designing and refining solutions with AI assistance",
+                "Building finished, functional products and portfolios"
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-cyan-700 font-bold text-sm">
+                  <div className="w-2 h-2 rounded-full bg-cyan-500" />
                   {item}
                 </li>
               ))}
@@ -1284,34 +1223,40 @@ const Problem = () => {
   );
 };
 
-const Solution = () => {
-  return (
-    <section id="solution" className="py-40 px-6 bg-slate-50 relative">
-      <div className="max-w-7xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-xs font-bold text-emerald-600 mb-8 uppercase tracking-widest">
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>The Build-to-Learn Solution</span>
-        </div>
-        <h2 className="font-display text-5xl md:text-7xl font-extrabold mb-8 text-slate-900 max-w-4xl mx-auto leading-tight">
-          Redefining Education Through <span className="text-emerald-600">Creation.</span>
-        </h2>
-        <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-20 leading-relaxed">
-          Master any digital skill by working on production-ready projects with AI-assisted guidance and industrial standards.
-        </p>
+const KeyObjectives = () => {
+  const objectives = [
+    { icon: <BrainCircuit />, title: "Develop AI Literacy", desc: "Equip students with the ability to leverage artificial intelligence responsibly, effectively, and strategically in their creations." },
+    { icon: <Sparkles />, title: "Foster Innovation", desc: "Build critical thinking skills to analyze modern challenges and formulate imaginative, viable solution models." },
+    { icon: <Rocket />, title: "Encourage Entrepreneurship", desc: "Introduce students to key concepts of value creation, user feedback loops, and sustainable small business design." },
+    { icon: <Users />, title: "Build Confidence", desc: "Empower youth with communication skills, team-based coordination, and leadership capabilities through project presentations." },
+    { icon: <GraduationCap />, title: "Career & Tech Readiness", desc: "Prepare the next generation for emerging technologies and the evolving requirements of the future workspace." },
+    { icon: <School />, title: "School Innovation Culture", desc: "Introduce project-based excellence and AI literacy curricula directly into schools to transform local learning spaces." }
+  ];
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { icon: <Code2 />, title: "Project-Based", desc: "No more lectures. Start with a project and learn the theory exactly when you need it." },
-            { icon: <Cpu />, title: "AI-Assisted", desc: "Get real-time guidance from AI tutors that help you solve problems, not just give answers." },
-            { icon: <Zap />, title: "Real-World Output", desc: "Every project you build is a functional piece of software ready for the real world." },
-            { icon: <Rocket />, title: "Portfolio Ready", desc: "Build a verified digital portfolio of work that actually proves your engineering skills." }
-          ].map((item, i) => (
-            <div key={i} className="p-10 rounded-[2.5rem] bg-white border border-slate-100 text-left group hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+  return (
+    <section className="py-40 px-6 bg-slate-50 relative">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-24">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-600 mb-6 uppercase tracking-widest">
+            <span>CORE OBJECTIVES</span>
+          </div>
+          <h2 className="font-display text-5xl md:text-6xl font-extrabold text-slate-900 max-w-4xl mx-auto leading-tight">
+            Our Key Objectives for <br />
+            <span className="text-emerald-600">Youth Transformation.</span>
+          </h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto mt-6 leading-relaxed font-semibold">
+            We are creating a generation of builders, leaders, and problem-solvers ready to lead national development.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {objectives.map((obj, i) => (
+            <div key={i} className="p-10 rounded-[3rem] bg-white border border-slate-100 text-left group hover:shadow-xl hover:shadow-slate-200/50 transition-all">
               <div className="w-14 h-14 rounded-2xl bg-emerald-500/5 flex items-center justify-center text-emerald-600 mb-8 group-hover:scale-110 transition-transform shadow-sm">
-                {item.icon}
+                {obj.icon}
               </div>
-              <h3 className="text-2xl font-extrabold mb-4 text-slate-900 tracking-tight">{item.title}</h3>
-              <p className="text-slate-600 leading-relaxed font-medium">{item.desc}</p>
+              <h3 className="text-2xl font-extrabold mb-4 text-slate-900 tracking-tight leading-snug">{obj.title}</h3>
+              <p className="text-slate-500 leading-relaxed text-sm font-semibold">{obj.desc}</p>
             </div>
           ))}
         </div>
@@ -1320,62 +1265,89 @@ const Solution = () => {
   );
 };
 
-const HowItWorks = () => {
-  const steps = [
-    { number: "01", title: "Join the Curriculum", desc: "Access the 7-Phase learning path designed to take you from foundational logic to AI mastery." },
-    { number: "02", title: "Build Real Projects", desc: "Every phase contains production-grade labs where you build actual software using modern stacks." },
-    { number: "03", title: "AI-Assisted Learning", desc: "Our AI agents monitor your code, providing instant hints and architectural feedback." },
-    { number: "04", title: "Verified Portfolio", desc: "Complete all phases to build a verified digital portfolio that proves your skills to the world." }
+const SkillsDeveloped = () => {
+  const skills = [
+    "Artificial Intelligence", "Critical Thinking", "Creativity", "Communication",
+    "Product Design", "Problem Solving", "Entrepreneurship", "Teamwork",
+    "Digital Literacy", "Leadership"
   ];
 
   return (
-    <section id="how-it-works" className="py-40 px-6 bg-white border-y border-slate-100">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-24">
-          <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 text-slate-900 leading-tight">
-            How <span className="gradient-text">VibeLab</span> Works
-          </h2>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            A seamless journey from absolute beginner to verified production-ready engineer.
-          </p>
+    <section className="py-28 px-6 bg-white border-y border-slate-100">
+      <div className="max-w-5xl mx-auto text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-600 mb-6 uppercase tracking-widest">
+          <span>COMPETENCY BLUEPRINT</span>
         </div>
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
-          <div className="space-y-12">
-            {steps.map((step, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="flex gap-8 group"
-              >
-                <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-2xl font-display font-black text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-sm">
-                  {step.number}
+        <h2 className="font-display text-4xl md:text-5xl font-extrabold text-slate-900 mb-8 tracking-tight">
+          Skills Developed Along the Journey.
+        </h2>
+        <p className="text-lg text-slate-600 max-w-xl mx-auto mb-12 font-medium leading-relaxed">
+          Through active project building, students naturally develop a powerful matrix of practical and cognitive capabilities.
+        </p>
+
+        <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
+          {skills.map((skill, idx) => (
+            <div 
+              key={idx}
+              className="px-6 py-3 rounded-full bg-slate-50 border border-slate-200/80 text-slate-700 font-bold text-sm hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all cursor-default shadow-sm duration-300"
+            >
+              {skill}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const UrduVoiceFirst = () => {
+  return (
+    <section className="py-32 px-6 bg-slate-50 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-12 gap-16 items-center">
+          <div className="lg:col-span-7">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-bold text-indigo-600 mb-6 uppercase tracking-widest">
+              <Globe className="w-3.5 h-3.5" />
+              <span>URDU & VOICE FIRST SYSTEM</span>
+            </div>
+            <h2 className="font-display text-4xl md:text-5xl font-extrabold text-slate-900 mb-8 tracking-tight leading-tight">
+              Built for Every Student, <br />
+              <span className="text-indigo-600">In Every Language.</span>
+            </h2>
+            <p className="text-xl text-slate-600 leading-relaxed font-semibold mb-8 max-w-2xl">
+              Students can interact with VibeLab using Urdu, English, or voice-based conversation. This removes barriers to participation and ensures no student is excluded by language or technical comfort.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-6">
+              {[
+                { label: "Voice Narration", desc: "No keyboard needed. Build ideas naturally by speaking your thoughts." },
+                { label: "Dual Language Support", desc: "Toggle seamlessly between high-context Urdu and global English interfaces." },
+                { label: "No Technical Jargon", desc: "Every step is framed in straightforward, friendly human dialogue." }
+              ].map((item, idx) => (
+                <div key={idx} className="space-y-2">
+                  <h4 className="font-bold text-slate-900 text-lg">{item.label}</h4>
+                  <p className="text-slate-500 text-sm font-semibold leading-relaxed">{item.desc}</p>
                 </div>
-                <div>
-                  <h3 className="text-2xl font-extrabold mb-3 text-slate-900 tracking-tight">{step.title}</h3>
-                  <p className="text-lg text-slate-600 leading-relaxed font-medium">{step.desc}</p>
-                </div>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
-          <div className="relative">
-            <div className="aspect-[4/3] rounded-[3rem] overflow-hidden border border-slate-200 relative group shadow-3xl">
-              <img 
-                src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80" 
-                alt="Collaboration" 
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl cursor-pointer hover:scale-110 transition-transform">
-                  <Play className="w-8 h-8 fill-slate-900 text-slate-900 ml-1" />
+          <div className="lg:col-span-5 relative">
+            <div className="p-8 rounded-[3rem] bg-white border border-slate-200/80 shadow-2xl space-y-6 relative z-10 max-w-sm mx-auto">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <span className="text-xs font-black uppercase text-indigo-600 tracking-wider font-mono">Accessibility Demo</span>
+                <div className="flex gap-1.5">
+                  <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px] font-bold">URDU</span>
+                  <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold">ENG</span>
                 </div>
               </div>
+              <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-indigo-200 animate-pulse">
+                  <Sparkles className="w-5 h-5 animate-spin-slow" />
+                </div>
+                <p className="text-slate-700 font-bold text-sm">"اپنا اگلا آئیڈیا یہاں ریکارڈ کریں..."</p>
+                <p className="text-slate-400 text-xs font-medium">Speak naturally in your primary language</p>
+              </div>
             </div>
-            <div className="absolute -top-6 -right-6 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl -z-10" />
-            <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -z-10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-indigo-500/5 rounded-full blur-[80px] -z-0" />
           </div>
         </div>
       </div>
@@ -1383,39 +1355,46 @@ const HowItWorks = () => {
   );
 };
 
-const LearningZones = () => {
-  const zones = [
-    { title: "Web Development", desc: "Master modern frontend and backend architectures by building production-ready SaaS applications.", color: "from-cyan-500 to-blue-600" },
-    { title: "AI & Automation", desc: "Integrate LLMs, vector databases, and AI agents into your workflows and products.", color: "from-blue-600 to-indigo-600" },
-    { title: "Startup Building", desc: "Learn the full product lifecycle: from idea and prototyping to launch and user acquisition.", color: "from-indigo-600 to-purple-600" },
-    { title: "Freelancing Skills", desc: "Acquire the practical technical and soft skills needed to thrive as an independent developer.", color: "from-purple-600 to-pink-600" }
+const ProjectCategories = () => {
+  const categories = [
+    { icon: <GraduationCap className="w-6 h-6" />, title: "Education", desc: "Interactive student tutoring, localized digital libraries, and literacy assistants.", color: "from-blue-500 to-cyan-500" },
+    { icon: <Heart className="w-6 h-6" />, title: "Health", desc: "First-aid guidance advisors, patient appointment assistants, and visual health tracking helpers.", color: "from-rose-500 to-pink-500" },
+    { icon: <Sprout className="w-6 h-6" />, title: "Agriculture", desc: "Crop yield estimators, soil hydration monitors, and local weather advisors.", color: "from-emerald-500 to-green-500" },
+    { icon: <Leaf className="w-6 h-6" />, title: "Environment", desc: "Waste tracking systems, clean-air calculators, and recycling incentives.", color: "from-teal-500 to-emerald-500" },
+    { icon: <Users className="w-6 h-6" />, title: "Community Development", desc: "Neighborhood clean-up coordinators, blood bank networks, and helper boards.", color: "from-indigo-500 to-purple-500" },
+    { icon: <Briefcase className="w-6 h-6" />, title: "Small Businesses", desc: "Visual catalog creators, local product pricing calculators, and sales trackers.", color: "from-amber-500 to-orange-500" },
+    { icon: <Building2 className="w-6 h-6" />, title: "Public Services", desc: "Civic complaint trackers, public transportation schedules, and safety portals.", color: "from-sky-500 to-blue-500" },
+    { icon: <Cpu className="w-6 h-6" />, title: "Technology", desc: "Productivity automations, voice assistants, and responsive data visualizers.", color: "from-purple-500 to-pink-500" }
   ];
 
   return (
-    <section id="zones" className="py-40 px-6 relative bg-slate-50">
+    <section id="categories-section" className="py-40 px-6 relative bg-slate-50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-24">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-600 mb-6 uppercase tracking-widest">
+            <span>REAL-WORLD PROBLEM SPACES</span>
+          </div>
           <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 text-slate-900 leading-tight">
-            Explore <span className="gradient-text">Learning Zones.</span>
+            Real Problems. <span className="gradient-text">Real Impact.</span>
           </h2>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Specialized paths designed to help you become a top 1% technical creator in the global market.
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-semibold">
+            Every project connects to a real challenge — local, national, or global.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {zones.map((zone, i) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {categories.map((cat, i) => (
             <motion.div 
               key={i}
               whileHover={{ y: -8 }}
-              className="p-10 rounded-[3rem] bg-white border border-slate-100 relative group overflow-hidden shadow-sm hover:shadow-xl transition-all"
+              className="p-8 rounded-[2.5rem] bg-white border border-slate-100 relative group overflow-hidden shadow-sm hover:shadow-xl transition-all"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${zone.color} opacity-0 group-hover:opacity-[0.03] transition-opacity`} />
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${zone.color} flex items-center justify-center text-white font-black mb-8 shadow-lg shadow-cyan-500/20`}>
-                {i + 1}
+              <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-[0.03] transition-opacity`} />
+              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-700 font-black mb-6 border border-slate-100 group-hover:bg-slate-900 group-hover:text-white group-hover:border-slate-900 transition-all shadow-sm">
+                {cat.icon}
               </div>
-              <h3 className="text-2xl font-extrabold mb-4 text-slate-900 tracking-tight leading-tight">{zone.title}</h3>
-              <p className="text-slate-600 leading-relaxed font-medium">{zone.desc}</p>
+              <h3 className="text-2xl font-extrabold mb-3 text-slate-900 tracking-tight leading-tight">{cat.title}</h3>
+              <p className="text-slate-500 leading-relaxed text-sm font-semibold">{cat.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -1425,59 +1404,96 @@ const LearningZones = () => {
 };
 
 const Audience = () => {
-  const targets = [
-    { title: "Students", desc: "Build a verified portfolio of production-grade projects while learning the core engineering principles." },
-    { title: "Schools", desc: "Bring industry-standard project-based learning to your institution with our structured curriculum and tools." },
-    { title: "Career Switchers", desc: "Transition into tech by learning the skills required for today's market: AI, SaaS, and fullstack dev." }
+  const audiences = [
+    {
+      title: "For Schools",
+      tagline: "Build a culture of innovation on campus",
+      image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=600&q=80",
+      benefits: [
+        "Increased student engagement",
+        "Structured AI exposure & literacy",
+        "Active, project-based learning",
+        "Enhanced student portfolios",
+        "Future-ready skills on transcripts"
+      ],
+      cta: "Explore School Programs →"
+    },
+    {
+      title: "For Students",
+      tagline: "Build real projects, launch real careers",
+      image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=600&q=80",
+      benefits: [
+        "Build real-world local solutions",
+        "Learn strategic AI tools practically",
+        "Develop leadership and confidence",
+        "Gain entrepreneurial exposure",
+        "Acquire verified innovation badges"
+      ],
+      cta: "Start Your Portfolio →"
+    },
+    {
+      title: "For Government & Partners",
+      tagline: "Empower national digital transformation",
+      image: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=600&q=80",
+      benefits: [
+        "Support regional digital literacy",
+        "Promote national AI competencies",
+        "Encourage localized problem-solving",
+        "Secure career pipeline readiness",
+        "Enhance national competitiveness"
+      ],
+      cta: "Connect with VibeLab →"
+    }
   ];
 
   return (
-    <section className="py-40 px-6 bg-white">
+    <section id="audience-section" className="py-40 px-6 bg-white relative">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-24 items-center">
-          <div>
-            <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-10 text-slate-900 leading-[1.1]">
-              Built for the <br />
-              <span className="gradient-text">Builders of Tomorrow.</span>
-            </h2>
-            <div className="space-y-10">
-              {targets.map((t, i) => (
-                <div key={i} className="flex gap-8 group">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-cyan-50 flex items-center justify-center group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-sm border border-cyan-100">
-                    <CheckCircle2 className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h4 className="text-2xl font-extrabold text-slate-900 mb-3 tracking-tight">{t.title}</h4>
-                    <p className="text-lg text-slate-600 leading-relaxed font-medium">{t.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className="text-center mb-24">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-600 mb-6 uppercase tracking-widest">
+            <span>WHO WE SERVE</span>
           </div>
-          <div className="relative">
-            <div className="bg-slate-100 p-6 rounded-[3.5rem] border border-slate-200 overflow-hidden relative group">
-              <img 
-                src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1200&q=80" 
-                alt="Builders" 
-                className="rounded-[2.5rem] w-full h-full object-cover shadow-2xl group-hover:scale-105 transition-transform duration-1000"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-cyan-500/5 mix-blend-overlay" />
-            </div>
-            <div className="absolute -bottom-8 -right-8 glass p-8 rounded-[2.5rem] border-white/20 shadow-2xl backdrop-blur-xl">
-              <div className="flex items-center gap-5">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3].map(i => (
-                    <img key={i} src={`https://i.pravatar.cc/100?img=${i + 30}`} className="w-12 h-12 rounded-full border-2 border-white shadow-md" referrerPolicy="no-referrer" />
-                  ))}
+          <h2 className="font-display text-5xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+            Impact Across Every <span className="gradient-text">Ecosystem.</span>
+          </h2>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto mt-6 leading-relaxed font-semibold">
+            We partner with schools, students, and government bodies to prepare communities for the AI-driven future.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-10">
+          {audiences.map((aud, i) => (
+            <div key={i} className="flex flex-col rounded-[3rem] border border-slate-100 bg-slate-50/30 overflow-hidden shadow-sm hover:shadow-xl transition-all group">
+              <div className="h-60 relative overflow-hidden">
+                <img 
+                  src={aud.image} 
+                  alt={aud.title} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-slate-900/10 mix-blend-multiply" />
+              </div>
+              <div className="p-8 flex-grow flex flex-col justify-between">
+                <div>
+                  <h3 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">{aud.title}</h3>
+                  <p className="text-sm font-bold text-cyan-650 uppercase tracking-widest mb-8">{aud.tagline}</p>
+                  <ul className="space-y-4 mb-10">
+                    {aud.benefits.map((benefit, idx) => (
+                      <li key={idx} className="flex items-start gap-3 text-slate-600 font-semibold text-sm">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="text-slate-900">
-                  <p className="font-black text-lg leading-tight uppercase tracking-tighter">Join 50k+</p>
-                  <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Global Builders</p>
+                <div className="pt-4 border-t border-slate-100">
+                  <span className="inline-flex items-center gap-2 text-slate-900 font-bold text-sm group-hover:text-cyan-600 transition-colors">
+                    {aud.cta}
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>
@@ -1642,33 +1658,28 @@ const Stats = () => {
   );
 };
 
+const VisionSection = () => {
+  return (
+    <section id="vision" className="py-36 px-6 bg-slate-900 text-white relative overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[150px] -z-0" />
+      <div className="max-w-5xl mx-auto relative z-10 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-bold text-cyan-400 mb-10 uppercase tracking-widest">
+          <span>OUR VISION</span>
+        </div>
+        <blockquote className="text-2xl md:text-4xl font-display font-medium leading-relaxed text-slate-100 max-w-4xl mx-auto italic">
+          "To empower every student to become a creator, innovator, and problem solver by using Artificial Intelligence to transform ideas into real-world solutions. Our goal is to make innovation accessible to every student, regardless of background, language, or technical experience. VibeLab aims to create the next generation of builders, entrepreneurs, and AI-powered innovators."
+        </blockquote>
+        <div className="mt-10 flex items-center justify-center gap-3">
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+          <p className="text-xs uppercase tracking-widest font-black text-cyan-400">The VibeLab Manifesto</p>
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleWaitlistJoin = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    
-    setIsSubmitting(true);
-    try {
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      if (response.ok) {
-        setSubmitted(true);
-        setEmail("");
-      }
-    } catch (error) {
-      console.error("Waitlist error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <section className="py-40 px-6 relative overflow-hidden bg-slate-50">
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/5 via-blue-600/5 to-transparent -z-10" />
@@ -1679,48 +1690,23 @@ const FinalCTA = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
           <Rocket className="text-white w-10 h-10" />
         </div>
         
-        <h2 className="font-display text-5xl md:text-7xl font-extrabold mb-8 text-slate-900 leading-tight tracking-tight">
-          Start building your <br />
-          <span className="gradient-text">future today.</span>
+        <h2 className="font-display text-4xl md:text-6xl font-extrabold mb-8 text-slate-900 leading-tight tracking-tight">
+          Every Student Deserves the Chance <br />
+          <span className="gradient-text">to Build Something Real.</span>
         </h2>
         
-        <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
-          Join the early access list and be the first to experience the build-to-learn revolution. No fluff, only production-ready skills.
+        <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-12 leading-relaxed font-semibold">
+          Begin your journey with VibeLab today and acquire the innovation skills of tomorrow. No coding required.
         </p>
 
-        <div className="flex flex-col items-center gap-10">
-          <form onSubmit={handleWaitlistJoin} className="flex flex-col sm:flex-row gap-4 w-full max-w-lg">
-            <div className="relative flex-1">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email" 
-                className="w-full pl-12 pr-4 py-5 rounded-2xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-bold shadow-sm"
-                required
-              />
-            </div>
-            <button 
-              type="submit"
-              disabled={isSubmitting || submitted}
-              className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold hover:bg-slate-800 transition-all active:scale-95 whitespace-nowrap shadow-xl shadow-slate-200 disabled:opacity-70"
-            >
-              {submitted ? "Success!" : isSubmitting ? "Joining..." : "Join Early Access"}
-            </button>
-          </form>
-
-          <div className="flex items-center gap-8">
-            <button 
-              onClick={() => onNavigate('contact')}
-              className="flex items-center gap-2 text-slate-900 hover:text-cyan-600 font-black uppercase tracking-widest text-xs transition-colors"
-            >
-              <Mail className="w-5 h-5" />
-              Contact Us
-            </button>
-            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest italic leading-relaxed">Early Access is limited to first 1000 applicants.</p>
-          </div>
+        <div className="flex flex-col items-center gap-4">
+          <button 
+            onClick={() => onNavigate('signup')}
+            className="bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold hover:bg-slate-800 transition-all active:scale-95 whitespace-nowrap shadow-xl shadow-slate-200 flex items-center gap-2"
+          >
+            Start the Journey <ArrowRight className="w-5 h-5" />
+          </button>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-2">No technical background needed. No cost to start.</p>
         </div>
       </div>
     </section>
@@ -1836,13 +1822,12 @@ const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 
 const LearningPathSection = () => {
   const phases = [
-    { id: 1, name: "Learn Python", desc: "Master variables, HTTP requests, APIs, JSON parsing, and solid OOP fundamentals in Python." },
-    { id: 2, name: "LLM & AI Basics", desc: "Understand tokens, context windows, text/image embeddings, prompt techniques, and vector DBs." },
-    { id: 3, name: "Build Projects", desc: "Build applications chaining multiple LLM prompts, structured data pipelines, and user flows." },
-    { id: 4, name: "AI Agents & MCP", desc: "Explore agent memory, reactive loops, tool-calling pipelines, and Model Context Protocol (MCP)." },
-    { id: 5, name: "Academic Literature", desc: "Analyze research papers on ReAct, Toolformer, Tree of Thoughts, and reflective architectures." },
-    { id: 6, name: "Live Courses & Certs", desc: "Solve interactive capstone courses from DeepLearning.AI and LangChain to earn verified badges." },
-    { id: 7, name: "Deployment & Scale", desc: "Publish production ready, containerized FastAPI and Docker services to cloud clusters with CI/CD." }
+    { id: 1, name: "Ideation", desc: "Students identify real-world problems and develop solution concepts using AI-assisted brainstorming." },
+    { id: 2, name: "Product Creation", desc: "Students work with AI to transform their concepts into working products and functional prototypes." },
+    { id: 3, name: "Testing & Validation", desc: "Students test their solutions, gather feedback from neighbors or peers, and iterate on designs." },
+    { id: 4, name: "Product Understanding", desc: "Students learn how their solutions work through self-teaching guides — building genuine comprehension, not just output." },
+    { id: 5, name: "Deployment", desc: "Students launch and share their completed solutions with the local and national community." },
+    { id: 6, name: "Portfolio & Career", desc: "Students build portfolios showcasing verified projects, achievements, and future-ready skills." }
   ];
 
   return (
@@ -1852,10 +1837,10 @@ const LearningPathSection = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center mb-24">
           <h2 className="font-display text-5xl md:text-6xl font-extrabold mb-8 leading-tight text-white">
-            The 7-Phase <span className="text-cyan-400">Mastery Path.</span>
+            The 6-Phase <span className="text-cyan-400">Journey.</span>
           </h2>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
-            A cohesive journey designed to bridge the gap between "tutorial student" and "production engineer."
+            A step-by-step innovation pathway designed to empower every student, regardless of prior technical background.
           </p>
         </div>
 
@@ -1868,15 +1853,15 @@ const LearningPathSection = () => {
                   <CheckCircle2 className="w-5 h-5 text-cyan-400" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold mb-3 text-white tracking-tight leading-tight">{phase.name}</h3>
+              <h3 className="text-2xl font-bold mb-3 text-white tracking-tight leading-tight">Phase {phase.id} — {phase.name}</h3>
               <p className="text-slate-400 leading-relaxed text-sm font-medium">{phase.desc}</p>
             </div>
           ))}
           
-          <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-cyan-600 to-blue-700 flex flex-col justify-center items-center text-center shadow-2xl shadow-cyan-500/20">
+          <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-cyan-600 to-blue-700 flex flex-col justify-center items-center text-center shadow-2xl shadow-cyan-500/20 lg:col-span-2">
              <Trophy className="w-12 h-12 text-white mb-4" />
-             <h3 className="text-2xl font-bold mb-2">Graduation</h3>
-             <p className="text-white/80 text-sm font-medium">Verified Portfolio & Global Certification</p>
+             <h3 className="text-2xl font-bold mb-2">Portfolio Readiness</h3>
+             <p className="text-white/80 text-sm font-medium">Complete all phases to showcase a verified public portfolio of verified innovations.</p>
           </div>
         </div>
       </div>
@@ -1897,12 +1882,14 @@ const LandingPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => 
       <Hero onNavigate={onNavigate} />
       <TrustedBy />
       <StudentTicker />
+      <WhyVibeLab />
+      <KeyObjectives />
       <LearningPathSection />
-      <Problem />
-      <Solution />
-      <HowItWorks />
-      <LearningZones />
+      <SkillsDeveloped />
+      <UrduVoiceFirst />
+      <ProjectCategories />
       <Audience />
+      <VisionSection />
       <FinalCTA onNavigate={onNavigate} />
     </>
   );
