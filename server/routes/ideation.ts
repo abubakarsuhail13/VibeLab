@@ -247,6 +247,13 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
       Latest Question: "${question_text}"
       Latest User Response: "${user_response}"
 
+      NATURAL LANGUAGE UNDERSTANDING & COGNITIVE DIVERSITY PROTOCOL:
+      - The student may describe their ideas using English, Urdu, Roman Urdu (Urdu written in Latin letters, e.g., "mujy website banani hay", "hospital management system banana hai", "students k liye platform", "AI se resume builder banana hai"), Mixed English and Urdu, informal or beginner language, short phrases, incomplete sentences, or vague/non-technical wording.
+      - Intelligently extract meaning, intended project idea, and context from the user's message without requiring any specific keywords, technical language, structured formats, or predefined schemas. Do not force them to use technical terms.
+      - If the user responds in Roman Urdu, Urdu, or mixed Roman Urdu/English, respond naturally in a warm, friendly blend of Roman Urdu and simple English (Hinglish/Urdu-English code-switching) so they feel deeply understood, validated, and comfortable.
+      - Always look at the previous QA history to contextualize their short/vague responses (such as "food delivery app" or "students k liye platform"). Infer reasonable context, build on their ideas, and continue the existing discovery conversation naturally without forcing them to repeat information they have already provided.
+      - When the user expresses an idea like "mujy website banani hay" or "I want to build an app", immediately recognize that this is a valid project intent. Map it to their desired solution space and proceed smoothly to the next relevant question based on your current understanding.
+
       RULES:
       - ONE question per message. Never combine two.
       - After each answer: one sentence of encouragement, then the next question.
@@ -341,12 +348,16 @@ router.post('/generate-blueprint', authenticateToken, async (req: any, res) => {
       return `Question ${r.story_number} ("${r.question_text}"):\nAnswer: "${r.user_response}"`;
     }).join('\n\n');
 
-    const prompt = `
+     const prompt = `
       You are an AI product analyst for VibeLab. A student aged 14-22 answered 13 questions.
       Generate their Product Blueprint from these answers.
 
       Student's Responses:
       ${answersSummary}
+
+      NATURAL LANGUAGE COMPREHENSION RULE:
+      - The student's responses may be written in English, Urdu, Roman Urdu (e.g., "mujy website banani hay"), or Mixed English and Urdu.
+      - Intelligently parse and translate these responses into standard, clear, and professional English to populate the blueprint fields.
 
       RULES:
       - Simple, encouraging language only.
