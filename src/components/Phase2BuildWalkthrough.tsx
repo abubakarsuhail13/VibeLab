@@ -36,6 +36,7 @@ import {
   Folder,
   FolderOpen,
   File,
+  Search,
   Maximize2,
   Minimize2,
   Layout,
@@ -478,6 +479,13 @@ export default function Phase2BuildWalkthrough({
   }, [activeStep, session?.id]);
 
   // Virtual Code Sandbox States for Step 6
+  const [guidePanelTab, setGuidePanelTab] = useState<'tasks' | 'explorer'>('tasks');
+  const [selectedCommonTag, setSelectedCommonTag] = useState<any | null>(null);
+  const [fileQuery, setFileQuery] = useState<string>('');
+  const [isAddingFile, setIsAddingFile] = useState<boolean>(false);
+  const [newFileName, setNewFileName] = useState<string>('');
+  const [workspaceIsMaximized, setWorkspaceIsMaximized] = useState<boolean>(false);
+
   const [virtualFiles, setVirtualFiles] = useState<Record<string, string>>({});
   const [activeFile, setActiveFile] = useState<string>('index.html');
   const [openTabs, setOpenTabs] = useState<string[]>(['index.html']);
@@ -529,6 +537,115 @@ export default function Phase2BuildWalkthrough({
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
   }, [componentMetadata]);
+
+  const COMMON_TAGS = [
+    {
+      tag: '<body>',
+      selector: 'body',
+      tagKey: '<body>',
+      whatItDoes: 'This is the main container of the webpage. All visible content appears inside it.',
+      whyItExists: 'To serve as the root of all user-visible structural boxes and layouts across the product.',
+      whatItAffects: 'Governs global styling properties, background colors, defaults, scroll behavior, and overall body heights.',
+      productConnection: 'Main canvas of your application. All user journey views and control bars are drawn inside here.'
+    },
+    {
+      tag: '<div>',
+      selector: 'div',
+      tagKey: '<div',
+      whatItDoes: 'This is a division or layout container used to structure, group and partition visual elements together.',
+      whyItExists: 'Allows creating separate compartments (e.g. headers, sidebars, forms) for modular style groupings.',
+      whatItAffects: 'No inherent meaning (non-semantic); used for flexbox layouts, grids, padding blocks, borders, and margins.',
+      productConnection: 'Groups sections of your pitch page, e.g. your high-fidelity feature list card or your screenshot container.'
+    },
+    {
+      tag: '<button>',
+      selector: 'button',
+      tagKey: '<button',
+      whatItDoes: 'This creates an interactive element users can click or tap to trigger actions.',
+      whyItExists: 'Provides an explicit control target ensuring accessibility and default keyboard-activated form submissions.',
+      whatItAffects: 'Fires JavaScript `onClick` triggers, updates state, submits user input arrays, or opens visual overlays.',
+      productConnection: 'Represents your primary call-to-action buttons like "Try the App", "Generate Feature Blueprint", or "Claim Certificate".'
+    },
+    {
+      tag: '<input>',
+      selector: 'input',
+      tagKey: '<input',
+      whatItDoes: 'This creates interactive data fields where users can type text, numbers, select options, or toggle checkboxes.',
+      whyItExists: 'Enables real-time data input, customization, and interactivity inside web tools.',
+      whatItAffects: 'Fires character change and input event emissions, binding typed details directly to sandbox state variables.',
+      productConnection: 'Crucial for capturing your customer ideas, emails, draft descriptions, and options selections.'
+    },
+    {
+      tag: '<p>',
+      selector: 'p',
+      tagKey: '<p',
+      whatItDoes: 'Groups text into readable body paragraphs with cohesive blocks of copy.',
+      whyItExists: 'Ensures structured formatting, proper text flow, and separation of paragraphs.',
+      whatItAffects: 'Applies clean paragraph break-line heights and sizing constraints.',
+      productConnection: 'Renders explanations, customer reviews, descriptions, and guide copy in a friendly readable manner.'
+    },
+    {
+      tag: '<h1> - <h6>',
+      selector: 'h1, h2, h3, h4',
+      tagKey: '<h',
+      whatItDoes: 'Represents section headings of varying size and hierarchical importance.',
+      whyItExists: 'Tells search engines and screen readers how your content is structured and what is most important.',
+      whatItAffects: 'Impacts title visibility, typeface weights, and margins.',
+      productConnection: 'Provides impressive display headings for your product name, landing titles, and section sections.'
+    },
+    {
+      tag: '<img>',
+      selector: 'img',
+      tagKey: '<img',
+      whatItDoes: 'Embeds and displays pictures, illustration icons, product logos, or visual mockups.',
+      whyItExists: 'To provide essential illustration context reinforcing text content and engaging visitors.',
+      whatItAffects: 'Sizing frames, responsiveness, source path fetches, and pixel aspect ratios.',
+      productConnection: 'Visualizes your digital product mockups, customer portrait avatars, and brand assets.'
+    },
+    {
+      tag: '<span>',
+      selector: 'span',
+      tagKey: '<span',
+      whatItDoes: 'Serves as an inline container used to style small specific pieces of text or inline icons.',
+      whyItExists: 'Enables micro-styling (e.g. highlighting a single word) without changing structure or wrapping lines.',
+      whatItAffects: 'Inline alignment and micro color, weight, or size updates of wrapped text elements.',
+      productConnection: 'Renders micro-badges, indicators like [live], or specific bold text accents.'
+    },
+    {
+      tag: '<header>',
+      selector: 'header',
+      tagKey: '<header',
+      whatItDoes: 'Marks the top navigation bar or introductory branding container.',
+      whyItExists: 'Provides an intuitive global entry point for navigating views, search bars, and logotype symbols.',
+      whatItAffects: 'Creates sticky top or bordered bars that house corporate logos, navigation buttons, and actions.',
+      productConnection: 'Presents your clean logo header and navigation menus at the top of your landing.'
+    }
+  ];
+
+  const handleHighlightEditorAndPreview = (tagKey: string, selector: string) => {
+    // Highlight preview
+    const iframe = document.getElementById('walkthrough-preview-iframe') as HTMLIFrameElement | null;
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({
+        action: 'highlight',
+        selector: selector
+      }, '*');
+    }
+
+    // Highlight editor
+    if (editorRef.current && monacoRef.current) {
+      const editor = editorRef.current;
+      const model = editor.getModel();
+      if (model) {
+        const matches = model.findMatches(tagKey, true, false, false, null, true);
+        if (matches && matches.length > 0) {
+          const match = matches[0];
+          editor.setSelection(match.range);
+          editor.revealRangeInCenter(match.range);
+        }
+      }
+    }
+  };
 
   const getInitialVirtualFiles = (pName: string, mvpCode: string) => {
     const projName = pName || projectName || 'Campaign Product';
@@ -2617,127 +2734,233 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                   [hide]
                                 </button>
                               </div>
+                              <div className="px-2.5 pt-2 pb-1 bg-slate-100/50 border-b border-slate-200/50 flex items-center gap-1.5 shrink-0">
+                                <Search className="w-3.5 h-3.5 text-slate-400" />
+                                <input
+                                  type="text"
+                                  value={fileQuery}
+                                  onChange={(e) => setFileQuery(e.target.value)}
+                                  placeholder="Find file..."
+                                  className="w-full text-xs font-sans tracking-wide text-slate-700 bg-transparent py-1 leading-normal border-none outline-none placeholder-slate-400"
+                                />
+                                {fileQuery && (
+                                  <button 
+                                    onClick={() => setFileQuery('')} 
+                                    type="button"
+                                    className="p-0.5 text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer text-[10px]"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Create File Section */}
+                              <div className="px-2.5 py-1.5 bg-slate-100/40 border-b border-slate-200/40 flex flex-col gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsAddingFile(!isAddingFile)}
+                                  className="text-[10px] font-sans font-extrabold text-[#2563eb] hover:bg-[#2563eb]/5 px-2 py-1.5 rounded-lg border border-[#2563eb]/20 text-left flex items-center justify-between cursor-pointer bg-white transition-all w-full leading-tight"
+                                >
+                                  <span className="flex items-center gap-1"><span>+</span> Create New File</span>
+                                  <span className="font-mono text-[9px] text-slate-400">src/components/</span>
+                                </button>
+
+                                {isAddingFile && (
+                                  <form 
+                                    onSubmit={(e) => {
+                                      e.preventDefault();
+                                      const trimmed = newFileName.trim();
+                                      if (!trimmed) return;
+                                      
+                                      let resolvedPath = trimmed;
+                                      if (!trimmed.includes('/')) {
+                                        resolvedPath = `src/components/${trimmed}`;
+                                      }
+
+                                      setVirtualFiles(prev => ({
+                                        ...prev,
+                                        [resolvedPath]: `// File: ${resolvedPath}\n// Purpose: Dynamic modular addition to your product MVP\n\nexport default function CustomModule() {\n  return (\n    <div className="p-4 border rounded-xl bg-slate-50">\n      <h4 className="text-sm font-bold text-slate-800">Custom Feature Component</h4>\n      <p className="text-xs text-slate-500 mt-1">Ready for product presentation!</p>\n    </div>\n  );\n}`
+                                      }));
+
+                                      if (!openTabs.includes(resolvedPath)) {
+                                        setOpenTabs(prev => [...prev, resolvedPath]);
+                                      }
+                                      setActiveFile(resolvedPath);
+                                      setNewFileName('');
+                                      setIsAddingFile(false);
+                                      toast.success(`Registered virtual file: ${resolvedPath}`);
+                                    }} 
+                                    className="mt-1 flex items-center gap-1 bg-white border border-[#2563eb]/35 rounded-lg p-1.5 shadow-sm"
+                                  >
+                                    <input
+                                      type="text"
+                                      value={newFileName}
+                                      onChange={(e) => setNewFileName(e.target.value)}
+                                      placeholder="new-screen.tsx"
+                                      className="flex-1 text-[11px] px-1.5 py-1 bg-transparent border-none outline-none font-mono text-slate-800"
+                                      autoFocus
+                                    />
+                                    <button type="submit" className="p-1 text-emerald-600 hover:text-emerald-700 bg-transparent border-none font-black text-xs cursor-pointer">
+                                      ✓
+                                    </button>
+                                    <button type="button" onClick={() => setIsAddingFile(false)} className="p-1 text-slate-400 hover:text-slate-600 bg-transparent border-none text-xs cursor-pointer">
+                                      ✕
+                                    </button>
+                                  </form>
+                                )}
+                              </div>
 
                               <div className="flex-1 overflow-y-auto p-2.5 space-y-1 scrollbar-thin">
-                                {[
-                                  {
-                                    name: 'Pages',
-                                    isFolder: true,
-                                    folderKey: 'src/pages',
-                                    children: [
-                                      { name: 'Landing.tsx', path: 'src/pages/Landing.tsx' },
-                                      { name: 'Dashboard.tsx', path: 'src/pages/Dashboard.tsx' }
-                                    ]
-                                  },
-                                  {
-                                    name: 'Components',
-                                    isFolder: true,
-                                    folderKey: 'src/components',
-                                    children: [
-                                      { name: 'Navigation.tsx', path: 'src/components/Navigation.tsx' },
-                                      { name: 'InteractiveWidget.tsx', path: 'src/components/InteractiveWidget.tsx' }
-                                    ]
-                                  },
-                                  {
-                                    name: 'Assets',
-                                    isFolder: true,
-                                    folderKey: 'public',
-                                    children: [
-                                      { name: 'logo-accent.svg', path: 'public/logo-accent.svg' },
-                                      { name: 'banner.png', path: 'public/banner.png' }
-                                    ]
-                                  },
-                                  {
-                                    name: 'Styles',
-                                    isFolder: true,
-                                    folderKey: 'src/styles',
-                                    children: [
-                                      { name: 'theme.css', path: 'src/styles/theme.css' },
-                                      { name: 'tailwind.config.js', path: 'tailwind.config.js' }
-                                    ]
-                                  },
-                                  {
-                                    name: 'APIs',
-                                    isFolder: true,
-                                    folderKey: 'src/apis',
-                                    children: [
-                                      { name: 'geminiProxy.ts', path: 'src/apis/geminiProxy.ts' },
-                                      { name: 'analytics.ts', path: 'src/apis/analytics.ts' }
-                                    ]
-                                  },
-                                  {
-                                    name: 'Database Models',
-                                    isFolder: true,
-                                    folderKey: 'src/db',
-                                    children: [
-                                      { name: 'schema.sql', path: 'src/db/schema.sql' },
-                                      { name: 'localStore.ts', path: 'src/db/localStore.ts' }
-                                    ]
-                                  },
-                                  {
-                                    name: 'Configuration Files',
-                                    isFolder: true,
-                                    folderKey: 'config',
-                                    children: [
-                                      { name: 'package.json', path: 'package.json' },
-                                      { name: 'readme.md', path: 'readme.md' },
-                                      { name: 'metadata.json', path: 'metadata.json' },
-                                      { name: 'index.html', path: 'index.html' }
-                                    ]
-                                  }
-                                ].map((node) => {
-                                  const isExpanded = expandedFolders[node.folderKey] !== false;
-                                  return (
-                                    <div key={node.name} className="space-y-0.5">
-                                      {/* Folder Header */}
-                                      <div
-                                        onClick={() => {
-                                          setExpandedFolders(prev => ({
-                                            ...prev,
-                                            [node.folderKey]: !isExpanded
-                                          }));
-                                        }}
-                                        className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-slate-100 rounded-lg text-xs font-bold text-slate-600 cursor-pointer transition-colors"
-                                      >
-                                        <span className="text-slate-400">
-                                          {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                                        </span>
-                                        <span className="text-[#2563eb]">
-                                          {isExpanded ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
-                                        </span>
-                                        <span className="truncate">{node.name}</span>
-                                      </div>
+                                {(() => {
+                                  // Build tree list statically but dynamic lookup
+                                  const baseFolders = [
+                                    {
+                                      name: 'Pages',
+                                      folderKey: 'src/pages',
+                                      children: [
+                                        { name: 'Landing.tsx', path: 'src/pages/Landing.tsx' },
+                                        { name: 'Dashboard.tsx', path: 'src/pages/Dashboard.tsx' }
+                                      ]
+                                    },
+                                    {
+                                      name: 'Components',
+                                      folderKey: 'src/components',
+                                      children: [
+                                        { name: 'Navigation.tsx', path: 'src/components/Navigation.tsx' },
+                                        { name: 'InteractiveWidget.tsx', path: 'src/components/InteractiveWidget.tsx' }
+                                      ]
+                                    },
+                                    {
+                                      name: 'Assets',
+                                      folderKey: 'public',
+                                      children: [
+                                        { name: 'logo-accent.svg', path: 'public/logo-accent.svg' },
+                                        { name: 'banner.png', path: 'public/banner.png' }
+                                      ]
+                                    },
+                                    {
+                                      name: 'Styles',
+                                      folderKey: 'src/styles',
+                                      children: [
+                                        { name: 'theme.css', path: 'src/styles/theme.css' },
+                                        { name: 'tailwind.config.js', path: 'tailwind.config.js' }
+                                      ]
+                                    },
+                                    {
+                                      name: 'APIs',
+                                      folderKey: 'src/apis',
+                                      children: [
+                                        { name: 'geminiProxy.ts', path: 'src/apis/geminiProxy.ts' },
+                                        { name: 'analytics.ts', path: 'src/apis/analytics.ts' }
+                                      ]
+                                    },
+                                    {
+                                      name: 'Database Models',
+                                      folderKey: 'src/db',
+                                      children: [
+                                        { name: 'schema.sql', path: 'src/db/schema.sql' },
+                                        { name: 'localStore.ts', path: 'src/db/localStore.ts' }
+                                      ]
+                                    },
+                                    {
+                                      name: 'Configuration Files',
+                                      folderKey: 'config',
+                                      children: [
+                                        { name: 'package.json', path: 'package.json' },
+                                        { name: 'readme.md', path: 'readme.md' },
+                                        { name: 'metadata.json', path: 'metadata.json' },
+                                        { name: 'index.html', path: 'index.html' }
+                                      ]
+                                    }
+                                  ];
 
-                                      {/* Folder Children */}
-                                      {isExpanded && node.children && (
-                                        <div className="pl-6 space-y-0.5 border-l border-slate-200 ml-3.5">
-                                          {node.children.map((child) => {
-                                            const isSelected = activeFile === child.path;
-                                            return (
-                                              <div
-                                                key={child.path}
-                                                onClick={() => {
-                                                  if (!openTabs.includes(child.path)) {
-                                                    setOpenTabs(prev => [...prev, child.path]);
-                                                  }
-                                                  setActiveFile(child.path);
-                                                }}
-                                                className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] cursor-pointer transition-all ${
-                                                  isSelected 
-                                                    ? 'bg-[#2563eb]/10 text-[#2563eb] font-extrabold border-l-2 border-l-[#2563eb] pl-1.5' 
-                                                    : 'hover:bg-slate-100 text-slate-500'
-                                                }`}
-                                              >
-                                                <File className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-[#2563eb]' : 'text-slate-400'}`} />
-                                                <span className="truncate">{child.name}</span>
-                                              </div>
-                                            );
-                                          })}
+                                  const allTreePaths = new Set(baseFolders.flatMap(f => f.children.map(c => c.path)));
+                                  Object.keys(virtualFiles).forEach(vKey => {
+                                    if (!allTreePaths.has(vKey)) {
+                                      let folderKey = 'config';
+                                      if (vKey.startsWith('src/pages/')) folderKey = 'src/pages';
+                                      else if (vKey.startsWith('src/components/')) folderKey = 'src/components';
+                                      else if (vKey.startsWith('public/')) folderKey = 'public';
+                                      else if (vKey.startsWith('src/styles/')) folderKey = 'src/styles';
+                                      else if (vKey.startsWith('src/apis/')) folderKey = 'src/apis';
+                                      else if (vKey.startsWith('src/db/')) folderKey = 'src/db';
+
+                                      const targetFolder = baseFolders.find(f => f.folderKey === folderKey) || baseFolders[baseFolders.length - 1];
+                                      targetFolder.children.push({ name: vKey.split('/').pop() || vKey, path: vKey });
+                                    }
+                                  });
+
+                                  // Apply search filter if active
+                                  let finalFolders = baseFolders;
+                                  if (fileQuery.trim()) {
+                                    const q = fileQuery.toLowerCase().trim();
+                                    finalFolders = baseFolders.map(folder => {
+                                      const matching = folder.children.filter(child => child.name.toLowerCase().includes(q) || child.path.toLowerCase().includes(q));
+                                      return { ...folder, children: matching };
+                                    }).filter(folder => folder.children.length > 0);
+                                  }
+
+                                  return finalFolders.map((node) => {
+                                    const isExpanded = expandedFolders[node.folderKey] !== false;
+                                    return (
+                                      <div key={node.name} className="space-y-0.5 animate-fade-in">
+                                        {/* Folder Header */}
+                                        <div
+                                          onClick={() => {
+                                            setExpandedFolders(prev => ({
+                                              ...prev,
+                                              [node.folderKey]: !isExpanded
+                                            }));
+                                          }}
+                                          className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-slate-100 rounded-lg text-xs font-bold text-slate-600 cursor-pointer transition-colors"
+                                        >
+                                          <span className="text-slate-400">
+                                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                          </span>
+                                          <span className="text-[#2563eb]">
+                                            {isExpanded ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4" />}
+                                          </span>
+                                          <span className="truncate">{node.name}</span>
                                         </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
+
+                                        {/* Folder Children */}
+                                        {isExpanded && node.children && (
+                                          <div className="pl-6 space-y-0.5 border-l border-slate-200 ml-3.5">
+                                            {node.children.map((child) => {
+                                              const isSelected = activeFile === child.path;
+                                              return (
+                                                <div
+                                                  key={child.path}
+                                                  onClick={() => {
+                                                    // Lazy initialization of newly registered explorer file in the real virtual state
+                                                    if (!virtualFiles[child.path]) {
+                                                      setVirtualFiles(prev => ({
+                                                        ...prev,
+                                                        [child.path]: `// Sandbox file: ${child.path}\n// Enhanced for ${projectName || 'your digital product'}\n\n// Add client layout modules here!`
+                                                      }));
+                                                    }
+                                                    if (!openTabs.includes(child.path)) {
+                                                      setOpenTabs(prev => [...prev, child.path]);
+                                                    }
+                                                    setActiveFile(child.path);
+                                                  }}
+                                                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md text-[11px] cursor-pointer transition-all ${
+                                                    isSelected 
+                                                      ? 'bg-[#2563eb]/10 text-[#2563eb] font-extrabold border-l-2 border-l-[#2563eb] pl-1.5' 
+                                                      : 'hover:bg-slate-100 text-slate-500'
+                                                  }`}
+                                                >
+                                                  <File className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-[#2563eb]' : 'text-slate-400'}`} />
+                                                  <span className="truncate">{child.name}</span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  });
+                                })()}
                               </div>
                             </div>
                           )}
@@ -2784,55 +3007,150 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                 </div>
                               </div>
 
-                              {/* Numbered tasks */}
-                              <div className="space-y-2">
-                                {[
-                                  { title: 'The Structure', desc: 'How your product is organised' },
-                                  { title: 'The Navigation', desc: 'How users move between screens' },
-                                  { title: `The ${features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true))[0]?.feature_name || 'Core System'}`, desc: 'What it does and how' },
-                                  { title: `The ${features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true))[1]?.feature_name || 'Action Flow'}`, desc: 'What it does and how' },
-                                  { title: 'The Data', desc: 'The sample information displayed' }
-                                ].map((task, idx) => (
-                                  <button
-                                    key={idx}
-                                    onClick={() => handleTaskClick(idx)}
-                                    className={`w-full text-left p-3 rounded-xl border flex items-start gap-3 transition-colors ${
-                                      selectedTaskIdx === idx 
-                                        ? 'bg-[#2563eb]/10 border-[#2563eb]/45 text-[#2563eb] font-bold' 
-                                        : 'bg-slate-50/40 border-slate-200 hover:bg-slate-50/85 text-slate-600'
-                                    }`}
-                                  >
-                                    <span className={`w-5 h-5 rounded-full text-[11px] font-bold font-mono shrink-0 flex items-center justify-center border ${
-                                      selectedTaskIdx === idx 
-                                        ? 'bg-[#2563eb] border-[#2563eb] text-black' 
-                                        : 'bg-white border-slate-200 text-slate-500'
-                                    }`}>
-                                      {idx + 1}
-                                    </span>
-                                    <div>
-                                      <p className="text-xs font-bold leading-tight">{task.title}</p>
-                                      <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">{task.desc}</p>
-                                    </div>
-                                  </button>
-                                ))}
+                              {/* Tab selection */}
+                              <div className="grid grid-cols-2 bg-slate-100 p-1 rounded-xl border border-slate-200/60 mb-2">
+                                <button
+                                  onClick={() => setGuidePanelTab('tasks')}
+                                  type="button"
+                                  className={`py-1.5 rounded-lg text-[10.5px] font-bold uppercase transition-all duration-150 border-none cursor-pointer ${
+                                    guidePanelTab === 'tasks'
+                                      ? 'bg-white text-slate-800 shadow font-black'
+                                      : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                  }`}
+                                >
+                                  Guided Tasks
+                                </button>
+                                <button
+                                  onClick={() => setGuidePanelTab('explorer')}
+                                  type="button"
+                                  className={`py-1.5 rounded-lg text-[10.5px] font-bold uppercase transition-all duration-150 border-none cursor-pointer ${
+                                    guidePanelTab === 'explorer'
+                                      ? 'bg-white text-slate-800 shadow font-black'
+                                      : 'text-slate-500 hover:text-slate-800 bg-transparent'
+                                  }`}
+                                >
+                                  Code Explorer
+                                </button>
                               </div>
 
-                              {/* Explanation block */}
-                              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                                <p className="text-[10px] font-bold text-[#2563eb] tracking-wide uppercase font-mono">
-                                  What this code does
-                                </p>
-                                {isExplaining ? (
-                                  <div className="flex items-center gap-2 py-2">
-                                    <Loader2 className="w-4 h-4 text-[#2563eb] animate-spin" />
-                                    <span className="text-[11px] text-slate-500 animate-pulse font-mono uppercase tracking-wider">Compiling expert review...</span>
+                              {guidePanelTab === 'tasks' ? (
+                                <>
+                                  {/* Numbered tasks */}
+                                  <div className="space-y-2">
+                                    {[
+                                      { title: 'The Structure', desc: 'How your product is organised' },
+                                      { title: 'The Navigation', desc: 'How users move between screens' },
+                                      { title: `The ${features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true))[0]?.feature_name || 'Core System'}`, desc: 'What it does and how' },
+                                      { title: `The ${features.filter(f => f.category === 'must_have' && (f.is_included === 1 || f.is_included === true))[1]?.feature_name || 'Action Flow'}`, desc: 'What it does and how' },
+                                      { title: 'The Data', desc: 'The sample information displayed' }
+                                    ].map((task, idx) => (
+                                      <button
+                                        key={idx}
+                                        onClick={() => handleTaskClick(idx)}
+                                        className={`w-full text-left p-3 rounded-xl border flex items-start gap-3 transition-colors ${
+                                          selectedTaskIdx === idx 
+                                            ? 'bg-[#2563eb]/10 border-[#2563eb]/45 text-[#2563eb] font-bold' 
+                                            : 'bg-slate-50/40 border-slate-200 hover:bg-slate-50/85 text-slate-600'
+                                        }`}
+                                      >
+                                        <span className={`w-5 h-5 rounded-full text-[11px] font-bold font-mono shrink-0 flex items-center justify-center border ${
+                                          selectedTaskIdx === idx 
+                                            ? 'bg-[#2563eb] border-[#2563eb] text-black' 
+                                            : 'bg-white border-slate-200 text-slate-500'
+                                        }`}>
+                                          {idx + 1}
+                                        </span>
+                                        <div>
+                                          <p className="text-xs font-bold leading-tight">{task.title}</p>
+                                          <p className="text-[10px] text-slate-500 mt-0.5 leading-tight">{task.desc}</p>
+                                        </div>
+                                      </button>
+                                    ))}
                                   </div>
-                                ) : (
-                                  <p className="text-[11px] text-slate-600 leading-relaxed pl-0.5 font-sans">
-                                    {taskExplanations[selectedTaskIdx] || 'Think of this like your app\'s foundation. It defines the central shell that ensures your text, inputs, and screens have space to exist and flow perfectly!'}
-                                  </p>
-                                )}
-                              </div>
+
+                                  {/* Explanation block */}
+                                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                                    <p className="text-[10px] font-bold text-[#2563eb] tracking-wide uppercase font-mono">
+                                      What this code does
+                                    </p>
+                                    {isExplaining ? (
+                                      <div className="flex items-center gap-2 py-2">
+                                        <Loader2 className="w-4 h-4 text-[#2563eb] animate-spin" />
+                                        <span className="text-[11px] text-slate-500 animate-pulse font-mono uppercase tracking-wider">Compiling expert review...</span>
+                                      </div>
+                                    ) : (
+                                      <p className="text-[11px] text-slate-600 leading-relaxed pl-0.5 font-sans">
+                                        {taskExplanations[selectedTaskIdx] || 'Think of this like your app\'s foundation. It defines the central shell that ensures your text, inputs, and screens have space to exist and flow perfectly!'}
+                                      </p>
+                                    )}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="space-y-4">
+                                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-relaxed">
+                                    Click any element below to reveal it inside your real code edit file and live screen preview:
+                                  </div>
+
+                                  <div className="grid grid-cols-3 gap-1.5">
+                                    {COMMON_TAGS.map((tagObj) => {
+                                      const isSelected = selectedCommonTag?.tag === tagObj.tag;
+                                      return (
+                                        <button
+                                          key={tagObj.tag}
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedCommonTag(tagObj);
+                                            handleHighlightEditorAndPreview(tagObj.tagKey, tagObj.selector);
+                                          }}
+                                          className={`px-1 py-1.5 text-[10px] font-mono font-bold rounded-lg border text-center transition-all cursor-pointer ${
+                                            isSelected
+                                              ? 'bg-[#2563eb] border-[#2563eb] text-white shadow-md'
+                                              : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                                          }`}
+                                        >
+                                          {tagObj.tag}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+
+                                  {selectedCommonTag ? (
+                                    <motion.div 
+                                      initial={{ opacity: 0, y: 5 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      className="p-4 bg-[#2563eb]/5 border border-[#2563eb]/15 rounded-xl space-y-3 font-sans"
+                                    >
+                                      <div className="flex justify-between items-center pb-1.5 border-b border-slate-200/50">
+                                        <span className="text-xs font-black font-mono text-[#2563eb]">{selectedCommonTag.tag} Element</span>
+                                        <span className="text-[9px] bg-[#2563eb]/10 text-[#2563eb] px-1.5 py-0.5 rounded uppercase font-black tracking-wider">active query</span>
+                                      </div>
+
+                                      <div className="space-y-2 text-[11px] leading-relaxed">
+                                        <div>
+                                          <p className="font-extrabold text-[#2563eb] uppercase text-[9px] font-mono tracking-wider">What it is & does</p>
+                                          <p className="text-slate-700 mt-0.5 font-medium">{selectedCommonTag.whatItDoes}</p>
+                                        </div>
+                                        <div>
+                                          <p className="font-extrabold text-[#2563eb] uppercase text-[9px] font-mono tracking-wider">Why it exists</p>
+                                          <p className="text-slate-700 mt-0.5 font-medium">{selectedCommonTag.whyItExists}</p>
+                                        </div>
+                                        <div>
+                                          <p className="font-extrabold text-[#2563eb] uppercase text-[9px] font-mono tracking-wider">Live screen action</p>
+                                          <p className="text-slate-700 mt-0.5 font-medium">{selectedCommonTag.whatItAffects}</p>
+                                        </div>
+                                        <div>
+                                          <p className="font-extrabold text-[#2563eb] uppercase text-[9px] font-mono tracking-wider">Product connection</p>
+                                          <p className="text-slate-700 mt-0.5 font-medium">{selectedCommonTag.productConnection}</p>
+                                        </div>
+                                      </div>
+                                    </motion.div>
+                                  ) : (
+                                    <div className="p-4 bg-slate-50 border border-slate-200 border-dashed rounded-xl text-center">
+                                      <p className="text-slate-400 text-[10px] font-bold font-mono">Select a tag above to explore its structural role</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
 
                               {/* Mini AI Tutor Chat widget */}
                               <div className="border border-slate-200 rounded-xl bg-slate-50/50 overflow-hidden">
