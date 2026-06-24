@@ -565,6 +565,659 @@ router.post('/features/approve', authenticateToken, async (req: any, res) => {
   }
 });
 
+function getProductCategory(name: string, problem: string, scope: string): string {
+  const combined = `${name} ${problem} ${scope}`.toLowerCase();
+  if (combined.includes('learn') || combined.includes('study') || combined.includes('school') || combined.includes('course') || combined.includes('student') || combined.includes('quiz') || combined.includes('teacher') || combined.includes('education')) {
+    return 'education';
+  }
+  if (combined.includes('health') || combined.includes('fitness') || combined.includes('well') || combined.includes('calm') || combined.includes('workout') || combined.includes('mind') || combined.includes('meditation') || combined.includes('breath') || combined.includes('doctor')) {
+    return 'health';
+  }
+  if (combined.includes('money') || combined.includes('shop') || combined.includes('budget') || combined.includes('finance') || combined.includes('delivery') || combined.includes('food') || combined.includes('buy') || combined.includes('sell') || combined.includes('payment') || combined.includes('order')) {
+    return 'finance_ecommerce';
+  }
+  if (combined.includes('social') || combined.includes('connect') || combined.includes('friend') || combined.includes('chat') || combined.includes('community') || combined.includes('forum') || combined.includes('group')) {
+    return 'social';
+  }
+  return 'productivity';
+}
+
+function generateAdaptiveFallbackScreens(bp: any, featureRows: any[]): any[] {
+  const category = getProductCategory(bp.project_name || '', bp.problem_statement || '', bp.mvp_scope || '');
+  const projName = bp.project_name || 'VibeLab App';
+  const targetUsers = bp.target_users || 'target users';
+  const problem = bp.problem_statement || 'painful legacy process';
+  
+  const featureListHtml = featureRows.slice(0, 4).map((f: any) => `
+    <div class="flex items-start gap-3">
+      <span class="text-indigo-500 dark:text-indigo-400 mt-0.5">✓</span>
+      <div>
+        <div class="text-xs font-bold text-slate-800 dark:text-slate-100">${f.feature_name}</div>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">${f.feature_description}</div>
+      </div>
+    </div>
+  `).join('');
+
+  if (category === 'education') {
+    return [
+      {
+        screen_name: "🎓 Study Quest Portal",
+        screen_description: `Main student learning hub tailored for ${targetUsers}. Displays enrolled revision tracks, active tasks, and personal stats.`,
+        screen_purpose: "Central hub for monitoring learning milestones, resuming smart courses, and accessing customized reference materials.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-32 h-32 bg-violet-600/10 rounded-full blur-2xl"></div>
+            <div class="flex items-center justify-between mb-8">
+              <div>
+                <div class="text-[10px] font-bold text-violet-400 uppercase tracking-widest mb-1">Quest Deck</div>
+                <h1 class="text-2xl font-black tracking-tight">${projName}</h1>
+              </div>
+              <div class="flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-full text-xs text-violet-300 font-semibold">
+                <span class="w-1.5 h-1.5 bg-violet-400 rounded-full"></span> Smart Sandbox
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-violet-300 uppercase tracking-wider font-extrabold mb-1">Target Learner</div>
+                <div class="text-sm font-bold text-slate-100">${targetUsers}</div>
+              </div>
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-violet-300 uppercase tracking-wider font-extrabold mb-1">Quest Goal</div>
+                <div class="text-xs font-medium text-slate-300 line-clamp-3">${problem}</div>
+              </div>
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-violet-300 uppercase tracking-wider font-extrabold mb-1">Learning Streak</div>
+                <div class="text-lg font-black text-violet-400 font-mono">🔥 5 Days Live</div>
+              </div>
+            </div>
+            <div class="bg-slate-800/20 border border-slate-700/30 rounded-xl p-5 mb-6">
+              <h3 class="text-xs font-extrabold text-violet-300 uppercase tracking-widest mb-3">Core Modules Installed</h3>
+              <div class="space-y-3">
+                ${featureListHtml}
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-slate-800/60">
+              <span class="text-[10px] font-mono text-slate-500">Workspace active</span>
+              <button class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all hover:shadow-lg">
+                Start Lesson
+              </button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📝 Adaptive Practice Engine",
+        screen_description: "Smart review dashboard equipped with instant grading metrics and personalized study tips.",
+        screen_purpose: "Enables interactive testing and diagnostics of target topics, displaying step-by-step guidance.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 bg-violet-600/20 border border-violet-500/30 rounded-xl flex items-center justify-center text-violet-400 text-lg">📝</div>
+              <div>
+                <h2 class="text-lg font-black tracking-tight">Adaptive Test Suite</h2>
+                <p class="text-xs text-slate-400">Review dynamic questions calibrated to your skill level.</p>
+              </div>
+            </div>
+            <div class="p-4 bg-slate-800/30 rounded-xl border border-slate-700/30 mb-6">
+              <div class="text-[10px] font-bold text-violet-400 uppercase tracking-widest mb-1">Question 1 of 5</div>
+              <p class="text-xs text-slate-200 font-medium mb-4">How does ${projName} optimize the learning workflow to resolve issues for ${targetUsers}?</p>
+              <div class="space-y-2">
+                <label class="flex items-center gap-3 p-3 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/40 rounded-lg cursor-pointer">
+                  <input type="radio" name="q1" class="text-violet-500 focus:ring-violet-500" />
+                  <span class="text-xs text-slate-300">By automating manual scheduling and highlighting critical pain points.</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/40 rounded-lg cursor-pointer">
+                  <input type="radio" name="q1" class="text-violet-500 focus:ring-violet-500" />
+                  <span class="text-xs text-slate-300">By providing direct reference libraries and gamified learning badges.</span>
+                </label>
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-4 border-t border-slate-800">
+              <span class="text-[10px] font-mono text-slate-500">Diagnostic track active</span>
+              <button class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl">
+                Submit Answer
+              </button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "🏆 Quest Achievements & Milestones",
+        screen_description: "Achievements gallery containing earned badges, score trackers, and learning level meters.",
+        screen_purpose: "Inspires students with responsive rewards, level promotions, and gamified progress review loops.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h2 class="text-lg font-black tracking-tight">My Accomplishments</h2>
+                <p class="text-xs text-slate-400">Unlock ranks as you master new skills.</p>
+              </div>
+              <div class="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-lg">
+                ⭐ Level 3 Explorer
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-6">
+              <div class="p-3 bg-slate-800/40 border border-slate-700/30 rounded-xl text-center">
+                <span class="text-2xl block mb-1">🔥</span>
+                <div class="text-[10px] font-bold text-slate-200">Consistency</div>
+                <div class="text-[9px] text-violet-400 mt-0.5">5-Day Streak</div>
+              </div>
+              <div class="p-3 bg-slate-800/40 border border-slate-700/30 rounded-xl text-center">
+                <span class="text-2xl block mb-1">🎯</span>
+                <div class="text-[10px] font-bold text-slate-200">Accuracy</div>
+                <div class="text-[9px] text-violet-400 mt-0.5">92% Average</div>
+              </div>
+              <div class="p-3 bg-slate-800/40 border border-slate-700/30 rounded-xl text-center">
+                <span class="text-2xl block mb-1">👑</span>
+                <div class="text-[10px] font-bold text-slate-200">Champ</div>
+                <div class="text-[9px] text-violet-400 mt-0.5">15 Quizzes</div>
+              </div>
+            </div>
+            <div class="p-4 bg-violet-600/10 border border-violet-500/20 rounded-xl">
+              <div class="text-xs text-violet-300 font-bold mb-1">🚀 Smart Progression Insight</div>
+              <p class="text-[11px] text-slate-400 leading-relaxed">Completing 2 more study quest drills will upgrade your badge rank to 'Topic Master'!</p>
+            </div>
+          </div>
+        `
+      }
+    ];
+  }
+
+  if (category === 'health') {
+    return [
+      {
+        screen_name: "🌿 Wellness Dashboard",
+        screen_description: `Mindful health tracker engineered for ${targetUsers}. Provides active habit lists, water logs, and daily health metrics.`,
+        screen_purpose: "A calm workspace to view habit completion logs, keep tabs on vital hydration, and review wellness streaks.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-32 h-32 bg-emerald-600/10 rounded-full blur-2xl"></div>
+            <div class="flex items-center justify-between mb-8">
+              <div>
+                <div class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">Serene Space</div>
+                <h1 class="text-2xl font-black tracking-tight">${projName}</h1>
+              </div>
+              <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full text-xs text-emerald-300 font-semibold">
+                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> Calm Active
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-emerald-300 uppercase tracking-wider font-extrabold mb-1">Active User</div>
+                <div class="text-sm font-bold text-slate-100">${targetUsers}</div>
+              </div>
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-emerald-300 uppercase tracking-wider font-extrabold mb-1">Our Wellness Goal</div>
+                <div class="text-xs font-medium text-slate-300 line-clamp-3">${problem}</div>
+              </div>
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-emerald-300 uppercase tracking-wider font-extrabold mb-1">Hydration Index</div>
+                <div class="text-lg font-black text-emerald-400 font-mono">💧 75% Checked</div>
+              </div>
+            </div>
+            <div class="bg-slate-800/20 border border-slate-700/30 rounded-xl p-5 mb-6">
+              <h3 class="text-xs font-extrabold text-emerald-300 uppercase tracking-widest mb-3">Habits & Targets Enabled</h3>
+              <div class="space-y-3">
+                ${featureListHtml}
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-slate-800/60">
+              <span class="text-[10px] font-mono text-slate-500">Wellness environment loaded</span>
+              <button class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all hover:shadow-lg">
+                Log Habit
+              </button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "🧘 Mindful Breath & Focus Center",
+        screen_description: "Focused interactive controller facilitating circular relaxation exercises, timer logs, and breathing cues.",
+        screen_purpose: "Enables direct stress reduction through paced breathing cycles and dynamic auditory loops.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+            <div class="flex items-center gap-3 mb-8">
+              <div class="w-10 h-10 bg-emerald-600/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400 text-lg">🧘</div>
+              <div>
+                <h2 class="text-lg font-black tracking-tight">Breathing Pacer</h2>
+                <p class="text-xs text-slate-400">Calibrate your breathing rhythm to find focus.</p>
+              </div>
+            </div>
+            <div class="flex flex-col items-center justify-center py-6 mb-6">
+              <div class="relative w-28 h-28 flex items-center justify-center mb-4">
+                <div class="absolute w-full h-full bg-emerald-500/10 rounded-full border border-emerald-500/30 animate-ping"></div>
+                <div class="absolute w-20 h-20 bg-emerald-500/25 rounded-full border border-emerald-500/40 animate-pulse"></div>
+                <span class="text-xs font-extrabold text-emerald-300 uppercase tracking-widest z-10">Breathe In</span>
+              </div>
+              <span class="text-xs text-slate-400 mt-2">Pace: 4s inhale • 4s exhale</span>
+            </div>
+            <div class="flex justify-between items-center pt-4 border-t border-slate-800">
+              <span class="text-[10px] font-mono text-slate-500">Pacer session loaded</span>
+              <button class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl">
+                Start Session
+              </button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📈 Wellness Analytics & Progress",
+        screen_description: "Track completion indexes, weekly habit checklists, and analytical summaries for stress relief patterns.",
+        screen_purpose: "Assists users in reviewing historical habit schedules and logging wellness goals.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h2 class="text-lg font-black tracking-tight">Wellness Report</h2>
+                <p class="text-xs text-slate-400">Review weekly goal alignments and summaries.</p>
+              </div>
+              <button class="px-3 py-1.5 bg-slate-800 border border-slate-700/40 hover:bg-slate-700 text-xs rounded-xl text-slate-300 font-bold">
+                📥 Export Log
+              </button>
+            </div>
+            <div class="space-y-3 mb-6">
+              <div class="flex items-center justify-between p-3.5 bg-slate-800/40 border border-slate-700/30 rounded-xl">
+                <span class="text-xs font-bold text-slate-200">Daily Water Targets</span>
+                <span class="text-xs font-bold text-emerald-400 font-mono">6 / 8 Glasses</span>
+              </div>
+              <div class="flex items-center justify-between p-3.5 bg-slate-800/40 border border-slate-700/30 rounded-xl">
+                <span class="text-xs font-bold text-slate-200">Mindful Breathing Drills</span>
+                <span class="text-xs font-bold text-emerald-400 font-mono">2 / 2 Sessions (100%)</span>
+              </div>
+              <div class="flex items-center justify-between p-3.5 bg-slate-800/40 border border-slate-700/30 rounded-xl">
+                <span class="text-xs font-bold text-slate-200">Step Counts Logged</span>
+                <span class="text-xs font-bold text-emerald-400 font-mono">8,450 / 10,000 Steps</span>
+              </div>
+            </div>
+            <div class="p-3.5 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+              <div class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1">💡 Mindful Suggestion</div>
+              <p class="text-[11px] text-slate-400 leading-relaxed">Completing habits before 12:00 PM usually boosts consistency levels by up to 35%!</p>
+            </div>
+          </div>
+        `
+      }
+    ];
+  }
+
+  if (category === 'finance_ecommerce') {
+    return [
+      {
+        screen_name: "🛍️ Smart Catalog & Orders Portal",
+        screen_description: `Modern product inventory grid and shopping desk customized for ${targetUsers}. Provides catalog filters and transaction indicators.`,
+        screen_purpose: "Enables discovery of key product inventories, shopping lists, and checkout modules.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-32 h-32 bg-amber-600/10 rounded-full blur-2xl"></div>
+            <div class="flex items-center justify-between mb-8">
+              <div>
+                <div class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-1">Store Console</div>
+                <h1 class="text-2xl font-black tracking-tight">${projName}</h1>
+              </div>
+              <div class="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full text-xs text-amber-300 font-semibold">
+                <span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span> Store Open
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-amber-300 uppercase tracking-wider font-extrabold mb-1">Shopping Group</div>
+                <div class="text-sm font-bold text-slate-100">${targetUsers}</div>
+              </div>
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-amber-300 uppercase tracking-wider font-extrabold mb-1">Problem Solved</div>
+                <div class="text-xs font-medium text-slate-300 line-clamp-3">${problem}</div>
+              </div>
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-amber-300 uppercase tracking-wider font-extrabold mb-1">Total Savings</div>
+                <div class="text-lg font-black text-amber-400 font-mono">💲 $120.45 Split</div>
+              </div>
+            </div>
+            <div class="bg-slate-800/20 border border-slate-700/30 rounded-xl p-5 mb-6">
+              <h3 class="text-xs font-extrabold text-amber-300 uppercase tracking-widest mb-3">Features & Integrations Loaded</h3>
+              <div class="space-y-3">
+                ${featureListHtml}
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-slate-800/60">
+              <span class="text-[10px] font-mono text-slate-500">Marketplace active</span>
+              <button class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs uppercase tracking-wider rounded-xl transition-all hover:shadow-lg">
+                View Catalog
+              </button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "💳 Expense Solver & Checkout Hub",
+        screen_description: "Splits purchase balances in real-time, displays item totals, and triggers transaction gateways.",
+        screen_purpose: "Assists users in compiling custom budget selections, dividing costs, and processing orders.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+            <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 bg-amber-600/20 border border-amber-500/30 rounded-xl flex items-center justify-center text-amber-400 text-lg">💳</div>
+              <div>
+                <h2 class="text-lg font-black tracking-tight">Interactive Bill Solver</h2>
+                <p class="text-xs text-slate-400">Calculate splits and complete transaction configurations.</p>
+              </div>
+            </div>
+            <div class="space-y-4 mb-6">
+              <div>
+                <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Total Amount to Process</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-3.5 text-slate-400 font-bold text-xs">$</span>
+                  <input type="number" value="150.00" class="w-full bg-slate-800/40 border border-slate-700/60 focus:border-amber-500 text-xs px-8 py-3.5 rounded-xl outline-none text-slate-200 font-mono font-bold" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Splitting Between</label>
+                  <input type="number" value="3" class="w-full bg-slate-800/40 border border-slate-700/60 focus:border-amber-500 text-xs px-4 py-3.5 rounded-xl outline-none text-slate-200 font-mono font-bold" />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Each Person Pays</label>
+                  <div class="w-full bg-amber-500/10 border border-amber-500/20 text-xs px-4 py-3.5 rounded-xl text-amber-400 font-mono font-black text-center">
+                    $50.00 / person
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-4 border-t border-slate-800">
+              <span class="text-[10px] font-mono text-slate-500">Split calculation verified</span>
+              <button class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs uppercase tracking-wider rounded-xl">
+                Execute Payment
+              </button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📦 Live Order & Tracker Suite",
+        screen_description: "Order status timeline showing delivery statuses, fulfillment milestones, and transaction historical tables.",
+        screen_purpose: "Allows target clients to verify completed transactions and follow delivery tracking journeys.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h2 class="text-lg font-black tracking-tight">Transaction Status Logs</h2>
+                <p class="text-xs text-slate-400">Review status logs of active split baskets.</p>
+              </div>
+              <span class="px-2 py-0.5 bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] uppercase font-mono rounded">
+                Active
+              </span>
+            </div>
+            <div class="relative pl-6 border-l-2 border-amber-500/30 space-y-6 mb-6">
+              <div class="relative">
+                <span class="absolute -left-[30px] top-0 w-3.5 h-3.5 rounded-full bg-amber-500 border-4 border-slate-900"></span>
+                <div class="text-xs font-bold text-slate-100">Order Placed & Split Completed</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">3 out of 3 group members successfully approved their splits.</p>
+              </div>
+              <div class="relative">
+                <span class="absolute -left-[30px] top-0 w-3.5 h-3.5 rounded-full bg-slate-700 border-4 border-slate-900 animate-pulse"></span>
+                <div class="text-xs font-bold text-slate-300">Awaiting Dispatch</div>
+                <p class="text-[11px] text-slate-500 mt-0.5">Fulfillment center compiling order package contents.</p>
+              </div>
+            </div>
+            <div class="p-3.5 bg-amber-500/5 rounded-xl border border-amber-500/10">
+              <div class="text-[10px] font-bold text-amber-400 uppercase tracking-widest mb-1">💡 Split Savings Tip</div>
+              <p class="text-[11px] text-slate-400 leading-normal">Splitting orders with your peers saved you an average of $4.50 in delivery service fees today!</p>
+            </div>
+          </div>
+        `
+      }
+    ];
+  }
+
+  if (category === 'social') {
+    return [
+      {
+        screen_name: "💬 Community Channels Portal",
+        screen_description: `Dynamic social board and active channels hub tailored for ${targetUsers}. Displays discussion panels, hot topics, and active user feeds.`,
+        screen_purpose: "Enables direct engagement with online interest channels, chat lobbies, and trending discussion boards.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-32 h-32 bg-pink-600/10 rounded-full blur-2xl"></div>
+            <div class="flex items-center justify-between mb-8">
+              <div>
+                <div class="text-[10px] font-bold text-pink-400 uppercase tracking-widest mb-1">Buzz Center</div>
+                <h1 class="text-2xl font-black tracking-tight">${projName}</h1>
+              </div>
+              <div class="flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 px-3 py-1.5 rounded-full text-xs text-pink-300 font-semibold">
+                <span class="w-1.5 h-1.5 bg-pink-400 rounded-full"></span> 42 Online
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-pink-300 uppercase tracking-wider font-extrabold mb-1">Primary Community</div>
+                <div class="text-sm font-bold text-slate-100">${targetUsers}</div>
+              </div>
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-pink-300 uppercase tracking-wider font-extrabold mb-1">Topic Challenge</div>
+                <div class="text-xs font-medium text-slate-300 line-clamp-3">${problem}</div>
+              </div>
+              <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                <div class="text-[10px] text-pink-300 uppercase tracking-wider font-extrabold mb-1">Discussion Index</div>
+                <div class="text-lg font-black text-pink-400 font-mono">💬 14 active threads</div>
+              </div>
+            </div>
+            <div class="bg-slate-800/20 border border-slate-700/30 rounded-xl p-5 mb-6">
+              <h3 class="text-xs font-extrabold text-pink-300 uppercase tracking-widest mb-3">Community Features Enabled</h3>
+              <div class="space-y-3">
+                ${featureListHtml}
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-3 border-t border-slate-800/60">
+              <span class="text-[10px] font-mono text-slate-500">Lobby environment active</span>
+              <button class="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all hover:shadow-lg">
+                Enter Discussion
+              </button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📨 Interactive Discussion Room",
+        screen_description: "Rich group-texting workspace containing custom formatted message bubbles, active typing indicators, and text input forms.",
+        screen_purpose: "Connects target users in clean, high-contrast message environments to share thoughts and solve pain points.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+            <div class="flex items-center justify-between mb-6 pb-3 border-b border-slate-800">
+              <div class="flex items-center gap-3">
+                <span class="text-lg">📨</span>
+                <div>
+                  <h2 class="text-base font-bold text-white">#general-discussion</h2>
+                  <p class="text-[10px] text-slate-400">Connecting ${targetUsers}</p>
+                </div>
+              </div>
+              <span class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></span>
+            </div>
+            <div class="space-y-4 mb-6 max-h-48 overflow-y-auto font-sans">
+              <div class="flex items-start gap-3">
+                <div class="w-7 h-7 bg-pink-600/20 border border-pink-500/30 rounded-full flex items-center justify-center text-xs font-bold text-pink-300 shrink-0 font-sans">JD</div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-200 font-sans">Jane Doe</span>
+                    <span class="text-[9px] text-slate-500 font-mono">2 min ago</span>
+                  </div>
+                  <p class="text-xs text-slate-300 mt-1 bg-slate-850 p-2.5 rounded-lg border border-slate-800 font-sans">Has anyone tried using ${projName} to solve: "${problem}" yet? It's awesome!</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3 justify-end">
+                <div class="text-right">
+                  <div class="flex items-center gap-2 justify-end">
+                    <span class="text-[9px] text-slate-500 font-mono">Just Now</span>
+                    <span class="text-xs font-bold text-pink-400 font-sans">You (Student)</span>
+                  </div>
+                  <p class="text-xs text-white bg-pink-600 p-2.5 rounded-lg mt-1 text-left shadow-md font-sans">Absolutely! It streamlines everything for ${targetUsers} perfectly!</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" placeholder="Type your comment..." class="flex-1 bg-slate-800/40 border border-slate-700/60 focus:border-pink-500 text-xs px-4 py-3 rounded-xl outline-none text-slate-200" />
+              <button class="p-3 bg-pink-600 hover:bg-pink-700 text-white rounded-xl transition-all">
+                Send
+              </button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "👥 Social Meetup Clubs",
+        screen_description: "Discover localized study clubs, startup project interest circles, and community-driven meetups.",
+        screen_purpose: "Encourages group alignment and peer collaboration through interactive signup forms and event schedules.",
+        layout_html: `
+          <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+              <div>
+                <h2 class="text-lg font-black tracking-tight">Meetup Circles</h2>
+                <p class="text-xs text-slate-400 font-sans">Discover and join local peer groups today.</p>
+              </div>
+            </div>
+            <div class="space-y-3.5 mb-6">
+              <div class="p-4 bg-slate-800/40 border border-slate-700/30 rounded-xl flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-slate-100 font-sans">🚀 Startup Pioneers Group</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 font-sans">12 Members • Meets Weekly</div>
+                </div>
+                <button class="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold rounded-lg font-sans">
+                  Join Circle
+                </button>
+              </div>
+              <div class="p-4 bg-slate-800/40 border border-slate-700/30 rounded-xl flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-slate-100 font-sans">🎓 Academic Collaboration Lab</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 font-sans">8 Members • Meets Bi-weekly</div>
+                </div>
+                <button class="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold rounded-lg font-sans">
+                  Join Circle
+                </button>
+              </div>
+            </div>
+            <div class="p-3.5 bg-pink-500/5 rounded-xl border border-pink-500/10 text-center font-sans">
+              <span class="text-xs font-medium text-slate-400 font-sans">Don't see your niche? <span class="text-pink-400 font-bold hover:underline cursor-pointer">Create a New Circle</span></span>
+            </div>
+          </div>
+        `
+      }
+    ];
+  }
+
+  // Fallback productivity / generic category
+  return [
+    {
+      screen_name: "📊 Productivity Console",
+      screen_description: `Operational command center customized for ${targetUsers}. Displays active workspace tasks, performance logs, and diagnostic states.`,
+      screen_purpose: "Consolidates workflow metrics, shows productivity statistics, and outlines critical tasks.",
+      layout_html: `
+        <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl relative overflow-hidden">
+          <div class="absolute -right-16 -top-16 w-32 h-32 bg-indigo-600/10 rounded-full blur-2xl"></div>
+          <div class="flex items-center justify-between mb-8">
+            <div>
+              <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Central Hub</div>
+              <h1 class="text-2xl font-black tracking-tight">${projName}</h1>
+            </div>
+            <div class="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full text-xs text-indigo-300 font-semibold">
+              <span class="w-1.5 h-1.5 bg-indigo-400 rounded-full"></span> Running
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+            <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+              <div class="text-[10px] text-indigo-300 uppercase tracking-wider font-extrabold mb-1">Target Client</div>
+              <div class="text-sm font-bold text-slate-100">${targetUsers}</div>
+            </div>
+            <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+              <div class="text-[10px] text-indigo-300 uppercase tracking-wider font-extrabold mb-1">Pain Point Handled</div>
+              <div class="text-xs font-medium text-slate-300 line-clamp-3">${problem}</div>
+            </div>
+            <div class="p-5 bg-slate-800/40 rounded-xl border border-slate-700/30">
+              <div class="text-[10px] text-indigo-300 uppercase tracking-wider font-extrabold mb-1">Workspace Status</div>
+              <div class="text-lg font-black text-indigo-400 font-mono">📊 100% Calibrated</div>
+            </div>
+          </div>
+          <div class="bg-slate-800/20 border border-slate-700/30 rounded-xl p-5 mb-6">
+            <h3 class="text-xs font-extrabold text-indigo-300 uppercase tracking-widest mb-3">Core Functions Deployed</h3>
+            <div class="space-y-3">
+              ${featureListHtml}
+            </div>
+          </div>
+          <div class="flex justify-between items-center pt-3 border-t border-slate-800/60">
+            <span class="text-[10px] font-mono text-slate-500">Command track running</span>
+            <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all hover:shadow-lg">
+              Open Board
+            </button>
+          </div>
+        </div>
+      `
+    },
+    {
+      screen_name: "⚙️ Automated Workflow Solver",
+      screen_description: "Active solution and action-configurator engine to process parameters and compute results.",
+      screen_purpose: "Enables manual user setups and executes smart automated simulation rules.",
+      layout_html: `
+        <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-indigo-600/20 border border-indigo-500/30 rounded-xl flex items-center justify-center text-indigo-400 text-lg">⚙️</div>
+            <div>
+              <h2 class="text-lg font-black tracking-tight">Workflow Automator</h2>
+              <p class="text-xs text-slate-400 font-sans">Configure parameters to resolve your core issues instantly.</p>
+            </div>
+          </div>
+          <div class="space-y-4 mb-6">
+            <div>
+              <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Target Variable Setup</label>
+              <input type="text" placeholder="Specify variable parameters..." class="w-full bg-slate-800/40 border border-slate-700/60 focus:border-indigo-500 text-xs px-4 py-3 rounded-xl outline-none text-slate-200" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Detailed Context Settings</label>
+              <textarea rows="3" placeholder="Provide extra detail descriptors..." class="w-full bg-slate-800/40 border border-slate-700/60 focus:border-indigo-500 text-xs px-4 py-3 rounded-xl outline-none text-slate-200 resize-none"></textarea>
+            </div>
+          </div>
+          <div class="flex justify-between items-center pt-4 border-t border-slate-800">
+            <span class="text-[10px] font-mono text-slate-500">Simulation engine ready</span>
+            <button class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl">
+              Run Automator
+            </button>
+          </div>
+        </div>
+      `
+    },
+    {
+      screen_name: "📋 Workspace Kanban Board",
+      screen_description: "Consolidated work boards splitting active tasks into Todo, Doing, and Done categories.",
+      screen_purpose: "Displays historical operations, manages project progress, and coordinates task priorities.",
+      layout_html: `
+        <div class="p-6 bg-slate-900 text-white font-sans rounded-2xl border border-slate-800 shadow-2xl">
+          <div class="flex justify-between items-center mb-6 font-sans">
+            <div>
+              <h2 class="text-lg font-black tracking-tight">Kanban Task Board</h2>
+              <p class="text-xs text-slate-400 font-sans">Track and manage task development progress.</p>
+            </div>
+            <button class="px-3 py-1.5 bg-slate-800 border border-slate-700/40 hover:bg-slate-700 text-xs font-bold rounded-xl text-slate-300 font-sans">
+              📥 Export CSV
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-3 mb-6 font-sans">
+            <div class="p-3 bg-slate-800/40 border border-slate-700/30 rounded-xl">
+              <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2 font-sans text-center">Todo</div>
+              <div class="p-2 bg-slate-900 border border-slate-800 rounded text-[11px] font-medium text-slate-300 text-center font-sans">Calibrate app settings</div>
+            </div>
+            <div class="p-3 bg-slate-800/40 border border-slate-700/30 rounded-xl">
+              <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2 font-sans text-center">Doing</div>
+              <div class="p-2 bg-slate-900 border border-slate-800 rounded text-[11px] font-medium text-slate-300 text-center font-sans">Wire visual charts</div>
+            </div>
+            <div class="p-3 bg-slate-800/40 border border-slate-700/30 rounded-xl">
+              <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2 font-sans text-center">Done</div>
+              <div class="p-2 bg-slate-900 border border-slate-800 rounded text-[11px] font-medium text-slate-300 text-center font-sans">Draft wireframe maps</div>
+            </div>
+          </div>
+          <div class="p-3.5 bg-indigo-500/5 rounded-xl border border-indigo-500/10 font-sans">
+            <div class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1 font-sans">💡 Workspace Tip</div>
+            <p class="text-[11px] text-slate-400 leading-normal font-sans">Operational charts demonstrate a 25% boost in task completion speed when visual cards are aligned early.</p>
+          </div>
+        </div>
+      `
+    }
+  ];
+}
+
 // 6. POST /api/product/journey/approve
 router.post('/journey/approve', authenticateToken, async (req: any, res) => {
   const { session_id } = req.body;
