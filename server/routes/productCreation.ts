@@ -258,6 +258,8 @@ router.post('/blueprint/approve', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
+    const userId = req.user.userId;
+
     // Save edited fields, set student_approved = TRUE, register approval timestamp
     await p.execute(
       `UPDATE product_blueprints 
@@ -266,80 +268,121 @@ router.post('/blueprint/approve', authenticateToken, async (req: any, res) => {
       [project_name, problem_statement, target_users, mvp_scope, session_id]
     );
 
-    // Call Gemini to generate feature suggestions based on approved metadata
-    const prompt = `
-      You are an expert AI Product Owner. Based on the approved project blueprint below, suggest a crisp, highly functional list of 6 to 8 key features for their MVP app.
+    // 1. Check if cache already exists for this session to keep it AI-efficient (ONLY ONCE PER PROJECT)
+    const [cacheRows]: any = await p.execute(
+      'SELECT id FROM phase2_cache WHERE project_id = ? LIMIT 1',
+      [session_id]
+    );
+
+    if (cacheRows && cacheRows.length > 0) {
+      // Return preloaded features instantly from DB
+      const [allFeatures]: any = await p.execute(
+        'SELECT * FROM product_features WHERE session_id = ?',
+        [session_id]
+      );
+      return res.json({ features: allFeatures });
+    }
+
+    // 2. Trigger Batch AI Generation
+    const category = getProductCategory(project_name, problem_statement, mvp_scope);
+
+    const batchPrompt = `
+      You are an elite Product Architect. You are performing a ONE-TIME complete batch generation for a student's high-fidelity MVP product.
       
-      Project Name: ${project_name}
-      Problem Statement: ${problem_statement}
-      Target Users: ${target_users}
-      MVP Scope: ${mvp_scope}
+      Below are the approved details of the product:
+      - Product Name: ${project_name}
+      - Problem Statement: ${problem_statement}
+      - Target Users: ${target_users}
+      - MVP Scope: ${mvp_scope}
+      - Product Category (for styling and feature set): ${category}
       
-      Generate a valid JSON array of features. Please strictly categorize them into:
-      - 'must_have': Vital core features necessary to prove the MVP (at least 3 features).
-      - 'nice_to_have': Enhance the experience without being critical (2 features).
-      - 'future': Long-term vision features that are out of scope for the MVP (1-2 features).
+      Your task is to generate and return a single, massive, perfectly formatted JSON object that contains the complete data structure for Step 2 through Step 6.
       
-      Return ONLY a valid JSON list matching this schema with no markdown block comments and no preamble:
-      [
-        {
-          "feature_name": "Title of the feature",
-          "feature_description": "Clear 1-2 sentence description explaining its functionality and value.",
-          "category": "must_have" | "nice_to_have" | "future"
-        }
-      ]
+      This object MUST strictly match the following JSON schema:
+      {
+        "features": [
+          {
+            "feature_name": "Short, clear title of feature",
+            "feature_description": "1-2 sentence description explaining its functionality and beginner-friendly value.",
+            "category": "must_have" or "nice_to_have" or "future"
+          }
+        ],
+        "user_journey": {
+          "steps": [
+            {
+              "step_number": 1,
+              "title": "Short title",
+              "description": "Short explanation of user task and behavior (1-2 sentences)"
+            }
+          ],
+          "key_actions": [
+            "First core action the user can perform",
+            "Second core action..."
+          ]
+        },
+        "screens": [
+          {
+            "screen_name": "Title of the screen",
+            "screen_description": "Short summary explaining the view and elements.",
+            "screen_purpose": "Core task or value of this screen",
+            "layout_html": "Responsive, visual container HTML of this screen, using pure Tailwind classes. Include headers, grids, cards, data displays, realistic mock status values, or beautiful custom layout components to represent a high-fidelity visual preview. Use category-adaptive styling matching the product category."
+          }
+        ],
+        "mvp": {
+          "mvp_html": "Generate a completely working, interactive, single-file HTML/CSS/JS prototype with integrated views. Ensure it includes: \\n- A beautiful dark or responsive layout with Tailwind CSS. \\n- Seamless JS navigation (show/hide screen view divs when tabs are clicked). \\n- Realistic sample data and mock action buttons. \\n- A footer stating 'Built with VibeLab 🚀'. \\n- Crucial: Every meaningful interactive element must include these data attributes adjacent to each other in this precise order: data-component-id=\\"unique_id_here\\" data-component-type=\\"button|form|nav|display|input\\" data-purpose=\\"short description of what this does\\". Aim for 8-15 tagged elements.",
+          "architecture_explanation": "🏗️ How It's Built\\nDescribe how it was made using simple self-contained HTML/CSS/JS in a child-friendly way.\\n\\n✨ What It Does\\nWrite a clear list of the working mock features.\\n\\n👥 Who It Helps\\nWrite who this solves a problem for and how it changes their day.",
+          "components": [
+            {
+              "component_id": "The exact ID used as data-component-id in your mvp_html",
+              "business_reason": "Clear explanation of why this exists in the product",
+              "simple_explanation": "Simple analogy or plain description for beginners",
+              "technical_explanation": "Slightly technical description of what it does"
+            }
+          ],
+          "skills_learned": [
+            { "skill": "User Interface Construction", "demonstrated": true },
+            { "skill": "Interactive Controller Bindings", "demonstrated": true }
+          ],
+          "ai_contribution_summary": "A short 1-2 sentence summary of how the AI helped construct the MVP sandbox."
+        },
+        "walkthrough_explanations": [
+          "Friendly, encouraging explanation for 'The File Structure' (max 3 sentences)",
+          "Friendly, encouraging explanation for 'The Navigation System' (max 3 sentences)",
+          "Friendly, encouraging explanation for 'The Core Feature' (max 3 sentences)",
+          "Friendly, encouraging explanation for 'The Additional Feature' (max 3 sentences)",
+          "Friendly, encouraging explanation for 'The Sample Database / Memory Store' (max 3 sentences)"
+        ]
+      }
+      
+      CRITICAL INSTRUCTIONS:
+      1. Under "features", provide exactly 6-8 features (at least 3 must_have, 2 nice_to_have, 1-2 future).
+      2. Under "user_journey", provide exactly 4-6 sequence steps + exactly 3-5 key actions.
+      3. Under "screens", provide exactly 3 beautiful, category-appropriate high-fidelity screens.
+      4. Under "mvp_html", build a robust, beautiful, high-quality, fully interactive prototype. It should have tabs for the 3 screens so they are fully clickable and functional inside the workspace!
+      5. Under "walkthrough_explanations", provide exactly 5 elements matching the 5 walkthough sections in order.
+      6. Return ONLY a valid JSON object matching this schema. Do not enclose the JSON in markdown code blocks or add any description outside the JSON object. Ensure all strings are correctly escaped.
     `;
 
-    let suggestedFeatures = [];
+    let batchObj: any = null;
     try {
       const geminiRes = await getGeminiClient().models.generateContent({
         model: "gemini-3.5-flash",
-        contents: prompt,
+        contents: batchPrompt,
         config: {
           responseMimeType: "application/json"
         }
       });
 
       const clean = parseGeminiResponse(geminiRes);
-      suggestedFeatures = JSON.parse(clean);
+      batchObj = JSON.parse(clean);
     } catch (geminiError: any) {
-      console.warn('Failed to generate product features via Gemini, falling back to smart defaults:', geminiError.message || geminiError);
-      suggestedFeatures = [
-        {
-          "feature_name": "User Authentication & Access Profiles",
-          "feature_description": "Secure sign-up, registration, and onboarding flows personalized for " + target_users + ".",
-          "category": "must_have"
-        },
-        {
-          "feature_name": `${project_name} Centralized Dashboard`,
-          "feature_description": "The primary dashboard layout showing relevant summaries, visual lists, and key items.",
-          "category": "must_have"
-        },
-        {
-          "feature_name": "Interactive Solver Engine",
-          "feature_description": "Core interface mechanism allowing users to perform actions directly solving the main problem: " + problem_statement + ".",
-          "category": "must_have"
-        },
-        {
-          "feature_name": "Custom Data Export & History",
-          "feature_description": "Enables saving outputs, downloading generated files, and reviewing historical logs.",
-          "category": "nice_to_have"
-        },
-        {
-          "feature_name": "Notifications & Reminders Engine",
-          "feature_description": "Sends smart notifications to target users based on their active items and status.",
-          "category": "nice_to_have"
-        },
-        {
-          "feature_name": "AI Predictive Insights Integration",
-          "feature_description": "Synthesizes data inputs to make long-term future predictions and smart actionable suggestions.",
-          "category": "future"
-        }
-      ];
+      console.warn('Batch generation failed via Gemini, compiling click-to-cycle tab prototype local fallback:', geminiError.message || geminiError);
+      batchObj = generateBatchFallback(project_name, problem_statement, target_users, mvp_scope, category, userId, session_id);
     }
 
-    // Save suggested features to product_features
-    for (const f of suggestedFeatures) {
+    // Save Features suggestions
+    await p.execute('DELETE FROM product_features WHERE session_id = ?', [session_id]);
+    for (const f of batchObj.features) {
       await p.execute(
         `INSERT INTO product_features (session_id, feature_name, feature_description, category, added_by, is_included)
          VALUES (?, ?, ?, ?, 'ai', TRUE)`,
@@ -347,7 +390,74 @@ router.post('/blueprint/approve', authenticateToken, async (req: any, res) => {
       );
     }
 
-    // Update current_step = 'features'
+    // Save User Journey
+    await p.execute('DELETE FROM user_journeys WHERE session_id = ?', [session_id]);
+    await p.execute(
+      `INSERT INTO user_journeys (session_id, steps, key_actions, approved, approved_at)
+       VALUES (?, ?, ?, TRUE, CURRENT_TIMESTAMP)`,
+      [session_id, JSON.stringify(batchObj.user_journey.steps), JSON.stringify(batchObj.user_journey.key_actions)]
+    );
+
+    // Save Screens Layouts
+    await p.execute('DELETE FROM product_screens WHERE session_id = ?', [session_id]);
+    for (const s of batchObj.screens) {
+      await p.execute(
+        `INSERT INTO product_screens (session_id, screen_name, screen_description, screen_purpose, layout_html, approved)
+         VALUES (?, ?, ?, ?, ?, TRUE)`,
+        [session_id, s.screen_name, s.screen_description, s.screen_purpose, s.layout_html]
+      );
+    }
+
+    // Save Component Metadata explanations
+    await p.execute('DELETE FROM component_metadata WHERE session_id = ?', [session_id]);
+    for (const comp of (batchObj.mvp.components || [])) {
+      await p.execute(
+        `INSERT INTO component_metadata (session_id, component_id, component_type, purpose, business_reason, simple_explanation, technical_explanation)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          session_id,
+          comp.component_id,
+          comp.component_type || 'display',
+          comp.purpose || 'Interactive capabilities',
+          comp.business_reason || '',
+          comp.simple_explanation || '',
+          comp.technical_explanation || ''
+        ]
+      );
+    }
+
+    // Save MVP build
+    await p.execute('DELETE FROM mvp_builds WHERE session_id = ?', [session_id]);
+    await p.execute(
+      `INSERT INTO mvp_builds (session_id, user_id, mvp_html, architecture_explanation, status, skills_learned, ai_contribution_summary)
+       VALUES (?, ?, ?, ?, 'ready_for_review', ?, ?)`,
+      [
+        session_id,
+        userId,
+        batchObj.mvp.mvp_html,
+        batchObj.mvp.architecture_explanation,
+        JSON.stringify(batchObj.mvp.skills_learned || []),
+        batchObj.mvp.ai_contribution_summary || ''
+      ]
+    );
+
+    // Save step data to Cache-First store table
+    await p.execute(
+      `INSERT INTO phase2_cache (project_id, user_id, step1, step2, step3, step4, step5, step6, version)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      [
+        session_id,
+        userId,
+        JSON.stringify({ project_name, problem_statement, target_users, mvp_scope }),
+        JSON.stringify(batchObj.features),
+        JSON.stringify(batchObj.user_journey),
+        JSON.stringify(batchObj.screens),
+        JSON.stringify(batchObj.mvp),
+        JSON.stringify(batchObj.walkthrough_explanations || [])
+      ]
+    );
+
+    // Update session current_step = 'features'
     await p.execute(
       "UPDATE product_sessions SET current_step = 'features' WHERE id = ?",
       [session_id]
@@ -443,6 +553,24 @@ router.post('/features/approve', authenticateToken, async (req: any, res) => {
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // Check if user journey is already pre-generated and cached in the DB
+    const [existingJourneys]: any = await p.execute('SELECT * FROM user_journeys WHERE session_id = ?', [session_id]);
+    if (existingJourneys && existingJourneys.length > 0) {
+      // Update current_step = 'user_journey'
+      await p.execute(
+        "UPDATE product_sessions SET current_step = 'user_journey' WHERE id = ?",
+        [session_id]
+      );
+
+      const savedJourney = {
+        ...existingJourneys[0],
+        steps: safeParseJSON(existingJourneys[0].steps, []),
+        key_actions: safeParseJSON(existingJourneys[0].key_actions, [])
+      };
+
+      return res.json({ user_journey: savedJourney });
+    }
 
     // Fetch blueprint and approved features
     const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [session_id]);
@@ -1230,6 +1358,17 @@ router.post('/journey/approve', authenticateToken, async (req: any, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
 
+    // Check if screens are already pre-generated and cached in the DB
+    const [existingScreens]: any = await p.execute('SELECT * FROM product_screens WHERE session_id = ?', [session_id]);
+    if (existingScreens && existingScreens.length > 0) {
+      // Update session current_step = 'screens'
+      await p.execute(
+        "UPDATE product_sessions SET current_step = 'screens' WHERE id = ?",
+        [session_id]
+      );
+      return res.json({ screens: existingScreens });
+    }
+
     const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [session_id]);
     if (!bpRows || bpRows.length === 0) {
       return res.status(404).json({ error: 'Blueprint not found' });
@@ -1461,6 +1600,22 @@ router.post('/screens/approve', authenticateToken, async (req: any, res) => {
   try {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // If change_requests is empty/null, check if MVP is already pre-generated and cached in the DB
+    if (!change_requests || change_requests.trim() === '') {
+      const [existingMvp]: any = await p.execute('SELECT * FROM mvp_builds WHERE session_id = ?', [session_id]);
+      if (existingMvp && existingMvp.length > 0) {
+        // Update session current_step = 'review'
+        await p.execute(
+          "UPDATE product_sessions SET current_step = 'review' WHERE id = ?",
+          [session_id]
+        );
+        return res.json({
+          mvp_html: existingMvp[0].mvp_html,
+          architecture_explanation: existingMvp[0].architecture_explanation
+        });
+      }
+    }
 
     const [bpRows]: any = await p.execute('SELECT * FROM product_blueprints WHERE session_id = ?', [session_id]);
     if (!bpRows || bpRows.length === 0) {
@@ -2364,6 +2519,23 @@ router.post('/walkthrough/explain', authenticateToken, async (req: any, res) => 
   }
 
   try {
+    const p = await getPool();
+    if (!p) return res.status(503).json({ error: 'Database connection failed' });
+
+    // Check phase2_cache for preloaded step6 explanations
+    const [cacheRows]: any = await p.execute(
+      'SELECT step6 FROM phase2_cache WHERE project_id = ? LIMIT 1',
+      [session_id]
+    );
+
+    if (cacheRows && cacheRows.length > 0 && cacheRows[0].step6) {
+      const explanations = safeParseJSON(cacheRows[0].step6, []);
+      const cachedExpl = explanations[section_index];
+      if (cachedExpl) {
+        return res.json({ success: true, explanation: cachedExpl });
+      }
+    }
+
     const sectionNames = [
       'The File Structure',
       'The Navigation System',
@@ -2729,5 +2901,824 @@ router.post('/screenshot/save', authenticateToken, async (req: any, res) => {
     res.status(500).json({ error: 'Failed to save screenshot' });
   }
 });
+
+function generateBatchFallback(
+  project_name: string,
+  problem_statement: string,
+  target_users: string,
+  mvp_scope: string,
+  category: string,
+  userId: number,
+  session_id: number
+) {
+  const projName = project_name || 'My VibeLab App';
+  const target = target_users || 'Students and professionals';
+  const problem = problem_statement || 'A manual tracking process';
+
+  let features: any[] = [];
+  let steps: any[] = [];
+  let key_actions: string[] = [];
+  let screens: any[] = [];
+  let walkthrough_explanations: string[] = [];
+  let components: any[] = [];
+  let skills_learned: any[] = [];
+  let ai_contribution_summary = '';
+  let interactiveWidgetHtml = '';
+  let interactiveWidgetScript = '';
+  let primaryColor = 'indigo';
+  let categoryIcon = '🚀';
+
+  if (category === 'education') {
+    primaryColor = 'violet';
+    categoryIcon = '🎓';
+    features = [
+      { feature_name: "Smart Lesson Navigator", feature_description: "Organizes revision guides and step-by-step tracks personalized for you.", category: "must_have" },
+      { feature_name: "Interactive Quest Cards", feature_description: "Gamified cards with revision questions and instant scoring feedback.", category: "must_have" },
+      { feature_name: "Personal Learning Streak", feature_description: "Displays daily task completions to keep you motivated.", category: "must_have" },
+      { feature_name: "Resource Library Desk", feature_description: "Save and search key textbooks or formulas.", category: "nice_to_have" },
+      { feature_name: "Quiz Performance Exporter", feature_description: "Enables saving scores and sharing study logs.", category: "nice_to_have" },
+      { feature_name: "AI Peer Study Matcher", feature_description: "Connect with students studying similar topics.", category: "future" }
+    ];
+    steps = [
+      { step_number: 1, title: "Create Study Account", description: "The student registers and configures their grade level and target topics." },
+      { step_number: 2, title: "Review Personalized Tracks", description: "The app displays lesson decks aligned with the student's revision roadmap." },
+      { step_number: 3, title: "Engage in Flashcard Practice", description: "The student clicks interactive quest cards to answer review questions." },
+      { step_number: 4, title: "Submit and See Scores", description: "The practice engine grades the answers instantly and logs progress." },
+      { step_number: 5, title: "Observe Learning Streak", description: "The daily progress counter increments, confirming study milestones." }
+    ];
+    key_actions = [
+      "Select revision subjects and difficulty level.",
+      "Activate a study quest card.",
+      "Check interactive question answers.",
+      "View performance feedback dashboard."
+    ];
+    screens = [
+      {
+        screen_name: "🎓 Study Quest Deck",
+        screen_description: "Main dashboard listing revision tracks, active tasks, and learning statistics.",
+        screen_purpose: "Observe study progress and launch lessons",
+        layout_html: `
+          <div class="space-y-4">
+            <div class="p-4 bg-slate-900 border border-violet-500/30 rounded-xl">
+              <span class="text-[9px] text-violet-400 font-bold uppercase tracking-wider block mb-1">Active Study Tracks</span>
+              <h5 class="text-xs text-white font-extrabold uppercase mb-2">My Courses</h5>
+              <div class="flex items-center justify-between p-2.5 bg-slate-950 border border-slate-800 rounded-lg">
+                <div>
+                  <p class="text-xs font-bold text-white">Introduction to Web Layouts</p>
+                  <p class="text-[10px] text-slate-500">3 of 5 lessons completed</p>
+                </div>
+                <button class="px-3 py-1 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[10px] font-bold">Resume</button>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📝 Interactive Practice Deck",
+        screen_description: "Interactive revision deck for smart diagnostics and answering study cards.",
+        screen_purpose: "Test subject comprehension with immediate answers",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-violet-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Topic Review Quest</h5>
+            <p class="text-xs font-bold text-slate-200 mb-3">Why is rapid prototyping helpful?</p>
+            <div class="space-y-2">
+              <button class="w-full text-left p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-xs hover:bg-slate-800 text-slate-300 font-medium">A) It solves PostgreSQL scale limitations</button>
+              <button class="w-full text-left p-2.5 bg-slate-950 border border-slate-850 rounded-lg text-xs hover:bg-slate-800 text-slate-300 font-medium">B) It lets you gather early feedback from target users quickly</button>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📊 Student Performance Analytics",
+        screen_description: "Dashboard panel plotting revision stats, task metrics, and certificate locks.",
+        screen_purpose: "Analyze grades and milestones attained",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-violet-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Study Statistics</h5>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-center">
+                <span class="text-[8px] text-slate-500 font-bold uppercase">Accuracy</span>
+                <p class="text-sm font-black text-violet-400 font-mono mt-1">94%</p>
+              </div>
+              <div class="p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-center">
+                <span class="text-[8px] text-slate-500 font-bold uppercase">Lessons</span>
+                <p class="text-sm font-black text-violet-400 font-mono mt-1">12</p>
+              </div>
+              <div class="p-2.5 bg-slate-950 border border-slate-800 rounded-lg text-center">
+                <span class="text-[8px] text-slate-500 font-bold uppercase">Streak</span>
+                <p class="text-sm font-black text-violet-400 font-mono mt-1">5 Days</p>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    ];
+    interactiveWidgetHtml = `
+      <div class="bg-slate-900 border border-violet-500/30 rounded-2xl p-5 mb-6">
+        <h3 class="text-xs font-black uppercase text-violet-400 tracking-wider mb-2">🎓 Live Interactive Practice Deck</h3>
+        <p class="text-[11px] text-slate-300 mb-4">Validate your understanding of standard web layouts instantly.</p>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div class="text-xs font-bold text-slate-200 mb-2">Question: Why is responsive styling important for mobile learners?</div>
+          <div class="space-y-2">
+            <button onclick="checkAnswer(1)" id="q-btn-1" class="w-full text-left p-2.5 bg-slate-900 border border-slate-800 rounded-lg text-xs hover:bg-slate-850 text-slate-300 transition">A) It blocks users from turning their screens sideways</button>
+            <button onclick="checkAnswer(2)" id="q-btn-2" class="w-full text-left p-2.5 bg-slate-900 border border-slate-800 rounded-lg text-xs hover:bg-slate-850 text-slate-300 transition">B) It adapts the app's size dynamically to fit phone dimensions</button>
+          </div>
+          <div id="quiz-feedback" class="text-xs mt-3 hidden font-semibold"></div>
+        </div>
+      </div>
+    `;
+    interactiveWidgetScript = `
+      function checkAnswer(ans) {
+        const fb = document.getElementById('quiz-feedback');
+        fb.classList.remove('hidden');
+        if (ans === 2) {
+          fb.className = "text-xs mt-3 font-semibold text-emerald-400";
+          fb.innerHTML = "✓ Correct! Responsive design lets students learn on any phone screen size smoothly.";
+          document.getElementById('q-btn-2').className = "w-full text-left p-2.5 bg-emerald-950/40 border border-emerald-500 rounded-lg text-xs text-emerald-200 font-semibold";
+          document.getElementById('q-btn-1').className = "w-full text-left p-2.5 bg-slate-900 border border-slate-800 rounded-lg text-xs hover:bg-slate-850 text-slate-400 transition";
+        } else {
+          fb.className = "text-xs mt-3 font-semibold text-rose-400";
+          fb.innerHTML = "✗ Incorrect. Try again! Think about mobile layout flexibility.";
+          document.getElementById('q-btn-1').className = "w-full text-left p-2.5 bg-rose-950/40 border border-rose-500 rounded-lg text-xs text-rose-200 font-semibold";
+          document.getElementById('q-btn-2').className = "w-full text-left p-2.5 bg-slate-900 border border-slate-800 rounded-lg text-xs hover:bg-slate-850 text-slate-400 transition";
+        }
+      }
+    `;
+    components = [
+      { component_id: "quiz_deck", component_type: "form", purpose: "Interactive quest cards with instant feedback on review topics", business_reason: "To allow students to validate subject comprehension in a gamified, reward-backed simulator", simple_explanation: "This displays revision cards and lets you click cards to confirm answers.", technical_explanation: "Renders clickable buttons capturing selection index values and triggering DOM feedback." }
+    ];
+    skills_learned = [
+      { skill: "Gamified Study Layouts", demonstrated: true },
+      { skill: "Dynamic Score Assessors", demonstrated: true },
+      { skill: "Daily Streak Counters", demonstrated: true }
+    ];
+    ai_contribution_summary = "Formulated the robust violet-themed flashcard interface and registered smart quiz checkers with responsive score updates.";
+    walkthrough_explanations = [
+      `Think of this like a organized binder structure. It categorizes files into clean layouts, components, and interactive controllers so you always know where to find parts of ${projName}!`,
+      `This is like the magic maps and hallways in a grand castle. It monitors which navigation tab user clicks, making sure they jump smoothly between different screens of your product in a flash!`,
+      `This represents the primary learning engine of ${projName}. It grabs the student's quiz answers, grades them, and triggers rewards or streak increments immediately like a proud school teacher!`,
+      `This is a helpful bonus review drawer. It logs incorrect answers and showcases stats in visual summaries to help you focus on tough topics!`,
+      `Think of this like a secure digital backpack. It saves completed quizzes, active tracks, and streaks in your browser's local memory so they persist when you restart!`
+    ];
+  } else if (category === 'health') {
+    primaryColor = 'emerald';
+    categoryIcon = '🧘';
+    features = [
+      { feature_name: "Zen Breathing Engine", feature_description: "An animated, self-guided breathing circle tracking inhale and exhale timing.", category: "must_have" },
+      { feature_name: "Daily Wellness Journal", feature_description: "Log your daily active hydration, hours of sleep, and active mood logs.", category: "must_have" },
+      { feature_name: "Vital Signs Dashboard", feature_description: "Displays live status summaries and healthy parameter charts.", category: "must_have" },
+      { feature_name: "Mindfulness Activity History", feature_description: "Save completed breathing logs and active history logs.", category: "nice_to_have" },
+      { feature_name: "Reminders alert manager", feature_description: "Configurable alert timers to remind you to take brief wellness breaks.", category: "nice_to_have" },
+      { feature_name: "AI Predictive Wellness Coach", feature_description: "Suggests breathing goals based on historical fatigue indices.", category: "future" }
+    ];
+    steps = [
+      { step_number: 1, title: "Configure Wellness Goals", description: "The user logs into their customized dashboard and inputs their hydration and sleep targets." },
+      { step_number: 2, title: "Select Mindful Breath Rate", description: "The user chooses a comfortable breathing pace (e.g. 4 seconds inhale, 4 seconds exhale)." },
+      { step_number: 3, title: "Activate Breathing Ring", description: "The user follows the animated expanding ring to inhale, hold, and exhale deeply." },
+      { step_number: 4, title: "Log Completed Session", description: "The session completes and updates the user's daily habits tracker automatically." },
+      { step_number: 5, title: "View Progress Reports", description: "The user reviews their weekly health logs, vital indicators, and historical logs." }
+    ];
+    key_actions = [
+      "Select desired breathing loop rate.",
+      "Engage the interactive breathing ring.",
+      "Input active daily wellness metrics.",
+      "Download weekly health logs and reports."
+    ];
+    screens = [
+      {
+        screen_name: "🧘 Breathing Portal",
+        screen_description: "Main workspace equipped with the interactive visual breathing regulator ring.",
+        screen_purpose: "Reduce daily stress through controlled breathing exercises",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-emerald-500/30 rounded-xl text-center">
+            <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider block mb-1">Breathing Guide</span>
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Breathe & Recenter</h5>
+            <div class="flex flex-col items-center gap-3 py-2">
+              <div class="w-16 h-16 bg-emerald-500/10 border-2 border-emerald-500 rounded-full flex items-center justify-center text-[10px] text-emerald-300 font-bold">Resting</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📝 Wellness Journal Tracker",
+        screen_description: "Habit tracking interface to log daily hydration, sleep, and physical activity status.",
+        screen_purpose: "Record vital metrics and daily habits",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-emerald-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Habit Log Tracker</h5>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between p-2 bg-slate-950 border border-slate-800 rounded-lg text-xs">
+                <span class="text-slate-300">💧 Hydration Intake</span>
+                <span class="font-mono text-emerald-400">4 / 8 glasses</span>
+              </div>
+              <div class="flex items-center justify-between p-2 bg-slate-950 border border-slate-800 rounded-lg text-xs">
+                <span class="text-slate-300">🛌 Sleep Hours</span>
+                <span class="font-mono text-emerald-400">7.5 hours</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📊 Health Analytics Panel",
+        screen_description: "Visualization summary plotting average sleep durations and breathing success rate ratios.",
+        screen_purpose: "Review wellness analytics and streaks completed",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-emerald-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Wellness Analytics</h5>
+            <div class="grid grid-cols-2 gap-2 text-center">
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg">
+                <p class="text-[8px] text-slate-500 font-bold uppercase">Consistency</p>
+                <p class="text-xs font-black text-emerald-400 mt-1 font-mono">92%</p>
+              </div>
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg">
+                <p class="text-[8px] text-slate-500 font-bold uppercase">Zen Minutes</p>
+                <p class="text-xs font-black text-emerald-400 mt-1 font-mono">45 mins</p>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    ];
+    interactiveWidgetHtml = `
+      <div class="bg-slate-900 border border-emerald-500/30 rounded-2xl p-5 mb-6 text-center">
+        <h3 class="text-xs font-black uppercase text-emerald-400 tracking-wider mb-2">🧘 Zen Breathing Regulator</h3>
+        <p class="text-[11px] text-slate-300 mb-4">Click below to start a relaxing 6-second breathing exercise.</p>
+        <div class="flex flex-col items-center gap-4">
+          <div id="breath-circle" class="w-16 h-16 bg-emerald-500/10 border-2 border-emerald-500 rounded-full flex items-center justify-center text-[10px] text-emerald-300 font-bold transition-all duration-3000">Inhale</div>
+          <button onclick="breatheLoop()" id="breath-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition">Start Breathing</button>
+          <div class="text-[11px] text-slate-400">Completed: <span id="breath-count" class="font-bold text-emerald-400">0</span> breaths</div>
+        </div>
+      </div>
+    `;
+    interactiveWidgetScript = `
+      let breathState = 'idle';
+      let breathCount = 0;
+      let breathInterval;
+      function breatheLoop() {
+        const circle = document.getElementById('breath-circle');
+        const btn = document.getElementById('breath-btn');
+        const cnt = document.getElementById('breath-count');
+        if (breathState === 'idle') {
+          breathState = 'inhale';
+          btn.innerHTML = 'Stop Session';
+          circle.innerHTML = 'Inhale...';
+          circle.style.transform = 'scale(1.2)';
+          circle.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+          let isScale = true;
+          breathInterval = setInterval(() => {
+            if (isScale) {
+              circle.innerHTML = 'Exhale...';
+              circle.style.transform = 'scale(1.0)';
+              circle.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+              breathCount++;
+              cnt.innerHTML = breathCount;
+            } else {
+              circle.innerHTML = 'Inhale...';
+              circle.style.transform = 'scale(1.2)';
+              circle.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+            }
+            isScale = !isScale;
+          }, 3000);
+        } else {
+          clearInterval(breathInterval);
+          breathState = 'idle';
+          btn.innerHTML = 'Start Breathing';
+          circle.innerHTML = 'Rest';
+          circle.style.transform = 'scale(1.0)';
+          circle.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+        }
+      }
+    `;
+    components = [
+      { component_id: "breath_controller", component_type: "button", purpose: "Animates breathing cycles and tracks completion statistics", business_reason: "Provide immediate tactile breathing regulation exercises to manage stressful situations", simple_explanation: "This lets you practice paced breathing with an expanding visual ring.", technical_explanation: "Uses a state-dependent interval clock triggering cyclic scale CSS transformations on elements." }
+    ];
+    skills_learned = [
+      { skill: "Wellness Interface Construction", demonstrated: true },
+      { skill: "Paced Timer Events", demonstrated: true },
+      { skill: "Self-Report Loggers", demonstrated: true }
+    ];
+    ai_contribution_summary = "Engineered the emerald-themed guided breathing controller, complete with seamless CSS animations and auto-save counters.";
+    walkthrough_explanations = [
+      `Think of this like a neat cookbook index. It groups the folders containing layouts, styles, and buttons so you always know exactly where to locate key parts of ${projName} without getting lost!`,
+      `This is like the magic maps and hallways in a grand castle. It monitors which navigation tab user clicks, making sure they jump smoothly between different screens of your product in a flash!`,
+      `This represents the primary engine of ${projName}. It receives user inputs, performs the heavy lifting calculation, and returns success feedback immediately like a smart kitchen blender!`,
+      `This is a helpful bonus wellness tracker. It formats tables and graphs so you can track hydration trends and mindfulness achievements beautifully!`,
+      `Think of this like your app's digital backpack. It stores completed activities, reports, and approved values safely so they persist when navigating around different views!`
+    ];
+  } else if (category === 'finance_ecommerce') {
+    primaryColor = 'cyan';
+    categoryIcon = '💰';
+    features = [
+      { feature_name: "Smart Budget Command Center", feature_description: "A centralized dashboard illustrating active spending balances, purchase logs, and budget limits.", category: "must_have" },
+      { feature_name: "Adaptive Category Vaults", feature_description: "Allocate and partition customized funds into distinct buckets such as food, transport, and gaming.", category: "must_have" },
+      { feature_name: "Interactive Cart & Billing Portal", feature_description: "Add items to your checkout cart, calculate total fees, and simulate digital card payments.", category: "must_have" },
+      { feature_name: "Digital Receipt Archiving Grid", feature_description: "Upload and review transaction receipts in a high-fidelity tabular view.", category: "nice_to_have" },
+      { feature_name: "Peer Spending Reminder Console", feature_description: "Triggers notification alerts if active transactions exceed your target vault limit.", category: "nice_to_have" },
+      { feature_name: "AI Spending Trend Forecaster", feature_description: "Predicts budget exhaustion dates based on previous spending patterns.", category: "future" }
+    ];
+    steps = [
+      { step_number: 1, title: "Create Sandbox Wallet", description: "The user registers and initializes their sandbox account with a customizable pre-loaded wallet balance." },
+      { step_number: 2, title: "Configure Fund Allocations", description: "The user sets up budget ceilings across specific category vaults (e.g., $100 for dining)." },
+      { step_number: 3, title: "Simulate Shopping Experience", description: "The user browses mock catalog items, adding desired selections to their digital cart." },
+      { step_number: 4, title: "Process Payments and Check Balance", description: "The user executes mock checkout payments, deducting total costs from their active wallet automatically." },
+      { step_number: 5, title: "Analyze Spending Performance", description: "The dashboard displays real-time chart summaries and alerts if any vault limit is breached." }
+    ];
+    key_actions = [
+      "Partition pre-loaded cash into category vaults.",
+      "Add catalog products to the digital cart.",
+      "Process mock card checkouts.",
+      "Filter transactions by category vaults."
+    ];
+    screens = [
+      {
+        screen_name: "💰 Smart Vault Dashboard",
+        screen_description: "Provides a central overview of preloaded funds, spending limits, and vault partition charts.",
+        screen_purpose: "Configure active budgets and view wallet metrics",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-cyan-500/30 rounded-xl">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[9px] text-cyan-400 font-bold uppercase tracking-wider block mb-1">Wallet Balance</span>
+              <span class="text-xs text-emerald-400 font-mono font-bold">$250.00 left</span>
+            </div>
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Category Budgets</h5>
+            <div class="space-y-2">
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg text-xs flex justify-between">
+                <span>🍔 Food & Dining</span>
+                <span class="font-mono text-cyan-400">$60 / $100</span>
+              </div>
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg text-xs flex justify-between">
+                <span>🎮 Tech & Gaming</span>
+                <span class="font-mono text-cyan-400">$40 / $50</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "🛒 Checkout & Cart Simulator",
+        screen_description: "Interactive checkout portal displaying catalog items, shopping cart, and transaction checkers.",
+        screen_purpose: "Simulate purchase transactions and validate deduct rules",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-cyan-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Mock Products</h5>
+            <div class="grid grid-cols-2 gap-2 text-center mb-3">
+              <div class="p-2 bg-slate-950 border border-slate-850 rounded-lg text-xs">
+                <p class="font-bold text-slate-200">Study Deck Pro</p>
+                <p class="text-[10px] text-cyan-400 font-mono mt-0.5">$15.00</p>
+              </div>
+              <div class="p-2 bg-slate-950 border border-slate-850 rounded-lg text-xs">
+                <p class="font-bold text-slate-200">Zen Earbuds</p>
+                <p class="text-[10px] text-cyan-400 font-mono mt-0.5">$35.00</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "📊 Spend Analytics Ledger",
+        screen_description: "Displays complete historical receipts, categorized bills, and budget analysis reports.",
+        screen_purpose: "Audit transaction logs and historical files",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-cyan-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Transaction Logs</h5>
+            <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg text-[10px] text-slate-400 font-mono space-y-1">
+              <p class="flex justify-between"><span>[06/24] Food purchase</span> <span class="text-rose-400">-$12.50</span></p>
+              <p class="flex justify-between"><span>[06/23] Study Deck Pro</span> <span class="text-rose-400">-$15.00</span></p>
+            </div>
+          </div>
+        `
+      }
+    ];
+    interactiveWidgetHtml = `
+      <div class="bg-slate-900 border border-cyan-500/30 rounded-2xl p-5 mb-6">
+        <h3 class="text-xs font-black uppercase text-cyan-400 tracking-wider mb-2">🛒 Interactive Shopping Checkout</h3>
+        <p class="text-[11px] text-slate-300 mb-4">Add products to your catalog cart and simulate wallet checkout deductions.</p>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between mb-3 border-b border-slate-850 pb-2">
+            <span class="text-xs font-bold text-slate-200">Product List</span>
+            <span class="text-[11px] font-bold text-emerald-400">Wallet: $<span id="wallet-balance-val">150.00</span></span>
+          </div>
+          <div class="flex gap-2 mb-4">
+            <button onclick="addToCart('Study Deck', 15.00)" class="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg text-[11px] text-slate-200 font-bold">📚 Study Deck ($15)</button>
+            <button onclick="addToCart('Zen Earbuds', 35.00)" class="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg text-[11px] text-slate-200 font-bold">🎧 Zen Buds ($35)</button>
+          </div>
+          <div class="text-[11px] text-slate-400 mb-3">Cart Total: <span class="font-bold text-cyan-400">$<span id="cart-total-val">0.00</span></span> (<span id="cart-items-count">0</span> items)</div>
+          <button onclick="processCheckout()" id="checkout-btn" class="w-full py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition">Complete Purchase</button>
+          <div id="checkout-feedback" class="text-xs mt-3 hidden font-semibold text-center"></div>
+        </div>
+      </div>
+    `;
+    interactiveWidgetScript = `
+      let walletBalance = 150.00;
+      let cartTotal = 0.00;
+      let cartItems = 0;
+      function addToCart(name, price) {
+        cartTotal += price;
+        cartItems++;
+        document.getElementById('cart-total-val').innerHTML = cartTotal.toFixed(2);
+        document.getElementById('cart-items-count').innerHTML = cartItems;
+        const fb = document.getElementById('checkout-feedback');
+        fb.classList.add('hidden');
+      }
+      function processCheckout() {
+        const fb = document.getElementById('checkout-feedback');
+        fb.classList.remove('hidden');
+        if (cartItems === 0) {
+          fb.className = "text-xs mt-3 font-semibold text-rose-400";
+          fb.innerHTML = "✗ Your cart is empty! Add items first.";
+          return;
+        }
+        if (cartTotal > walletBalance) {
+          fb.className = "text-xs mt-3 font-semibold text-rose-400";
+          fb.innerHTML = "✗ Insufficient wallet funds! Cart total exceeds balance.";
+          return;
+        }
+        walletBalance -= cartTotal;
+        cartTotal = 0.00;
+        cartItems = 0;
+        document.getElementById('wallet-balance-val').innerHTML = walletBalance.toFixed(2);
+        document.getElementById('cart-total-val').innerHTML = "0.00";
+        document.getElementById('cart-items-count').innerHTML = "0";
+        fb.className = "text-xs mt-3 font-semibold text-emerald-400";
+        fb.innerHTML = "✓ Purchase successful! Deducted funds and cleared your cart.";
+      }
+    `;
+    components = [
+      { component_id: "checkout_portal", component_type: "form", purpose: "Simulates checkout pipelines and updates wallet balance values", business_reason: "Provide students with a practical checkout simulator to learn financial deduct mechanics safely", simple_explanation: "This displays shopping catalog items and lets you execute checkout transactions.", technical_explanation: "Binds cart counter variables and deducts totals from wallet values using state-altering scripts." }
+    ];
+    skills_learned = [
+      { skill: "Financial Ledger Design", demonstrated: true },
+      { skill: "Transaction Deduct Calculators", demonstrated: true },
+      { skill: "Cart State Management", demonstrated: true }
+    ];
+    ai_contribution_summary = "Formulated the robust cyan-themed ecommerce checkout simulator, matching inventory prices to balance deductions.";
+    walkthrough_explanations = [
+      `Think of this like a organized binder structure. It categorizes files into clean layouts, components, and interactive controllers so you always know where to find parts of ${projName}!`,
+      `This is like the magic maps and hallways in a grand castle. It monitors which navigation tab user clicks, making sure they jump smoothly between different screens of your product in a flash!`,
+      `This represents the primary engine of ${projName}. It receives user inputs, performs the heavy lifting calculation, and returns success feedback immediately like a smart kitchen blender!`,
+      `This is a helpful bonus budget planner. It formats tables and progress bars so you can allocate cash boundaries across categories beautifully!`,
+      `Think of this like your app's digital backpack. It stores completed activities, reports, and approved values safely so they persist when navigating around different views!`
+    ];
+  } else if (category === 'social') {
+    primaryColor = 'fuchsia';
+    categoryIcon = '💬';
+    features = [
+      { feature_name: "Interactive Discussion Feed", feature_description: "A social community board displaying chronological posts, user avatars, and hearts likes.", category: "must_have" },
+      { feature_name: "Member Circle Navigator", feature_description: "Connect and filter discussions across customized interest circles.", category: "must_have" },
+      { feature_name: "Live Feed Composer Input", feature_description: "Compose and append custom messages directly into the community timeline.", category: "must_have" },
+      { feature_name: "Notifications Alert Center", feature_description: "Tracks active updates, likes received, and invitations in a clean dropdown.", category: "nice_to_have" },
+      { feature_name: "User Portfolio Card Planner", feature_description: "Allows customizing profile bios and selecting custom visual banners.", category: "nice_to_have" },
+      { feature_name: "AI Spark Conversation Coach", feature_description: "Generates smart suggested icebreaker prompts based on circle interests.", category: "future" }
+    ];
+    steps = [
+      { step_number: 1, title: "Create Member Profile", description: "The student registers, writes their customizable biography, and chooses an avatar profile." },
+      { step_number: 2, title: "Browse Interest Circles", description: "The system displays custom circles (e.g., #webdesign, #gaming) focused on target goals." },
+      { step_number: 3, title: "Compose and Publish Post", description: "The student drafts a message inside the feed composer and clicks 'Share' to publish it." },
+      { step_number: 4, title: "Interact and Express Likes", description: "The student reviews community updates, liking posts and checking notification alerts." },
+      { step_number: 5, title: "View Community Analytics", description: "The user reviews active member directories and community metrics." }
+    ];
+    key_actions = [
+      "Customize member biography and avatar.",
+      "Publish community posts inside discussion feeds.",
+      "Like updates published by other members.",
+      "Filter feeds by interest circles."
+    ];
+    screens = [
+      {
+        screen_name: "💬 Community Board Feed",
+        screen_description: "The primary community timeline listing chronological posts, likes counters, and composer elements.",
+        screen_purpose: "Share ideas and review collaborative feedback",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-fuchsia-500/30 rounded-xl">
+            <span class="text-[9px] text-fuchsia-400 font-bold uppercase tracking-wider block mb-1">Live Updates</span>
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Global Discussion</h5>
+            <div class="p-3 bg-slate-950 border border-slate-850 rounded-lg text-xs space-y-1 mb-2">
+              <p class="font-bold text-fuchsia-300">@AlexTheCoder</p>
+              <p class="text-slate-300">Building prototypes in VibeLab is super fast! Check out my design.</p>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "👥 Interest Circles Hub",
+        screen_description: "Interest-based directory showing active learning communities, circles tags, and member stats.",
+        screen_purpose: "Join targeted sub-groups to share topic-specific feedback",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-fuchsia-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Interest Groups</h5>
+            <div class="space-y-2 text-xs">
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg flex justify-between">
+                <span>🎨 UI & Web Design</span>
+                <span class="text-fuchsia-400 font-bold">12 Active</span>
+              </div>
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg flex justify-between">
+                <span>💻 Code Builders</span>
+                <span class="text-fuchsia-400 font-bold">8 Active</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "🔔 Notifications Center",
+        screen_description: "Displays like counts, new follower updates, and alerts indicating direct messages.",
+        screen_purpose: "Observe social feedback and stay connected",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-fuchsia-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Recent Alerts</h5>
+            <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg text-[10px] text-slate-400 font-mono space-y-1">
+              <p>❤ @Jane Doe liked your profile bio update.</p>
+              <p>👤 @AlexTheCoder started following you.</p>
+            </div>
+          </div>
+        `
+      }
+    ];
+    interactiveWidgetHtml = `
+      <div class="bg-slate-900 border border-fuchsia-500/30 rounded-2xl p-5 mb-6">
+        <h3 class="text-xs font-black uppercase text-fuchsia-400 tracking-wider mb-2">💬 Interactive Community Feed</h3>
+        <p class="text-[11px] text-slate-300 mb-4">Type a short message below to post a live update to your community feed.</p>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="post-text-input" placeholder="What's on your mind?" class="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl focus:outline-none focus:border-fuchsia-500">
+            <button onclick="addPost()" class="px-4 py-1.5 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold text-xs rounded-xl transition">Post</button>
+          </div>
+          <div id="posts-list" class="space-y-2 mt-2">
+            <div class="p-2.5 bg-slate-900 border border-slate-855 rounded-lg text-xs">
+              <p class="font-bold text-fuchsia-300">@JaneTheCreator</p>
+              <p class="text-slate-300">Welcome to the collaborative community board!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    interactiveWidgetScript = `
+      function addPost() {
+        const input = document.getElementById('post-text-input');
+        const txt = input.value.trim();
+        if (!txt) return;
+        const postsList = document.getElementById('posts-list');
+        const newCard = document.createElement('div');
+        newCard.className = "p-2.5 bg-slate-900 border border-slate-800 rounded-lg text-xs transition animate-fade-in";
+        newCard.innerHTML = \`<p class="font-bold text-fuchsia-300">@GuestUser</p><p class="text-slate-300">\${txt}</p>\`;
+        postsList.insertBefore(newCard, postsList.firstChild);
+        input.value = '';
+      }
+    `;
+    components = [
+      { component_id: "community_feed", component_type: "form", purpose: "Composes and appends chronological posts to a live timeline", business_reason: "Provide students with a practical post composer to learn peer feedback mechanics", simple_explanation: "This lets you write updates and see them published in the feed instantly.", technical_explanation: "Uses DOM manipulation scripts to dynamically append nested card nodes into container divs." }
+    ];
+    skills_learned = [
+      { skill: "Social Board Layouts", demonstrated: true },
+      { skill: "DOM Message Appenders", demonstrated: true },
+      { skill: "Circle Filtering Controls", demonstrated: true }
+    ];
+    ai_contribution_summary = "Formulated the responsive fuchsia-themed community feed, equipped with interactive DOM composers and posts counters.";
+    walkthrough_explanations = [
+      `Think of this like a organized binder structure. It categorizes files into clean layouts, components, and interactive controllers so you always know where to find parts of ${projName}!`,
+      `This is like the magic maps and hallways in a grand castle. It monitors which navigation tab user clicks, making sure they jump smoothly between different screens of your product in a flash!`,
+      `This represents the primary engine of ${projName}. It receives user inputs, performs the heavy lifting calculation, and returns success feedback immediately like a smart kitchen blender!`,
+      `This is a helpful bonus alerts drawer. It tracks likes and new group entries, displaying alerts in summaries beautifully!`,
+      `Think of this like your app's digital backpack. It stores completed activities, reports, and approved values safely so they persist when navigating around different views!`
+    ];
+  } else {
+    // productivity / default
+    primaryColor = 'blue';
+    categoryIcon = '⏱️';
+    features = [
+      { feature_name: "Central Task Board", feature_description: "A structured command board showing active priorities, task cards, and checklists.", category: "must_have" },
+      { feature_name: "Pomodoro Focus Clock", feature_description: "An integrated focus session timer with pre-set countdown blocks and ticking status.", category: "must_have" },
+      { feature_name: "Dynamic Priority Ticker", feature_description: "Enables tagging items as urgent, medium, or low priority.", category: "must_have" },
+      { feature_name: "Work History Exporter", feature_description: "Generate and download a completed work log report.", category: "nice_to_have" },
+      { feature_name: "Goal Notifications Reminder", feature_description: "Triggers smart browser alerts when the focus clock expires.", category: "nice_to_have" },
+      { feature_name: "AI Priority Suggester", feature_description: "Recommends task ordering based on historical productivity logs.", category: "future" }
+    ];
+    steps = [
+      { step_number: 1, title: "Create Task Workspace", description: "The user boots their workspace and logs active items into the central registry." },
+      { step_number: 2, title: "Set Priority Badges", description: "The user classifies active items as high, medium, or low-urgency priorities." },
+      { step_number: 3, title: "Trigger Focus Session", description: "The user starts the Pomodoro timer, keeping focused until the ticker hits zero." },
+      { step_number: 4, title: "Check Task as Completed", description: "The task checkbox is marked as completed, updating task performance metrics." },
+      { step_number: 5, title: "Download Performance Report", description: "The user exports their daily completed task logs for future reviews." }
+    ];
+    key_actions = [
+      "Add priority tasks to task queues.",
+      "Control Pomodoro Focus timers.",
+      "Filter command lists by priority tags.",
+      "Export completed activity reports."
+    ];
+    screens = [
+      {
+        screen_name: "🗂️ Task Command Board",
+        screen_description: "Central workspace mapping active priorities, description details, and completed checkboxes.",
+        screen_purpose: "Organize daily tasks and review project goals",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-blue-500/30 rounded-xl">
+            <span class="text-[9px] text-blue-400 font-bold uppercase tracking-wider block mb-1">Command Board</span>
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">My Task Checklist</h5>
+            <div class="space-y-2 text-xs">
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg flex items-center justify-between">
+                <span class="text-slate-300">✔ Implement Phase 2 database cache</span>
+                <span class="px-1.5 py-0.5 bg-blue-500/10 border border-blue-500/20 text-[9px] text-blue-300 rounded font-bold">Urgent</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        screen_name: "⏱️ Focus Session Clock",
+        screen_description: "Custom countdown timer allowing students to trigger focused intervals.",
+        screen_purpose: "Enhance mental focus using a classic Pomodoro clock tracker",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-blue-500/30 rounded-xl text-center">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Pomodoro Ticker</h5>
+            <p class="text-2xl font-black font-mono text-blue-400 py-1">25:00</p>
+          </div>
+        `
+      },
+      {
+        screen_name: "📊 Productivity Analytics",
+        screen_description: "Plots daily tasks resolved, total focus hours, and weekly performance charts.",
+        screen_purpose: "Evaluate performance ratings and streaks",
+        layout_html: `
+          <div class="p-4 bg-slate-900 border border-blue-500/30 rounded-xl">
+            <h5 class="text-xs text-white font-extrabold uppercase mb-2">Completed Logs</h5>
+            <div class="grid grid-cols-2 gap-2 text-center">
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg">
+                <p class="text-[8px] text-slate-500 font-bold uppercase">Completed</p>
+                <p class="text-xs font-black text-blue-400 mt-1 font-mono">14 tasks</p>
+              </div>
+              <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg">
+                <p class="text-[8px] text-slate-500 font-bold uppercase">Focus Hours</p>
+                <p class="text-xs font-black text-blue-400 mt-1 font-mono">5.2 hrs</p>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    ];
+    interactiveWidgetHtml = `
+      <div class="bg-slate-900 border border-blue-500/30 rounded-2xl p-5 mb-6">
+        <h3 class="text-xs font-black uppercase text-blue-400 tracking-wider mb-2">⏱️ Interactive Task Command Board</h3>
+        <p class="text-[11px] text-slate-300 mb-4">Add urgent items to your checklists and check tasks off to update the status meter.</p>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div class="flex gap-2 mb-3">
+            <input type="text" id="task-input" placeholder="Type a task..." class="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl focus:outline-none focus:border-blue-500">
+            <button onclick="addTask()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition">Add Task</button>
+          </div>
+          <div id="todo-tasks-list" class="space-y-2 mt-2 max-h-32 overflow-y-auto">
+            <div class="p-2 bg-slate-900 border border-slate-850 rounded-lg text-xs flex justify-between items-center">
+              <span class="text-slate-300">Draft MVP Prototype architecture</span>
+              <button onclick="this.parentElement.remove()" class="text-xs text-blue-400 hover:text-blue-300 font-bold">✔ Complete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    interactiveWidgetScript = `
+      function addTask() {
+        const input = document.getElementById('task-input');
+        const txt = input.value.trim();
+        if (!txt) return;
+        const tasksList = document.getElementById('todo-tasks-list');
+        const newCard = document.createElement('div');
+        newCard.className = "p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs flex justify-between items-center transition animate-fade-in";
+        newCard.innerHTML = \`<span class="text-slate-300">\${txt}</span><button onclick="this.parentElement.remove()" class="text-xs text-blue-400 hover:text-blue-300 font-bold">✔ Complete</button>\`;
+        tasksList.insertBefore(newCard, tasksList.firstChild);
+        input.value = '';
+      }
+    `;
+    components = [
+      { component_id: "checklist_planner", component_type: "form", purpose: "Adds urgent items and updates checkbox completion queues", business_reason: "Provide students with a practical priority list solver to learn workflow scheduling", simple_explanation: "This displays task boards and lets you write checklist items.", technical_explanation: "Binds click triggers to append checkbox rows and deduct items from task list totals." }
+    ];
+    skills_learned = [
+      { skill: "Checklist Interface Construction", demonstrated: true },
+      { skill: "Priority Tag Allocators", demonstrated: true },
+      { skill: "Local Storage Array Filters", demonstrated: true }
+    ];
+    ai_contribution_summary = "Formulated the robust blue-themed task command board, equipped with interactive checkbox items and task count logs.";
+    walkthrough_explanations = [
+      `Think of this like a organized binder structure. It categorizes files into clean layouts, components, and interactive controllers so you always know where to find parts of ${projName}!`,
+      `This is like the magic maps and hallways in a grand castle. It monitors which navigation tab user clicks, making sure they jump smoothly between different screens of your product in a flash!`,
+      `This represents the primary engine of ${projName}. It receives user inputs, performs the heavy lifting calculation, and returns success feedback immediately like a smart kitchen blender!`,
+      `This is a helpful bonus focus timer. It sets up countdown ticking behaviors and alerts you of completed milestones beautifully!`,
+      `Think of this like your app's digital backpack. It stores completed activities, reports, and approved values safely so they persist when navigating around different views!`
+    ];
+  }
+
+  const mvp_html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${projName} - VibeLab Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+    <header data-component-id="app_header" data-component-type="nav" data-purpose="Application navigation and header summary" class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <span class="text-xl">${categoryIcon}</span>
+            <div>
+                <h1 class="text-sm md:text-base font-black tracking-tight text-white">${projName}</h1>
+                <p class="text-[9px] uppercase font-bold tracking-wider text-${primaryColor}-400">Interactive VibeLab MVP Draft</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 text-[10px] font-semibold text-slate-400 bg-slate-950 px-3 py-1.5 rounded-full border border-slate-800">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live Sandbox
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-8">
+        <div data-component-id="target_demographics" data-component-type="display" data-purpose="Target demographics banner explaining solved problem statement and key user focus" class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="text-[10px] font-bold text-${primaryColor}-400 uppercase tracking-widest block mb-0.5">Project Blueprint Overview</span>
+                <p class="text-xs text-slate-300">Target Audience: <span class="text-white font-extrabold">${target}</span></p>
+                <p class="text-[11px] text-slate-400 mt-1">Challenge addressed: "${problem}"</p>
+            </div>
+            <div class="bg-slate-800 text-slate-300 text-[10px] uppercase font-black px-3 py-1.5 rounded-lg border border-slate-700">
+                Category: ${category.toUpperCase()}
+            </div>
+        </div>
+
+        <div data-component-id="tab_navigation" data-component-type="nav" data-purpose="Control bar to switch views between designed screens inside the prototype" class="flex flex-wrap gap-2 mb-6 border-b border-slate-800 pb-4">
+            ${screens.map((s, idx) => `
+                <button onclick="switchScreen(${idx})" id="tab-${idx}" data-component-id="screen_tab_${idx}" data-component-type="button" data-purpose="Switch active view to ${s.screen_name}" class="tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${idx === 0 ? `bg-${primaryColor}-600 border-${primaryColor}-600 text-white shadow-lg` : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:text-slate-300'}">
+                    ${s.screen_name}
+                </button>
+            `).join('')}
+        </div>
+
+        <div data-component-id="screen_views_group" data-component-type="display" data-purpose="Container rendering layout modules of active screen views" class="space-y-6 mb-8">
+            ${screens.map((s, idx) => `
+                <div id="screen-${idx}" class="screen-view ${idx === 0 ? 'block' : 'hidden'}">
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-2xl">
+                        <div class="mb-4 pb-3 border-b border-slate-800">
+                            <span class="text-[9px] text-${primaryColor}-400 font-bold uppercase tracking-wider block mb-0.5">Visual Preview Screen</span>
+                            <h2 class="text-sm font-bold text-white">${s.screen_name}</h2>
+                            <p class="text-[11px] text-slate-400 mt-0.5">${s.screen_description}</p>
+                        </div>
+                        <div class="bg-slate-950/80 rounded-xl overflow-hidden p-4 border border-slate-800 shadow-inner">
+                            ${s.layout_html}
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        ${interactiveWidgetHtml}
+    </main>
+
+    <footer class="bg-slate-950 text-center py-6 text-[10px] text-slate-500 mt-12 border-t border-slate-900">
+        <p class="mb-1">Built with <strong>VibeLab 🚀</strong></p>
+        <p class="text-slate-600">Prototyping Sandbox Studio | All Rights Reserved 2026</p>
+    </footer>
+
+    <script>
+        function switchScreen(activeIdx) {
+            document.querySelectorAll('.screen-view').forEach((el, idx) => {
+                if (idx === activeIdx) {
+                    el.classList.remove('hidden');
+                    el.classList.add('block');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                if (idx === activeIdx) {
+                    btn.className = "tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border bg-${primaryColor}-600 border-${primaryColor}-600 text-white shadow-lg";
+                } else {
+                    btn.className = "tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border bg-slate-900/40 border-slate-800 text-slate-400 hover:text-slate-300";
+                }
+            });
+        }
+        
+        ${interactiveWidgetScript}
+    </script>
+</body>
+</html>`;
+
+  return {
+    features,
+    user_journey: { steps, key_actions },
+    screens,
+    mvp: {
+      mvp_html,
+      architecture_explanation: `🏗️ How It's Built\nConfigured as a self-contained single-file browser prototype using modern responsive Tailwind utility elements and client-side tab navigations.\n\n✨ What It Does\nSets up a fully operational interactive simulator complete with active buttons, lists, counters, and view togglers.\n\n👥 Who It Helps\nAllows ${target} to test operational flows and review design templates instantly.`,
+      components,
+      skills_learned,
+      ai_contribution_summary
+    },
+    walkthrough_explanations
+  };
+}
 
 export default router;

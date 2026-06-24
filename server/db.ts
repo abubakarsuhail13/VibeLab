@@ -950,6 +950,24 @@ export const getPool = async () => {
           )
         `);
 
+        await connection.execute(`
+          CREATE TABLE IF NOT EXISTS phase2_cache (
+            id                    INT PRIMARY KEY AUTO_INCREMENT,
+            project_id            INT NOT NULL,
+            user_id               INT NOT NULL,
+            step1                 LONGTEXT,
+            step2                 LONGTEXT,
+            step3                 LONGTEXT,
+            step4                 LONGTEXT,
+            step5                 LONGTEXT,
+            step6                 LONGTEXT,
+            version               INT DEFAULT 1,
+            created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES product_sessions(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `);
+
         // Safe, isolated column generator for all tables
         const addColumnIfNeeded = async (tableName: string, columnName: string, columnDef: string) => {
           try {
