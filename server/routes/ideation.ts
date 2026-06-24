@@ -202,107 +202,96 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
       [session_id, story_number, story_code, question_text, user_response]
     );
 
-    // Fetch the context details for the current session to pass to Gemini
-    const [historyRows]: any = await p.execute(
-      'SELECT story_number, question_text, user_response, ai_followup FROM ideation_responses WHERE session_id = ? ORDER BY id ASC',
-      [session_id]
+    // Standard list of questions to find next questions and descriptions
+    const QUESTIONS = [
+      { number: 1, text: "What do you enjoy doing the most?" },
+      { number: 2, text: "What problem or frustration do you face often?" },
+      { number: 3, text: "Who else faces this problem?" },
+      { number: 4, text: "How are people solving it today?" },
+      { number: 5, text: "What do you dislike about the current solution?" },
+      { number: 6, text: "If you could magically fix this problem, what would your solution do?" },
+      { number: 7, text: "Do you think AI could help solve it? How?" },
+      { number: 8, text: "Would a website, app, chatbot, or smart device work best?" },
+      { number: 9, text: "What is the most important feature of your solution?" },
+      { number: 10, text: "If you had only one week, what is the simplest version you could build?" },
+      { number: 11, text: "How would you know your solution is helping people?" },
+      { number: 12, text: "Why are you excited about building this project?" },
+      { number: 13, text: "If this project succeeds, how will someone's life become easier or better?" }
+    ];
+
+    const encouragements: Record<number, string> = {
+      1: "Awesome! Let's explore that deeper.",
+      2: "That sounds like a real frustration. Let's look at who else experiences this.",
+      3: "It's always great to identify who we're helping. How are they solving it today?",
+      4: "Interesting to see how they manage now. What do you dislike about those solutions?",
+      5: "Exactly, that's where your opportunity lies! If you could magically fix it, what would your solution do?",
+      6: "That is a brilliant vision! Do you think AI could help solve it? How?",
+      7: "AI can definitely add a lot of value there. Would a website, app, chatbot, or smart device work best?",
+      8: "Perfect choice for this kind of solution. What is the most important feature of your solution?",
+      9: "Focusing on that key feature is super smart. If you had only one week, what is the simplest version you could build?",
+      10: "An excellent way to scope down the MVP. How would you know your solution is helping people?",
+      11: "A great metric to measure impact. Why are you excited about building this project?",
+      12: "That passion is what will drive this project! If this project succeeds, how will someone's life become easier or better?",
+      13: "Beautifully said. This will make a real difference."
+    };
+
+    const followUps: Record<number, string> = {
+      1: "Boht khoob! Kya aap is baare me thora aur bata sakte hain? What do you like most about it?",
+      2: "Ye to kafi pareshan-kun hai. How often do you face this issue in your daily life?",
+      3: "I see. Do your friends, family, or other students also talk about this problem?",
+      4: "Sahi. Wo abhi isko hal karne ke liye kya tareeqa ya tools use karte hain?",
+      5: "Got it. What makes that current solution slow, expensive, or annoying?",
+      6: "That sounds amazing! If there were no limits, what is the main feature of this solution?",
+      7: "AI can do wonders. Do you imagine it predicting something, generating text, or classifying data?",
+      8: "Nice choice. Why do you think that specific format (web/app/device) is the best fit?",
+      9: "Zabardast! Is feature ko chalate waqt user ko sab se pehle kya dikhega or do?",
+      10: "Keep it simple! What is the absolute bare minimum screen or feature you need first?",
+      11: "Good metric. Would you look at daily active users, or positive feedback ratings?",
+      12: "Love that motivation! What is the single biggest thing you hope to learn from it?",
+      13: "That's a powerful vision. Can you sum up that impact in a few words?"
+    };
+
+    // Determine if the current answer is vague/short (less than 4 words)
+    const words = user_response.trim().split(/\s+/).filter(Boolean);
+    const isVagueOrShort = words.length < 4;
+
+    // Check if we've already asked a follow-up for this story_number in this session
+    const [existingRows]: any = await p.execute(
+      'SELECT id FROM ideation_responses WHERE session_id = ? AND story_number = ?',
+      [session_id, story_number]
     );
+    const alreadyAskedFollowUp = existingRows.length > 1;
 
-    const previousAnswersText = historyRows.map((r: any) => {
-      let aiText = '';
-      if (r.ai_followup) {
-        try {
-          const parsedFollowup = JSON.parse(r.ai_followup);
-          aiText = parsedFollowup.text || '';
-        } catch (_) {
-          aiText = r.ai_followup;
-        }
-      }
-      return `Question ${r.story_number}: "${r.question_text}"\nAnswer: "${r.user_response}"${aiText ? `\nFollowup Question: "${aiText}"` : ''}`;
-    }).join('\n\n');
+    let ai_message = "";
+    let next_story_number: number | null = null;
+    let next_question: string | null = null;
+    let is_complete = false;
 
-    const prompt = `
-      You are a friendly AI mentor inside VibeLab for students aged 14-22.
-      Help the student discover a project idea. Be warm and encouraging always.
-
-      The student is responding to story_number: ${story_number} (${story_code}).
-      The 13 questions IN ORDER:
-      1. What do you enjoy doing the most?
-      2. What problem or frustration do you face often?
-      3. Who else faces this problem?
-      4. How are people solving it today?
-      5. What do you dislike about the current solution?
-      6. If you could magically fix this problem, what would your solution do?
-      7. Do you think AI could help solve it? How?
-      8. Would a website, app, chatbot, or smart device work best?
-      9. What is the most important feature of your solution?
-      10. If you had only one week, what is the simplest version you could build?
-      11. How would you know your solution is helping people?
-      12. Why are you excited about building this project?
-      13. If this project succeeds, how will someone's life become easier or better?
-
-      Previous QA History in this session:
-      ${previousAnswersText}
-
-      Latest Question: "${question_text}"
-      Latest User Response: "${user_response}"
-
-      NATURAL LANGUAGE UNDERSTANDING & COGNITIVE DIVERSITY PROTOCOL:
-      - The student may describe their ideas using English, Urdu, Roman Urdu (Urdu written in Latin letters, e.g., "mujy website banani hay", "hospital management system banana hai", "students k liye platform", "AI se resume builder banana hai"), Mixed English and Urdu, informal or beginner language, short phrases, incomplete sentences, or vague/non-technical wording.
-      - Intelligently extract meaning, intended project idea, and context from the user's message without requiring any specific keywords, technical language, structured formats, or predefined schemas. Do not force them to use technical terms.
-      - If the user responds in Roman Urdu, Urdu, or mixed Roman Urdu/English, respond naturally in a warm, friendly blend of Roman Urdu and simple English (Hinglish/Urdu-English code-switching) so they feel deeply understood, validated, and comfortable.
-      - Always look at the previous QA history to contextualize their short/vague responses (such as "food delivery app" or "students k liye platform"). Infer reasonable context, build on their ideas, and continue the existing discovery conversation naturally without forcing them to repeat information they have already provided.
-      - When the user expresses an idea like "mujy website banani hay" or "I want to build an app", immediately recognize that this is a valid project intent. Map it to their desired solution space and proceed smoothly to the next relevant question based on your current understanding.
-
-      RULES:
-      - ONE question per message. Never combine two.
-      - After each answer: one sentence of encouragement, then the next question.
-      - If user's latest response is under 10 words or vague, and you haven't asked a follow-up for this question (${story_number}) yet in the history, you MUST ask ONE gentle follow-up question instead of moving to the next question.
-      - If you already asked a follow-up for this question previously in the history, do not ask another follow-up. Move to the next question.
-      - No jargon. No formal language. Max 3 sentences total per message.
-      - Ask questions in strict order. Do not skip any.
-
-      Return ONLY valid JSON:
-      {
-        "ai_message": "your encouragement + next question/followup question as a single friendly message string",
-        "next_story_number": <the number of the next question as integer, or the same story_number if asking a followup. If question 13 is fully answered successfully, write null>,
-        "next_question": "<the text of the next question, or the followup question if asking a followup. If finished, write null>",
-        "is_complete": <true if question 13 was answered and no followup is needed, false otherwise>
-      }
-    `;
-
-    const response = await getGeminiClient().models.generateContent({
-      model: "gemini-3.1-flash-lite",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      }
-    });
-
-    const resultText = response.text || '{}';
-    let cleanText = resultText.trim();
-    const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      cleanText = jsonMatch[0];
+    if (isVagueOrShort && !alreadyAskedFollowUp && followUps[story_number]) {
+      // Ask follow-up for the current story number
+      ai_message = followUps[story_number];
+      next_story_number = story_number;
+      next_question = question_text;
+      is_complete = false;
     } else {
-      cleanText = cleanText.replace(/```json|```/g, '').trim();
-    }
-    const parsed = JSON.parse(cleanText);
-
-    let next_story_number = parsed.next_story_number;
-    let next_question = parsed.next_question;
-    let is_complete = !!parsed.is_complete;
-
-    // Normalize for final completed states
-    if (is_complete || (story_number >= 13 && next_story_number !== story_number)) {
-      is_complete = true;
-      next_story_number = null;
-      next_question = null;
+      // Progress to the next question
+      if (story_number >= 13) {
+        is_complete = true;
+        ai_message = "Mubarak ho! We have completed all 13 discovery questions. Now I am ready to generate your customized product blueprint. Let's do it!";
+        next_story_number = null;
+        next_question = null;
+      } else {
+        next_story_number = story_number + 1;
+        const nextQObj = QUESTIONS.find(q => q.number === next_story_number);
+        next_question = nextQObj ? nextQObj.text : null;
+        is_complete = false;
+        ai_message = `${encouragements[story_number]} Next question: ${next_question}`;
+      }
     }
 
     // Always save the AI's response message details inside ai_followup as JSON so we can rebuild history on resume
     const followupPayload = JSON.stringify({
-      text: parsed.ai_message,
+      text: ai_message,
       next_story_number: next_story_number
     });
 
@@ -312,7 +301,7 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
     );
 
     res.json({
-      ai_message: parsed.ai_message,
+      ai_message,
       next_story_number,
       next_question,
       is_complete

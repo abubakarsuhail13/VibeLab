@@ -336,7 +336,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 {/* 1. Blueprint Overview */}
                 <div className="space-y-4">
                   <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
-                    <FileText className="w-5 h-5" /> 1. Project Blueprint
+                    <FileText className="w-5 h-5" /> 1. Your Project Blueprint
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-1">
@@ -361,7 +361,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 {/* 2. Feature Stack */}
                 <div className="space-y-4 border-t border-slate-200 pt-8">
                   <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
-                    <ListTodo className="w-5 h-5" /> 2. Feature Requirements List
+                    <ListTodo className="w-5 h-5" /> 2. Feature Discovery & Rationales
                   </h4>
                   <div className="space-y-3">
                     {projectData.features.map((feat) => (
@@ -385,7 +385,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 {projectData.journey && (
                   <div className="space-y-4 border-t border-slate-200 pt-8">
                     <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
-                      <Compass className="w-5 h-5" /> 3. User Journey Map
+                      <Compass className="w-5 h-5" /> 3. User Journey
                     </h4>
                     <div className="p-6 rounded-2xl bg-white border border-slate-200 space-y-6">
                       <div className="space-y-1">
@@ -413,7 +413,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 {/* 4. Product Screens */}
                 <div className="space-y-4 border-t border-slate-200 pt-8">
                   <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
-                    <Monitor className="w-5 h-5" /> 4. High-Fidelity Screens
+                    <Monitor className="w-5 h-5" /> 4. Product Screens
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {projectData.screens.map((scr) => (
@@ -432,7 +432,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 {projectData.mvp?.mvp_html && (
                   <div className="space-y-4 border-t border-slate-200 pt-8">
                     <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
-                      <FileCode2 className="w-5 h-5" /> 5. Sandboxed Interactive Prototype
+                      <FileCode2 className="w-5 h-5" /> 5 & 6. Sandboxed MVP Prototype
                     </h4>
                     <div className="h-[450px] bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-2xl">
                       <iframe
@@ -455,7 +455,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 {projectData.mvp?.product_description && (
                   <div className="space-y-4 border-t border-slate-200 pt-8">
                     <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
-                      <FileText className="w-5 h-5" /> 6. Launch pitch & Description
+                      <FileText className="w-5 h-5" /> 7. Pitch Story & Description
                     </h4>
                     <div className="p-6 rounded-2xl bg-white border border-slate-200 font-sans text-sm text-slate-600 leading-relaxed font-normal whitespace-pre-wrap pl-1 bg-white/50">
                       {projectData.mvp.product_description}
@@ -467,7 +467,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 {projectData.mvp?.demo_script && (
                   <div className="space-y-4 border-t border-slate-200 pt-8">
                     <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
-                      <HelpCircle className="w-5 h-5" /> 7. Demo script & Presentation
+                      <HelpCircle className="w-5 h-5" /> 9. Demo Script & Presentation
                     </h4>
                     <div className="p-6 rounded-2xl bg-white border border-slate-200 space-y-2 select-text font-normal font-sans leading-relaxed text-sm text-slate-600 bg-white/50 whitespace-pre-wrap">
                       {projectData.mvp.demo_script}
@@ -479,7 +479,7 @@ export default function PhaseComplete({ onNavigate }: { onNavigate?: (page: stri
                 {projectData.mvp?.builder_reflection && (
                   <div className="space-y-4 border-t border-slate-200 pt-8">
                     <h4 className="font-bebas text-xl tracking-widest text-[#2563eb] flex items-center gap-2">
-                      <Users className="w-5 h-5" /> 8. Builder Key Lessons Learned
+                      <Users className="w-5 h-5" /> 6. Builder Key Lessons (MVP Review)
                     </h4>
                     <div className="p-6 rounded-2xl bg-white border border-slate-200 font-sans italic text-sm text-slate-600 leading-relaxed bg-white/50 whitespace-pre-wrap pl-1 font-normal">
                       "{projectData.mvp.builder_reflection}"

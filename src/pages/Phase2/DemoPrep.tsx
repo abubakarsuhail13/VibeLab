@@ -218,7 +218,7 @@ export default function DemoPrep({ onNavigate }: { onNavigate?: (page: string) =
         {/* Branding & Header */}
         <div className="text-center md:text-left mb-10 space-y-3">
           <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#2563eb] leading-none">
-            DEMO PREPARATION
+            DEMO SCRIPT
           </h2>
           <p className="text-slate-650 text-base md:text-lg leading-relaxed max-w-3xl">
             You are almost ready to present! Use this interactive dashboard guide to prepare with confidence, refine your talking script, and practice.

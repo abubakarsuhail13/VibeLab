@@ -173,7 +173,7 @@ export default function FeatureExplain({ onNavigate }: { onNavigate?: (page: str
         {/* Branding & Header */}
         <div className="text-center md:text-left mb-10 space-y-3">
           <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#2563eb] leading-none">
-            EXPLAIN YOUR FEATURES
+            AI MECHANICS
           </h2>
           <p className="text-slate-650 text-base md:text-lg leading-relaxed max-w-3xl">
             For each feature, write why you chose to include it. This shows you really understand your product's design and user purpose.

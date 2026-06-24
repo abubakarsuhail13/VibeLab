@@ -124,7 +124,7 @@ export default function ProductDescription({ onNavigate }: { onNavigate?: (page:
         {/* Branding & Header */}
         <div className="text-center md:text-left mb-8 space-y-3">
           <h2 className="font-bebas text-5xl md:text-7xl tracking-widest text-[#2563eb] leading-none">
-            YOUR PRODUCT DESCRIPTION
+            PITCH STORY
           </h2>
           <p className="text-slate-650 text-base md:text-lg leading-relaxed">
             This is how you explain your product to others. Edit it until it sounds like you.
