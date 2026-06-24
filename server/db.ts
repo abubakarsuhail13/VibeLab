@@ -7,8 +7,14 @@ dotenv.config();
 
 const LOCAL_DB_DIR = './server/local_db';
 
+const tableCache = new Map<string, any[]>();
+
 // Helper function to load table data with fallback seeds
 function getTableData(table: string): any[] {
+  if (tableCache.has(table)) {
+    return tableCache.get(table)!;
+  }
+
   if (!fs.existsSync(LOCAL_DB_DIR)) {
     fs.mkdirSync(LOCAL_DB_DIR, { recursive: true });
   }
@@ -24,6 +30,7 @@ function getTableData(table: string): any[] {
         {id: 5, name: "Phase 5 — Portfolio & Showcase", description: "Build your portfolio and present your achievements.", order_index: 5, is_locked_default: 1}
       ];
       fs.writeFileSync(filePath, JSON.stringify(defaultPhases, null, 2), 'utf-8');
+      tableCache.set(table, defaultPhases);
       return defaultPhases;
     }
     if (table === 'users') {
@@ -40,6 +47,7 @@ function getTableData(table: string): any[] {
         }
       ];
       fs.writeFileSync(filePath, JSON.stringify(defaultUsers, null, 2), 'utf-8');
+      tableCache.set(table, defaultUsers);
       return defaultUsers;
     }
     if (table === 'phase_projects') {
@@ -67,25 +75,33 @@ function getTableData(table: string): any[] {
         }
       ];
       fs.writeFileSync(filePath, JSON.stringify(defaultProjects, null, 2), 'utf-8');
+      tableCache.set(table, defaultProjects);
       return defaultProjects;
     }
+    tableCache.set(table, []);
     return [];
   }
   try {
     const data = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    tableCache.set(table, parsed);
+    return parsed;
   } catch (e) {
+    tableCache.set(table, []);
     return [];
   }
 }
 
 // Helper to save table data synchronously
 function saveTableData(table: string, data: any[]) {
+  tableCache.set(table, data);
   if (!fs.existsSync(LOCAL_DB_DIR)) {
     fs.mkdirSync(LOCAL_DB_DIR, { recursive: true });
   }
   const filePath = path.join(LOCAL_DB_DIR, `${table}.json`);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8', (err) => {
+    if (err) console.error(`Error saving table ${table}:`, err);
+  });
 }
 
 // SQL condition parser for local JSON query filtering
