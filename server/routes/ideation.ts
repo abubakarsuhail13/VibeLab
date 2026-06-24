@@ -222,16 +222,16 @@ router.post('/respond', authenticateToken, async (req: any, res) => {
     const encouragements: Record<number, string> = {
       1: "Awesome! Let's explore that deeper.",
       2: "That sounds like a real frustration. Let's look at who else experiences this.",
-      3: "It's always great to identify who we're helping. How are they solving it today?",
-      4: "Interesting to see how they manage now. What do you dislike about those solutions?",
-      5: "Exactly, that's where your opportunity lies! If you could magically fix it, what would your solution do?",
-      6: "That is a brilliant vision! Do you think AI could help solve it? How?",
-      7: "AI can definitely add a lot of value there. Would a website, app, chatbot, or smart device work best?",
-      8: "Perfect choice for this kind of solution. What is the most important feature of your solution?",
-      9: "Focusing on that key feature is super smart. If you had only one week, what is the simplest version you could build?",
-      10: "An excellent way to scope down the MVP. How would you know your solution is helping people?",
-      11: "A great metric to measure impact. Why are you excited about building this project?",
-      12: "That passion is what will drive this project! If this project succeeds, how will someone's life become easier or better?",
+      3: "It's always great to identify who we're helping.",
+      4: "Interesting to see how they manage now.",
+      5: "Exactly, that's where your opportunity lies!",
+      6: "That is a brilliant vision!",
+      7: "AI can definitely add a lot of value there.",
+      8: "Perfect choice for this kind of solution.",
+      9: "Focusing on that key feature is super smart.",
+      10: "An excellent way to scope down the MVP.",
+      11: "A great metric to measure impact.",
+      12: "That passion is what will drive this project!",
       13: "Beautifully said. This will make a real difference."
     };
 
