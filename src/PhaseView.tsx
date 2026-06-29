@@ -2156,20 +2156,27 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                             const isCompleted = sec.step < currentSessionStep;
                             const isActiveStep = sec.step === currentSessionStep;
                             const isSelected = selectedPhase2Section === sec.step;
+                            const isLocked = sec.step > currentSessionStep;
  
                             return (
                               <motion.div
                                 key={sec.step}
-                                whileHover={{ scale: 1.015, y: -2 }}
-                                whileTap={{ scale: 0.985 }}
+                                whileHover={isLocked ? {} : { scale: 1.015, y: -2 }}
+                                whileTap={isLocked ? {} : { scale: 0.985 }}
                                 onClick={() => {
+                                  if (isLocked) {
+                                    toast.error(`Section ${sec.step} is locked. Complete the previous sections first!`);
+                                    return;
+                                  }
                                   setSelectedPhase2Section(sec.step);
-                                  toast.success(`Active segment set to Section ${sec.step}. Check your Quiz under the Learn tab!`, { id: 'sec-toggle' });
+                                  setShowDetailedBuilder(true);
                                 }}
-                                className={`cursor-pointer group relative p-5 md:p-6 rounded-2xl transition-all flex flex-col justify-between min-h-[150px] ${
-                                  isSelected
-                                    ? 'bg-gradient-to-b from-indigo-50/20 to-white border-2 border-indigo-600 bg-white shadow-lg shadow-indigo-500/5 ring-4 ring-indigo-500/5'
-                                    : 'bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-sm'
+                                className={`group relative p-5 md:p-6 rounded-2xl transition-all flex flex-col justify-between min-h-[150px] ${
+                                  isLocked
+                                    ? 'bg-slate-50 border border-slate-200 opacity-60 cursor-not-allowed'
+                                    : isSelected
+                                      ? 'cursor-pointer bg-gradient-to-b from-indigo-50/20 to-white border-2 border-indigo-600 bg-white shadow-lg shadow-indigo-500/5 ring-4 ring-indigo-500/5'
+                                      : 'cursor-pointer bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-sm'
                                 }`}
                               >
                                 <div className="space-y-3">
@@ -2181,12 +2188,17 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                     </div>
  
                                     <div className="flex items-center gap-1.5">
+                                      {isLocked && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-400 rounded-full text-[9px] font-bold border border-slate-200">
+                                          <Lock className="w-2.5 h-2.5" /> Locked
+                                        </span>
+                                      )}
                                       {isCompleted && (
                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full text-[9px] font-bold border border-emerald-100">
                                           <Check className="w-2.5 h-2.5" /> Approved
                                         </span>
                                       )}
-                                      {isActiveStep && (
+                                      {isActiveStep && !isLocked && (
                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[9px] font-bold border border-amber-100 animate-pulse">
                                           <Zap className="w-2.5 h-2.5 text-amber-500" /> Build Now
                                         </span>

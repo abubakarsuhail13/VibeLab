@@ -512,7 +512,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
 
   const renderSidebarContent = (isMobile: boolean = false) => {
     return (
-      <div className="flex flex-col h-full">
+      <div className={`flex flex-col ${isMobile ? 'min-h-full justify-between' : 'h-full'}`}>
         {isMobile && (
           <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-150">
             <div className="flex items-center gap-3">
@@ -569,7 +569,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
           </div>
         </div>
 
-        <nav className="space-y-2 flex-1 overflow-y-auto custom-scrollbar">
+        <nav className={`space-y-2 ${isMobile ? 'shrink-0' : 'flex-1 overflow-y-auto custom-scrollbar'}`}>
           {user?.role === "teacher" ? (
             <>
               <button 

@@ -350,6 +350,11 @@ export default function Phase2BuildWalkthrough({
   const [activeStep, setActiveStep] = useState<number>(initialStep || 1);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isEditingApprovedStep, setIsEditingApprovedStep] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsEditingApprovedStep(false);
+  }, [activeStep]);
 
   // STEP 1 State
   const [projectName, setProjectName] = useState('');
@@ -2039,6 +2044,11 @@ Handles routing via custom React layouts, templates, and server-side model groun
 
   const activeItem = STEP_LABELS[activeStep - 1] || STEP_LABELS[0];
 
+  const farthestStep = (session?.status === 'completed' || session?.current_step === 'approved' || session?.current_step === 'complete') 
+    ? 10 
+    : (session ? (STEP_MAP_ORDER[session.current_step] || 1) : 1);
+  const isFieldDisabled = activeStep < farthestStep && !isEditingApprovedStep;
+
   return (
     <div className="fixed inset-0 z-50 bg-[#f8fafc] flex flex-col font-sans overflow-hidden text-slate-800 animate-fade-in">
       <EducationalAiBackground isDark={false} />
@@ -2071,9 +2081,12 @@ Handles routing via custom React layouts, templates, and server-side model groun
       <div className="bg-slate-50/80 backdrop-blur-sm border-b border-slate-200 px-4 md:px-12 py-2 flex items-center shrink-0 overflow-x-auto scrollbar-none z-20">
         <div className="flex items-center gap-2 w-full justify-between">
           {STEP_LABELS.map((stepItem) => {
-            const isStepCompleted = stepItem.step < activeStep;
+            const farthestStep = (session?.status === 'completed' || session?.current_step === 'approved' || session?.current_step === 'complete') 
+              ? 10 
+              : (session ? (STEP_MAP_ORDER[session.current_step] || 1) : 1);
+            const isStepCompleted = stepItem.step < farthestStep;
             const isStepActive = stepItem.step === activeStep;
-            const isStepLocked = stepItem.step > activeStep;
+            const isStepLocked = stepItem.step > farthestStep;
             return (
               <button
                 key={stepItem.step}
@@ -2118,6 +2131,55 @@ Handles routing via custom React layouts, templates, and server-side model groun
             </div>
           )}
 
+          {activeStep !== 6 && activeStep < farthestStep && (
+            <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                  <Check className="w-4 h-4" />
+                </div>
+                <div>
+                  <h5 className="text-xs font-bold font-sans">This Section is Approved</h5>
+                  <p className="text-[10px] text-emerald-600 leading-normal font-medium">
+                    You have already completed this step. You can review the details or make changes if needed.
+                  </p>
+                </div>
+              </div>
+              
+              {!isEditingApprovedStep ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingApprovedStep(true)}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer border-none shadow-sm"
+                >
+                  Edit Section
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handleSaveGlobalDraft(true);
+                      setIsEditingApprovedStep(false);
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer border-none shadow-sm"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingApprovedStep(false);
+                      fetchSessionAndProgress();
+                    }}
+                    className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-slate-200 cursor-pointer shadow-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {STEP_LABELS.map((item) => {
             const isCompleted = item.step < activeStep;
             const isActive = item.step === activeStep;
@@ -2155,7 +2217,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                   value={projectName}
                                   onChange={(e) => setProjectName(e.target.value)}
                                   placeholder="Enter project name..."
-                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none transition-colors"
+                                  disabled={isFieldDisabled}
+                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none transition-colors disabled:bg-slate-50 disabled:text-slate-500"
                                 />
                               </div>
 
@@ -2167,7 +2230,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                   onChange={(e) => setProblemStatement(e.target.value)}
                                   rows={2}
                                   placeholder="Describe the pain point..."
-                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                  disabled={isFieldDisabled}
+                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors disabled:bg-slate-50 disabled:text-slate-500"
                                 />
                               </div>
 
@@ -2179,7 +2243,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                   onChange={(e) => setTargetUsers(e.target.value)}
                                   rows={2}
                                   placeholder="Who are your primary target users?"
-                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                  disabled={isFieldDisabled}
+                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors disabled:bg-slate-50 disabled:text-slate-500"
                                 />
                               </div>
 
@@ -2191,7 +2256,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                   onChange={(e) => setMvpScope(e.target.value)}
                                   rows={3}
                                   placeholder="What core features are inside the MVP?"
-                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors"
+                                  disabled={isFieldDisabled}
+                                  className="w-full bg-white border border-slate-200 focus:border-[#2563eb] text-sm text-slate-800 px-4 py-3 rounded-xl outline-none resize-none transition-colors disabled:bg-slate-50 disabled:text-slate-500"
                                 />
                               </div>
                             </div>
@@ -2240,7 +2306,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
                                         onChange={(e) => handleToggleIncludeFeature(feat.id, e.target.checked)}
-                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer"
+                                        disabled={isFieldDisabled}
+                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer disabled:opacity-50"
                                       />
                                     </div>
                                     <p className="text-[11px] text-slate-500 leading-normal mb-3">{feat.feature_description}</p>
@@ -2251,7 +2318,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                       <select 
                                         value={feat.category}
                                         onChange={(e) => handleChangeFeatureCategory(feat.id, e.target.value as any)}
-                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none"
+                                        disabled={isFieldDisabled}
+                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none disabled:opacity-50"
                                       >
                                         <option value="must_have">Must Have</option>
                                         <option value="nice_to_have">Nice To Have</option>
@@ -2287,7 +2355,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
                                         onChange={(e) => handleToggleIncludeFeature(feat.id, e.target.checked)}
-                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer"
+                                        disabled={isFieldDisabled}
+                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer disabled:opacity-50"
                                       />
                                     </div>
                                     <p className="text-[11px] text-slate-500 leading-normal mb-3">{feat.feature_description}</p>
@@ -2298,7 +2367,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                       <select 
                                         value={feat.category}
                                         onChange={(e) => handleChangeFeatureCategory(feat.id, e.target.value as any)}
-                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none"
+                                        disabled={isFieldDisabled}
+                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none disabled:opacity-50"
                                       >
                                         <option value="must_have">Must Have</option>
                                         <option value="nice_to_have">Nice To Have</option>
@@ -2334,7 +2404,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                         type="checkbox"
                                         checked={Boolean(feat.is_included)}
                                         onChange={(e) => handleToggleIncludeFeature(feat.id, e.target.checked)}
-                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer"
+                                        disabled={isFieldDisabled}
+                                        className="rounded border-slate-300 bg-white text-[#2563eb] focus:ring-0 cursor-pointer disabled:opacity-50"
                                       />
                                     </div>
                                     <p className="text-[11px] text-slate-500 leading-normal mb-3">{feat.feature_description}</p>
@@ -2345,7 +2416,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                       <select 
                                         value={feat.category}
                                         onChange={(e) => handleChangeFeatureCategory(feat.id, e.target.value as any)}
-                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none"
+                                        disabled={isFieldDisabled}
+                                        className="text-[9.5px] bg-white border border-slate-200 rounded font-bold px-1.5 py-0.5 text-[#2563eb] outline-none disabled:opacity-50"
                                       >
                                         <option value="must_have">Must Have</option>
                                         <option value="nice_to_have">Nice To Have</option>
@@ -2363,48 +2435,50 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           </div>
 
                           {/* Add Custom Feature Sub-Form */}
-                          <form onSubmit={handleAddCustomFeature} className="p-5 border border-slate-200 bg-white/50 rounded-2xl space-y-4">
-                            <h5 className="text-xs font-bold text-slate-800 flex items-center gap-2">
-                              <Plus className="w-4 h-4 text-[#2563eb]" />
-                              Add Custom Feature
-                            </h5>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <input 
-                                type="text"
-                                placeholder="Feature Name (e.g., Live Sync)"
-                                value={customFeatureName}
-                                onChange={(e) => setCustomFeatureName(e.target.value)}
-                                className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-slate-800 placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
+                          {!isFieldDisabled && (
+                            <form onSubmit={handleAddCustomFeature} className="p-5 border border-slate-200 bg-white/50 rounded-2xl space-y-4">
+                              <h5 className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                                <Plus className="w-4 h-4 text-[#2563eb]" />
+                                Add Custom Feature
+                              </h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input 
+                                  type="text"
+                                  placeholder="Feature Name (e.g., Live Sync)"
+                                  value={customFeatureName}
+                                  onChange={(e) => setCustomFeatureName(e.target.value)}
+                                  className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-slate-800 placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
+                                />
+
+                                <select 
+                                  value={customFeatureCategory}
+                                  onChange={(e) => setCustomFeatureCategory(e.target.value as any)}
+                                  className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-[#2563eb] focus:border-[#2563eb] outline-none"
+                                >
+                                  <option value="must_have">Must Have</option>
+                                  <option value="nice_to_have">Nice To Have</option>
+                                  <option value="future">Future</option>
+                                </select>
+                              </div>
+
+                              <textarea 
+                                placeholder="Write a clear feature description..."
+                                value={customFeatureDesc}
+                                onChange={(e) => setCustomFeatureDesc(e.target.value)}
+                                rows={2}
+                                className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-slate-800 placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
                               />
 
-                              <select 
-                                value={customFeatureCategory}
-                                onChange={(e) => setCustomFeatureCategory(e.target.value as any)}
-                                className="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-[#2563eb] focus:border-[#2563eb] outline-none"
+                              <button 
+                                type="submit"
+                                disabled={isAddingFeature}
+                                className="w-full py-2 px-4 rounded-xl border border-[#2563eb]/30 hover:border-[#2563eb] text-[#2563eb] text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase disabled:opacity-50"
                               >
-                                <option value="must_have">Must Have</option>
-                                <option value="nice_to_have">Nice To Have</option>
-                                <option value="future">Future</option>
-                              </select>
-                            </div>
-
-                            <textarea 
-                              placeholder="Write a clear feature description..."
-                              value={customFeatureDesc}
-                              onChange={(e) => setCustomFeatureDesc(e.target.value)}
-                              rows={2}
-                              className="w-full bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-xs text-slate-800 placeholder:text-slate-500 focus:border-[#2563eb] outline-none"
-                            />
-
-                            <button 
-                              type="submit"
-                              disabled={isAddingFeature}
-                              className="w-full py-2 px-4 rounded-xl border border-[#2563eb]/30 hover:border-[#2563eb] text-[#2563eb] text-xs font-bold transition-all flex items-center justify-center gap-1.5 uppercase disabled:opacity-50"
-                            >
-                              {isAddingFeature ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                              Add Feature
-                            </button>
-                          </form>
+                                {isAddingFeature ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                                Add Feature
+                              </button>
+                            </form>
+                          )}
 
                           <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs flex items-center gap-2">
                             <Info className="w-4 h-4 text-[#2563eb] shrink-0" />
@@ -2539,8 +2613,9 @@ Handles routing via custom React layouts, templates, and server-side model groun
                               placeholder="e.g. Try a dark blue layout theme, or change screen titles to be clearer..."
                               value={changeRequests}
                               onChange={(e) => setChangeRequests(e.target.value)}
+                              disabled={isFieldDisabled}
                               rows={2.5}
-                              className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-xs text-slate-800 px-4 py-3 rounded-xl outline-none"
+                              className="w-full bg-white border border-slate-200 hover:border-slate-200 focus:border-[#2563eb] text-xs text-slate-800 px-4 py-3 rounded-xl outline-none disabled:bg-slate-50 disabled:text-slate-500"
                             />
                             <p className="text-[10px] text-slate-500">Provide adjustments instructions to re-generate modified visual drafts above.</p>
                           </div>
@@ -3361,7 +3436,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                     handleTaskClick(selectedTaskIdx);
                                   }}
                                   options={{
-                                    readOnly: false,
+                                    readOnly: isFieldDisabled,
                                     minimap: { enabled: false },
                                     fontSize: 12,
                                     lineNumbers: "on",
