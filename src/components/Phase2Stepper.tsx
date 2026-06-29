@@ -12,16 +12,16 @@ interface Phase2StepperProps {
 }
 
 const STEP_LABELS = [
-  { step: 1, label: 'Blueprint', path: '/phase/2?noredirect=true', key: 'blueprint' },
-  { step: 2, label: 'Features', path: '/phase/2/features', key: 'features' },
-  { step: 3, label: 'Journey', path: '/phase/2/journey', key: 'user_journey' },
-  { step: 4, label: 'Screens', path: '/phase/2/screens', key: 'screens' },
-  { step: 5, label: 'Build', path: '/phase/2/building', key: 'review' }, // transitional loading
-  { step: 6, label: 'MVP Review', path: '/phase/2/review', key: 'review' },
-  { step: 7, label: 'Pitch Story', path: '/phase/2/description', key: 'description' },
-  { step: 8, label: 'AI Mechanics', path: '/phase/2/explain', key: 'explain' },
-  { step: 9, label: 'Demo Script', path: '/phase/2/demo', key: 'demo' },
-  { step: 10, label: 'Complete', path: '/phase/2/complete', key: 'complete' }
+  { step: 1, label: 'Understand Your Idea', path: '/phase/2?noredirect=true', key: 'blueprint' },
+  { step: 2, label: 'Plan Your Features', path: '/phase/2/features', key: 'features' },
+  { step: 3, label: 'Design the User Experience', path: '/phase/2/journey', key: 'user_journey' },
+  { step: 4, label: 'Create Your Product Design', path: '/phase/2/screens', key: 'screens' },
+  { step: 5, label: 'Build Your Product', path: '/phase/2/building', key: 'review' }, // transitional loading
+  { step: 6, label: 'Learn How Your Product Works', path: '/phase/2/review', key: 'review' },
+  { step: 7, label: 'Tell Your Product Story', path: '/phase/2/description', key: 'description' },
+  { step: 8, label: 'Understand the Technology', path: '/phase/2/explain', key: 'explain' },
+  { step: 9, label: 'Practice Your Presentation', path: '/phase/2/demo', key: 'demo' },
+  { step: 10, label: 'Graduate & Get Certified', path: '/phase/2/complete', key: 'complete' }
 ];
 
 const STEP_MAP_ORDER: Record<string, number> = {

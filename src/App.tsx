@@ -65,6 +65,7 @@ import FeatureExplain from "./pages/Phase2/FeatureExplain";
 import DemoPrep from "./pages/Phase2/DemoPrep";
 import PhaseComplete from "./pages/Phase2/PhaseComplete";
 import Leaderboard from "./Leaderboard";
+import PricingPlans from "./components/PricingPlans";
 
 const AdminPanel = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
   const [password, setPassword] = useState("");
@@ -307,6 +308,18 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
     }
   };
 
+  const handlePricingClick = () => {
+    setIsOpen(false);
+    if (currentPage === 'home') {
+      document.getElementById('pricing-plans-section')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      onNavigate('home');
+      setTimeout(() => {
+        document.getElementById('pricing-plans-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    }
+  };
+
   const navTo = (page: string) => {
     setIsOpen(false);
     onNavigate(page);
@@ -337,6 +350,13 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
             className="text-slate-600 hover:text-blue-600 transition-colors py-1"
           >
             How It Works
+          </button>
+
+          <button 
+            onClick={handlePricingClick} 
+            className="text-slate-600 hover:text-blue-600 transition-colors py-1"
+          >
+            Pricing
           </button>
 
           {user && (
@@ -442,6 +462,13 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
                 className="w-full py-3 px-4 rounded-xl text-left text-sm font-bold text-slate-600 hover:bg-slate-50"
               >
                 How It Works
+              </button>
+
+              <button 
+                onClick={handlePricingClick} 
+                className="w-full py-3 px-4 rounded-xl text-left text-sm font-bold text-slate-600 hover:bg-slate-50"
+              >
+                Pricing
               </button>
 
               {user && (
@@ -1889,6 +1916,7 @@ const LandingPage = ({ onNavigate }: { onNavigate: (page: string) => void }) => 
       <UrduVoiceFirst />
       <ProjectCategories />
       <Audience />
+      <PricingPlans onNavigate={onNavigate} />
       <VisionSection />
       <FinalCTA onNavigate={onNavigate} />
     </>

@@ -233,16 +233,16 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
     activeSession?.session?.current_step === 'complete';
 
   const PHASE2_SECTIONS = [
-    { step: 1, label: 'Your Project Blueprint', desc: 'Confirming foundational MVP ideas and aligning product requirements.' },
-    { step: 2, label: 'Feature Discovery', desc: 'Identifying and prioritizing must-haves, nice-to-haves, and future plans to prevent scope creep.' },
-    { step: 3, label: 'User Journey', desc: 'Modeling how users will navigate through the application windows/pages.' },
-    { step: 4, label: 'Product Screens', desc: 'Designing mock visual layouts with interactive triggers and state controls.' },
-    { step: 5, label: 'Building Your Product', desc: 'NPM package compilation, bundling source codes, and local runtime verification.' },
-    { step: 6, label: 'MVP Code Walkthrough', desc: 'Synthesizing layout templates, inspecting DOM code structures, and linking views.' },
-    { step: 7, label: 'Pitch Story', desc: 'Refining core marketing descriptions, value propositions, and explaining product outcomes.' },
-    { step: 8, label: 'AI Mechanics', desc: 'Implementing server-side LLM secure proxy controls, configuring system instructions.' },
-    { step: 9, label: 'Demo Script', desc: 'Drafting presentation scripts and preparing step-by-step product walkthrough pitches.' },
-    { step: 10, label: 'All Completed', desc: 'Consolidating deliverables, verifying credentials, and final completion tasks.' }
+    { step: 1, label: 'Understand Your Idea', desc: 'Confirming foundational MVP ideas and aligning product requirements.' },
+    { step: 2, label: 'Plan Your Features', desc: 'Identifying and prioritizing must-haves, nice-to-haves, and future plans to prevent scope creep.' },
+    { step: 3, label: 'Design the User Experience', desc: 'Modeling how users will navigate through the application windows/pages.' },
+    { step: 4, label: 'Create Your Product Design', desc: 'Designing mock visual layouts with interactive triggers and state controls.' },
+    { step: 5, label: 'Build Your Product', desc: 'NPM package compilation, bundling source codes, and local runtime verification.' },
+    { step: 6, label: 'Learn How Your Product Works', desc: 'Synthesizing layout templates, inspecting DOM code structures, and linking views.' },
+    { step: 7, label: 'Tell Your Product Story', desc: 'Refining core marketing descriptions, value propositions, and explaining product outcomes.' },
+    { step: 8, label: 'Understand the Technology', desc: 'Implementing server-side LLM secure proxy controls, configuring system instructions.' },
+    { step: 9, label: 'Practice Your Presentation', desc: 'Drafting presentation scripts and preparing step-by-step product walkthrough pitches.' },
+    { step: 10, label: 'Graduate & Get Certified', desc: 'Consolidating deliverables, verifying credentials, and final completion tasks.' }
   ];
 
   const getSectionIcon = (step: number) => {
@@ -1334,7 +1334,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                         Aligned Study Module: Section {selectedPhase2Section}
                       </h4>
                       <p className="text-slate-400 text-xs font-semibold leading-relaxed">
-                        Currently studying: {PHASE2_SECTIONS[selectedPhase2Section - 1]?.label || "Your Project Blueprint"}
+                        Currently studying: {PHASE2_SECTIONS[selectedPhase2Section - 1]?.label || "Understand Your Idea"}
                       </p>
                     </div>
                   </div>

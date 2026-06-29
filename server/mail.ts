@@ -27,7 +27,7 @@ if (emailUser && emailPass) {
     pass: emailPass,
   };
 } else {
-  console.warn('Email Debug: Credentials missing in environment variables.');
+  console.log('Email Debug: Credentials not configured, utilizing simulated email flow.');
 }
 
 export const transporter = nodemailer.createTransport(transporterOptions);
@@ -82,7 +82,7 @@ export const sendMail = async (options: nodemailer.SendMailOptions) => {
     const user = process.env.EMAIL_USER || process.env.SMTP_USER;
     const pass = process.env.EMAIL_PASS || process.env.SMTP_PASS;
     if (!user || !pass) {
-      console.warn('Email config ERROR: SMTP USER or PASS missing, and No Resend key configure. Email simulated instead.');
+      console.log('Email Info: Running in simulated email mode. No custom SMTP or Resend credentials detected.');
       console.log(`[EMAIL SIMULATION] To: ${toEmail}\nSubject: ${options.subject}\nBody: ${options.html}`);
       return { messageId: 'simulated-id' };
     }

@@ -313,16 +313,16 @@ const getInjectedMvpCode = (codeText: string) => {
 };
 
 const STEP_LABELS = [
-  { step: 1, label: 'Your Project Blueprint', desc: 'Review and confirm your foundational MVP ideas.' },
-  { step: 2, label: 'Feature Discovery', desc: 'Identify must-haves, nice-to-haves, and future plans.' },
-  { step: 3, label: 'User Journey', desc: 'Model how people will navigate through your application.' },
-  { step: 4, label: 'Product Screens', desc: 'Review high-fidelity wireframes and visual layouts.' },
-  { step: 5, label: 'Building Your Product', desc: 'Compiling your code, assets, and wiring up views.' },
-  { step: 6, label: 'MVP Code Walkthrough', desc: 'Inspect your full screen, interactive MVP application.' },
-  { step: 7, label: 'Pitch Story', desc: 'Add descriptive features and the core story of your product.' },
-  { step: 8, label: 'AI Mechanics', desc: 'Highlight the technical opportunities and systems.' },
-  { step: 9, label: 'Demo Script', desc: 'Write down a step-by-step presentation script.' },
-  { step: 10, label: 'All Completed', desc: 'Unlock your certification and submit your project!' }
+  { step: 1, label: 'Understand Your Idea', desc: 'Review and confirm your foundational MVP ideas.' },
+  { step: 2, label: 'Plan Your Features', desc: 'Identify must-haves, nice-to-haves, and future plans.' },
+  { step: 3, label: 'Design the User Experience', desc: 'Model how people will navigate through your application.' },
+  { step: 4, label: 'Create Your Product Design', desc: 'Review high-fidelity wireframes and visual layouts.' },
+  { step: 5, label: 'Build Your Product', desc: 'Compiling your code, assets, and wiring up views.' },
+  { step: 6, label: 'Learn How Your Product Works', desc: 'Inspect your full screen, interactive MVP application.' },
+  { step: 7, label: 'Tell Your Product Story', desc: 'Add descriptive features and the core story of your product.' },
+  { step: 8, label: 'Understand the Technology', desc: 'Highlight the technical opportunities and systems.' },
+  { step: 9, label: 'Practice Your Presentation', desc: 'Write down a step-by-step presentation script.' },
+  { step: 10, label: 'Graduate & Get Certified', desc: 'Unlock your certification and submit your project!' }
 ];
 
 const STEP_MAP_ORDER: Record<string, number> = {
@@ -2092,20 +2092,24 @@ Handles routing via custom React layouts, templates, and server-side model groun
                 key={stepItem.step}
                 disabled={isStepLocked}
                 onClick={() => setActiveStep(stepItem.step)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-[11px] font-bold bg-transparent border-none ${
-                  isStepActive 
-                    ? 'bg-[#2563eb] text-white shadow-md' 
-                    : isStepCompleted 
-                      ? 'text-emerald-700 hover:bg-emerald-50 bg-emerald-500/5 cursor-pointer' 
-                      : 'text-slate-400 cursor-not-allowed'
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all text-[11px] font-bold ${
+                  isStepActive
+                    ? 'bg-[#2563eb] text-white border-[#2563eb] hover:bg-[#1d4ed8] hover:border-[#1d4ed8] shadow-md cursor-pointer'
+                    : isStepLocked
+                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                      : isStepCompleted
+                        ? 'bg-emerald-500/10 text-emerald-700 border-emerald-200/60 hover:bg-emerald-500/20 hover:border-emerald-300 cursor-pointer'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300 cursor-pointer'
                 }`}
               >
                 <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-mono border ${
-                  isStepActive 
-                    ? 'bg-white border-white text-[#2563eb]' 
-                    : isStepCompleted 
-                      ? 'bg-emerald-100 border-emerald-300 text-emerald-700' 
-                      : 'bg-white border-slate-200 text-slate-400'
+                  isStepActive
+                    ? 'bg-white border-white text-[#2563eb]'
+                    : isStepLocked
+                      ? 'bg-slate-50 border-slate-200 text-slate-400'
+                      : isStepCompleted
+                        ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
+                        : 'bg-white border-slate-200 text-slate-500'
                 }`}>
                   {isStepCompleted ? <Check className="w-2.5 h-2.5" /> : stepItem.step}
                 </span>
