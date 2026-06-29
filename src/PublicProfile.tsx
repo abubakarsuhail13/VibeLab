@@ -7,6 +7,15 @@ interface PublicProfileProps {
   currentUser?: any;
 }
 
+function formatCertDate(dateValue: string | null | undefined): string {
+  if (!dateValue) return 'Date pending';
+  const parsed = new Date(dateValue);
+  if (isNaN(parsed.getTime())) return 'Date pending';
+  return parsed.toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric'
+  });
+}
+
 export default function PublicProfile({ userId, currentUser }: PublicProfileProps) {
   const [profile, setProfile] = useState<any>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -587,7 +596,7 @@ export default function PublicProfile({ userId, currentUser }: PublicProfileProp
                         <div className="flex items-center gap-2 mt-1">
                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Certified</span>
                            <div className="w-1 h-1 rounded-full bg-slate-300" />
-                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{new Date(badge.created_at).getFullYear()}</span>
+                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{formatCertDate(badge.earned_at || badge.created_at)}</span>
                         </div>
                       </div>
                     </motion.div>

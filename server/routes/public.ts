@@ -113,9 +113,9 @@ router.get('/leaderboard', async (req, res) => {
           ) as badges_count,
           (
             SELECT COUNT(*) 
-            FROM project_submissions 
-            WHERE user_id = u.id 
-            ${isMonthly ? 'AND created_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY)' : ''}
+            FROM mvp_builds 
+            WHERE user_id = u.id AND status = 'approved'
+            ${isMonthly ? 'AND (approved_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY) OR (approved_at IS NULL AND generated_at >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY)))' : ''}
           ) as projects_count,
           (
             SELECT COUNT(*)
@@ -195,14 +195,23 @@ router.get('/profile/:vl_id', async (req, res) => {
       [user.id]
     );
 
-    // Find completed project submissions
+    // Find completed project submissions from mvp_builds
     const [subRows]: any = await p.execute(
-      `SELECT s.id, s.github_url, s.live_url, s.description, s.created_at, p.title as project_title, ph.name as phase_name 
-       FROM project_submissions s 
-       JOIN phase_projects p ON s.project_id = p.id 
-       JOIN phases ph ON s.phase_id = ph.id 
-       WHERE s.user_id = ? 
-       ORDER BY s.created_at DESC`,
+      `SELECT 
+         mb.id, 
+         COALESCE(u.github_url, 'https://github.com') as github_url, 
+         CONCAT('/profile/', u.vl_id) as live_url, 
+         COALESCE(mb.product_description, pb.problem_statement, pbp.problem_statement, 'AI-synthesized custom product MVP') as description, 
+         COALESCE(mb.approved_at, mb.generated_at) as created_at, 
+         COALESCE(pb.project_name, pbp.product_name, 'Custom MVP Build') as project_title, 
+         'Product Creation' as phase_name 
+       FROM mvp_builds mb
+       JOIN product_sessions ps ON mb.session_id = ps.id
+       JOIN users u ON ps.user_id = u.id
+       LEFT JOIN product_blueprints pb ON pb.session_id = ps.id
+       LEFT JOIN project_blueprints pbp ON ps.ideation_session_id = pbp.session_id
+       WHERE u.id = ? AND mb.status = 'approved'
+       ORDER BY COALESCE(mb.approved_at, mb.generated_at) DESC`,
       [user.id]
     );
 
@@ -310,7 +319,21 @@ router.get('/user/:userId/submissions', async (req, res) => {
     const p = await getPool();
     if (!p) return res.status(503).json({ error: 'Database connection failed' });
     const [rows]: any = await p.execute(
-      'SELECT s.*, p.title as project_title FROM project_submissions s JOIN phase_projects p ON s.project_id = p.id WHERE s.user_id = ? ORDER BY s.created_at DESC',
+      `SELECT 
+         mb.id, 
+         COALESCE(u.github_url, 'https://github.com') as github_url, 
+         CONCAT('/profile/', u.vl_id) as live_url, 
+         COALESCE(mb.product_description, pb.problem_statement, pbp.problem_statement, 'AI-synthesized custom product MVP') as description, 
+         COALESCE(mb.approved_at, mb.generated_at) as created_at, 
+         COALESCE(pb.project_name, pbp.product_name, 'Custom MVP Build') as project_title, 
+         'Product Creation' as phase_name 
+       FROM mvp_builds mb
+       JOIN product_sessions ps ON mb.session_id = ps.id
+       JOIN users u ON ps.user_id = u.id
+       LEFT JOIN product_blueprints pb ON pb.session_id = ps.id
+       LEFT JOIN project_blueprints pbp ON ps.ideation_session_id = pbp.session_id
+       WHERE u.id = ? AND mb.status = 'approved'
+       ORDER BY COALESCE(mb.approved_at, mb.generated_at) DESC`,
       [userId]
     );
     res.json(rows);
