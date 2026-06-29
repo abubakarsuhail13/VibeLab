@@ -475,7 +475,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
             ];
           case 8:
             return [
-              "Gemini LLM API keys and secure server proxies",
+              "Vibelab LLM API keys and secure server proxies",
               "System instructions and custom context scaffolding",
               "Parameter tuning: Temperature, tokens, and safety"
             ];
@@ -2707,7 +2707,7 @@ export default function PhaseView({ phaseId, onBack, onProgress }: PhaseViewProp
                                </button>
                             </form>
                             <p className="text-[10px] text-slate-500 text-center mt-4 font-medium uppercase tracking-widest">
-                               Powered by Gemini Flash 3
+                               Powered by Vibelab Flash 3
                             </p>
                          </div>
                       </motion.div>

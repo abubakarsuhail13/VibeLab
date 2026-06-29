@@ -14,7 +14,7 @@ export const AILoader: React.FC<AILoaderProps> = ({ type }) => {
   const config = {
     blueprint: {
       title: 'Synthesizing Feature Recommendations',
-      description: 'Gemini is translating your foundational blueprint ideas into a comprehensive set of product milestones and features.',
+      description: 'Vibelab is translating your foundational blueprint ideas into a comprehensive set of product milestones and features.',
       icon: <Brain className="w-5 h-5 text-blue-500 animate-pulse" />,
       stages: [
         'Analyzing blueprint problem statement & variables...',
@@ -48,7 +48,7 @@ export const AILoader: React.FC<AILoaderProps> = ({ type }) => {
     },
     features: {
       title: 'Fomulating Interactive User Journey',
-      description: 'Gemini is modeling a customized step-by-step user workflow flow based on your selected product characteristics.',
+      description: 'Vibelab is modeling a customized step-by-step user workflow flow based on your selected product characteristics.',
       icon: <Layers className="w-5 h-5 text-amber-500 animate-pulse" />,
       stages: [
         'Ingesting approved product feature matrix...',
@@ -82,7 +82,7 @@ export const AILoader: React.FC<AILoaderProps> = ({ type }) => {
     },
     journey: {
       title: 'Synthesizing Screen Layouts & Wireframes',
-      description: 'Gemini is rendering semantic layout maps, CSS parameters, and visual container wires for each user interface screen.',
+      description: 'Vibelab is rendering semantic layout maps, CSS parameters, and visual container wires for each user interface screen.',
       icon: <Compass className="w-5 h-5 text-[#2563eb] animate-pulse" />,
       stages: [
         'Mapping view screens to the interactive roadmap...',
@@ -162,7 +162,7 @@ export const AILoader: React.FC<AILoaderProps> = ({ type }) => {
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-mono font-bold uppercase tracking-wider text-rose-500 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 fill-rose-500 animate-spin" /> Gemini Engine Work
+                <Sparkles className="w-3.5 h-3.5 fill-rose-500 animate-spin" /> Vibelab Engine Work
               </span>
             </div>
             <h3 className="text-sm font-black text-slate-800 tracking-tight mt-0.5">

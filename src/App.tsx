@@ -368,15 +368,6 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
             </button>
           )}
 
-          {user && (
-            <button 
-              onClick={() => navTo('leaderboard')} 
-              className={`hover:text-blue-600 transition-colors py-1 ${currentPage === 'leaderboard' ? 'text-blue-600 font-bold border-b-2 border-blue-600' : 'text-slate-600'}`}
-            >
-              Global Leaderboard
-            </button>
-          )}
-
           <button 
             onClick={() => navTo('verify-credential')} 
             className={`hover:text-blue-600 transition-colors py-1 ${currentPage === 'verify-credential' ? 'text-blue-600 font-bold border-b-2 border-blue-600' : 'text-slate-600'}`}
@@ -477,15 +468,6 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
                   className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'dashboard' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
                 >
                   Dashboard
-                </button>
-              )}
-
-              {user && (
-                <button 
-                  onClick={() => navTo('leaderboard')} 
-                  className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'leaderboard' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
-                >
-                  Global Leaderboard
                 </button>
               )}
 

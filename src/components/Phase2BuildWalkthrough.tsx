@@ -1464,7 +1464,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
       // Update local step view state
       setSession((prev: any) => prev ? { ...prev, current_step: 'features' } : null);
       setActiveStep(2);
-      toast.success('Your blueprint is saved! Gemini generated feature recommendations.');
+      toast.success('Your blueprint is saved! Vibelab generated feature recommendations.');
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Blueprint approval failed.');
@@ -1583,7 +1583,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
       setUserJourney(data.user_journey);
       setSession((prev: any) => prev ? { ...prev, current_step: 'user_journey' } : null);
       setActiveStep(3);
-      toast.success('Features locked! Gemini formulated a user journey flow.');
+      toast.success('Features locked! Vibelab formulated a user journey flow.');
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to lock features.');
@@ -2675,7 +2675,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             <div className="space-y-1.5 text-[10px]">
                               <div className="text-slate-300 flex items-start gap-2">
                                 <span className="text-blue-500">▶</span> 
-                                <span>[system] Initializing Gemini AST structure parser... <span className="text-emerald-400 font-bold">Done</span></span>
+                                <span>[system] Initializing Vibelab AST structure parser... <span className="text-emerald-400 font-bold">Done</span></span>
                               </div>
                               <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 25 ? 'text-slate-300' : 'text-slate-600'}`}>
                                 <span className={buildProgress > 25 ? 'text-blue-500' : ''}>▶</span> 
@@ -3654,7 +3654,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             {/* Live Word Count Indicator */}
                             <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono uppercase">
                               <span>WORD COUNT: <strong className="text-emerald-400">{productDescription.trim() ? productDescription.trim().split(/\s+/).length : 0}</strong> words</span>
-                              <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-[#2563eb]" /> Drafted with Gemini AI</span>
+                              <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-[#2563eb]" /> Drafted with Vibelab AI</span>
                             </div>
                           </div>
 
