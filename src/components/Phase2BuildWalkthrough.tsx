@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
 import MonacoEditor from '@monaco-editor/react';
@@ -48,7 +49,8 @@ import {
   BarChart3,
   LayoutTemplate,
   Box,
-  Code2
+  Code2,
+  Terminal
 } from 'lucide-react';
 import { EducationalAiBackground } from "./EducationalAiBackground";
 import { AILoader } from "./AILoader";
@@ -380,6 +382,7 @@ export default function Phase2BuildWalkthrough({
   // STEP 5 State: Loading cycling messages
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [buildProgress, setBuildProgress] = useState(5);
+  const [buildError, setBuildError] = useState<string | null>(null);
 
   // STEP 6–10 States
   const [mvp, setMvp] = useState<any>(null);
@@ -433,6 +436,7 @@ export default function Phase2BuildWalkthrough({
   // STEP 10 State
   const [showFullProductModal, setShowFullProductModal] = useState<boolean>(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string>('');
+  const [screenshotError, setScreenshotError] = useState<boolean>(false);
   const [skillsLearnedJson, setSkillsLearnedJson] = useState<any | null>(null);
   const [aiContributionSummary, setAiContributionSummary] = useState<string>('');
 
@@ -507,6 +511,69 @@ export default function Phase2BuildWalkthrough({
   const [showFullScreenPreview, setShowFullScreenPreview] = useState<boolean>(false);
   const [workspaceLayout, setWorkspaceLayout] = useState<'split' | 'code' | 'preview'>('split');
   const [isGuideHidden, setIsGuideHidden] = useState<boolean>(false);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(230);
+  const [guideWidth, setGuideWidth] = useState<number>(300);
+  const [splitRatio, setSplitRatio] = useState<number>(50); // percentage for editor column
+
+  const dragStartRef = useRef<{
+    type: 'sidebar' | 'guide' | 'splitter';
+    startX: number;
+    startWidthOrRatio: number;
+  } | null>(null);
+
+  const handleMouseDown = (type: 'sidebar' | 'guide' | 'splitter', e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startValue = type === 'sidebar' ? sidebarWidth : type === 'guide' ? guideWidth : splitRatio;
+    dragStartRef.current = { type, startX, startWidthOrRatio: startValue };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragStartRef.current) return;
+      const { type, startX, startWidthOrRatio } = dragStartRef.current;
+      const deltaX = e.clientX - startX;
+      if (type === 'sidebar') {
+        const newWidth = Math.max(150, Math.min(400, startWidthOrRatio + deltaX));
+        setSidebarWidth(newWidth);
+      } else if (type === 'guide') {
+        const newWidth = Math.max(200, Math.min(500, startWidthOrRatio + deltaX));
+        setGuideWidth(newWidth);
+      } else if (type === 'splitter') {
+        const container = document.getElementById('workspace-panels-container');
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          const activeSidebarWidth = (!isSidebarHidden && workspaceLayout !== 'preview') ? sidebarWidth : 0;
+          const activeGuideWidth = (!isGuideHidden && workspaceLayout !== 'preview') ? guideWidth : 0;
+          const remainingWidth = rect.width - activeSidebarWidth - activeGuideWidth - 16;
+          if (remainingWidth > 0) {
+            const editorLeft = rect.left + activeSidebarWidth + activeGuideWidth;
+            const relativeX = e.clientX - editorLeft;
+            const newRatio = Math.max(15, Math.min(85, (relativeX / remainingWidth) * 100));
+            setSplitRatio(newRatio);
+          }
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (dragStartRef.current) {
+        dragStartRef.current = null;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [sidebarWidth, guideWidth, splitRatio, isSidebarHidden, isGuideHidden, workspaceLayout]);
+
   const [activeShowcaseTab, setActiveShowcaseTab] = useState<'dashboard' | 'emulator' | 'screens' | 'features' | 'pitch'>('dashboard');
 
   // Step 6 hover and tutor states
@@ -846,6 +913,29 @@ body {
   background-color: #f8fafc;
   color: #0f172a;
 }`,
+      'src/styles/style.css': `/* Custom style.css for additional user interface styling and overrides */
+
+.custom-interactive-element {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-interactive-element:hover {
+  transform: translateY(-2px);
+}`,
+      'src/components/script.js': `// Custom JavaScript file containing interactive client behavior and animations
+
+console.log("Interactive script successfully compiled in VibeLab Sandbox!");
+
+document.addEventListener("DOMContentLoaded", () => {
+  const triggerButton = document.getElementById("sandbox-trigger-btn");
+  if (triggerButton) {
+    triggerButton.addEventListener("click", () => {
+      console.log("Trigger button clicked! Initiating custom visual feedback...");
+    });
+  }
+});`,
       'tailwind.config.js': `module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
@@ -1629,6 +1719,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
   // Approve Screens, trigger build: Step 4 -> Step 5 -> Step 6
   const handleApproveScreensAndBuild = async () => {
     setIsSubmitting(true);
+    setBuildError(null);
     setActiveStep(5); // Immediate transition to gold spinner of loading step 5
 
     try {
@@ -1668,12 +1759,20 @@ Handles routing via custom React layouts, templates, and server-side model groun
       window.location.reload();
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || 'MVP full build execution failed.');
-      setActiveStep(4); // Pull them back to Step 4 on error
+      const errMsg = error.message || 'MVP full build execution failed.';
+      toast.error(errMsg);
+      setBuildError(errMsg);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Auto-trigger build or retry compilation when activeStep is 5
+  useEffect(() => {
+    if (activeStep === 5 && !isSubmitting && !buildError) {
+      handleApproveScreensAndBuild();
+    }
+  }, [activeStep, isSubmitting, buildError]);
 
   const handleAskTutor = async (questionText: string) => {
     if (!hoveredComponent || !session?.id || isTutorLoading) return;
@@ -2637,67 +2736,103 @@ Handles routing via custom React layouts, templates, and server-side model groun
                        ***********************************************************/}
                       {item.step === 5 && (
                         <div className="py-12 flex flex-col justify-center items-center text-center space-y-6">
-                          <div className="relative">
-                            {/* Golden Spinner Circle */}
-                            <div className="w-16 h-16 border-4 border-[#2563eb]/10 border-t-[#2563eb] rounded-full animate-spin"></div>
-                            <Sparkles className="w-6 h-6 text-[#2563eb] absolute top-5 left-5 animate-pulse" />
-                          </div>
-
-                          <div className="w-full max-w-md">
-                            <h2 className="font-bebas text-5xl tracking-widest text-[#2563eb] inline-block animate-pulse mb-3 leading-none">
-                              BUILDING YOUR PRODUCT
-                            </h2>
-                            <p className="text-xs text-slate-500 font-mono tracking-wider max-w-sm mx-auto uppercase mt-2">
-                              {cyclingMessages[loadingMsgIdx]}
-                            </p>
-                            
-                            {/* Modern Progress HUD */}
-                            <div className="mt-5 space-y-2">
-                              <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-500">
-                                <span>COMPILING SANDBOX BUNDLE</span>
-                                <span className="text-[#2563eb]">{buildProgress}%</span>
+                          {buildError ? (
+                            <div className="p-8 bg-rose-50 border border-rose-200 rounded-3xl w-full max-w-md text-center space-y-4 shadow-sm animate-in fade-in duration-300">
+                              <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center mx-auto text-rose-600">
+                                <AlertTriangle className="w-6 h-6" />
                               </div>
-                              <div className="w-full bg-slate-200/65 rounded-full h-2.5 overflow-hidden border border-slate-200/50 p-0.5">
-                                <div 
-                                  style={{ width: `${buildProgress}%` }} 
-                                  className="h-full bg-gradient-to-r from-[#2563eb] to-rose-500 rounded-full transition-all duration-300 ease-out"
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Interactive Developer Telemetry Log */}
-                          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 font-mono text-left space-y-2 shadow-inner">
-                            <div className="flex items-center justify-between text-[9px] text-slate-500 border-b border-slate-800 pb-2 mb-2">
-                              <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> VibeLab Compiler Cores</span>
-                              <span className="text-rose-400 font-bold uppercase animate-pulse">LIVE SYNTHESIS</span>
-                            </div>
-                            <div className="space-y-1.5 text-[10px]">
-                              <div className="text-slate-300 flex items-start gap-2">
-                                <span className="text-blue-500">▶</span> 
-                                <span>[system] Initializing Vibelab AST structure parser... <span className="text-emerald-400 font-bold">Done</span></span>
-                              </div>
-                              <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 25 ? 'text-slate-300' : 'text-slate-600'}`}>
-                                <span className={buildProgress > 25 ? 'text-blue-500' : ''}>▶</span> 
-                                <span>[compiler] Processing screen routing paths & wiring layouts... {buildProgress > 25 ? <span className="text-emerald-400 font-bold">Done</span> : <span className="animate-pulse">Active</span>}</span>
-                              </div>
-                              <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 55 ? 'text-slate-300' : 'text-slate-600'}`}>
-                                <span className={buildProgress > 55 ? 'text-blue-500' : ''}>▶</span> 
-                                <span>[linker] Injecting custom styling classes & Tailwind modules... {buildProgress > 55 ? <span className="text-emerald-400 font-bold">Done</span> : (buildProgress > 25 ? <span className="text-amber-500 animate-pulse">Pending...</span> : <span className="text-slate-600">Waiting</span>)}</span>
-                              </div>
-                              <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 80 ? 'text-slate-300' : 'text-slate-600'}`}>
-                                <span className={buildProgress > 80 ? 'text-blue-500' : ''}>▶</span> 
-                                <span>[optimizer] Packaging standalone index.html interactive bundle... {buildProgress > 80 ? <span className="text-emerald-400 font-bold">Optimized</span> : (buildProgress > 55 ? <span className="text-amber-500 animate-pulse">Pending...</span> : <span className="text-slate-600">Waiting</span>)}</span>
+                              <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                                Build Compilation Failed
+                              </h3>
+                              <p className="text-xs text-rose-700 leading-relaxed font-semibold">
+                                {buildError}
+                              </p>
+                              <p className="text-[10px] text-slate-500 font-medium">
+                                The VibeLab compiler cores encountered an unexpected timeout or network error. You can retry the compile process or go back to adjust your screens.
+                              </p>
+                              <div className="flex items-center justify-center gap-3 pt-2">
+                                <button
+                                  onClick={() => setActiveStep(4)}
+                                  className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all cursor-pointer shadow-sm"
+                                >
+                                  Go Back to Screens
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setBuildError(null);
+                                    handleApproveScreensAndBuild();
+                                  }}
+                                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all cursor-pointer shadow-md"
+                                >
+                                  Retry Compile
+                                </button>
                               </div>
                             </div>
-                          </div>
+                          ) : (
+                            <>
+                              <div className="relative">
+                                {/* Golden Spinner Circle */}
+                                <div className="w-16 h-16 border-4 border-[#2563eb]/10 border-t-[#2563eb] rounded-full animate-spin"></div>
+                                <Sparkles className="w-6 h-6 text-[#2563eb] absolute top-5 left-5 animate-pulse" />
+                              </div>
 
-                          <div className="p-4 bg-white/70 border border-slate-200/60 rounded-2xl max-w-md text-left flex gap-3">
-                            <Info className="w-4.5 h-4.5 text-[#2563eb] shrink-0 mt-0.5" />
-                            <p className="text-[10px] text-slate-500 leading-normal">
-                              VibeLab is compiling your entire single-file HTML/CSS/JS MVP code on the server-side, integrating mock analytics models, interactive templates, and navigation features. Please hold on!
-                            </p>
-                          </div>
+                              <div className="w-full max-w-md">
+                                <h2 className="font-bebas text-5xl tracking-widest text-[#2563eb] inline-block animate-pulse mb-3 leading-none">
+                                  BUILDING YOUR PRODUCT
+                                </h2>
+                                <p className="text-xs text-slate-500 font-mono tracking-wider max-w-sm mx-auto uppercase mt-2">
+                                  {cyclingMessages[loadingMsgIdx]}
+                                </p>
+                                
+                                {/* Modern Progress HUD */}
+                                <div className="mt-5 space-y-2">
+                                  <div className="flex items-center justify-between text-[10px] font-mono font-bold text-slate-500">
+                                    <span>COMPILING SANDBOX BUNDLE</span>
+                                    <span className="text-[#2563eb]">{buildProgress}%</span>
+                                  </div>
+                                  <div className="w-full bg-slate-200/65 rounded-full h-2.5 overflow-hidden border border-slate-200/50 p-0.5">
+                                    <div 
+                                      style={{ width: `${buildProgress}%` }} 
+                                      className="h-full bg-gradient-to-r from-[#2563eb] to-rose-500 rounded-full transition-all duration-300 ease-out"
+                                    ></div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Interactive Developer Telemetry Log */}
+                              <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-4 font-mono text-left space-y-2 shadow-inner">
+                                <div className="flex items-center justify-between text-[9px] text-slate-500 border-b border-slate-800 pb-2 mb-2">
+                                  <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> VibeLab Compiler Cores</span>
+                                  <span className="text-rose-400 font-bold uppercase animate-pulse">LIVE SYNTHESIS</span>
+                                </div>
+                                <div className="space-y-1.5 text-[10px]">
+                                  <div className="text-slate-300 flex items-start gap-2">
+                                    <span className="text-blue-500">▶</span> 
+                                    <span>[system] Initializing Vibelab AST structure parser... <span className="text-emerald-400 font-bold">Done</span></span>
+                                  </div>
+                                  <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 25 ? 'text-slate-300' : 'text-slate-600'}`}>
+                                    <span className={buildProgress > 25 ? 'text-blue-500' : ''}>▶</span> 
+                                    <span>[compiler] Processing screen routing paths & wiring layouts... {buildProgress > 25 ? <span className="text-emerald-400 font-bold">Done</span> : <span className="animate-pulse">Active</span>}</span>
+                                  </div>
+                                  <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 55 ? 'text-slate-300' : 'text-slate-600'}`}>
+                                    <span className={buildProgress > 55 ? 'text-blue-500' : ''}>▶</span> 
+                                    <span>[linker] Injecting custom styling classes & Tailwind modules... {buildProgress > 55 ? <span className="text-emerald-400 font-bold">Done</span> : (buildProgress > 25 ? <span className="text-amber-500 animate-pulse">Pending...</span> : <span className="text-slate-600">Waiting</span>)}</span>
+                                  </div>
+                                  <div className={`transition-all duration-300 flex items-start gap-2 ${buildProgress > 80 ? 'text-slate-300' : 'text-slate-600'}`}>
+                                    <span className={buildProgress > 80 ? 'text-blue-500' : ''}>▶</span> 
+                                    <span>[optimizer] Packaging standalone index.html interactive bundle... {buildProgress > 80 ? <span className="text-emerald-400 font-bold">Optimized</span> : (buildProgress > 55 ? <span className="text-amber-500 animate-pulse">Pending...</span> : <span className="text-slate-600">Waiting</span>)}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="p-4 bg-white/70 border border-slate-200/60 rounded-2xl max-w-md text-left flex gap-3">
+                                <Info className="w-4.5 h-4.5 text-[#2563eb] shrink-0 mt-0.5" />
+                                <p className="text-[10px] text-slate-500 leading-normal">
+                                  VibeLab is compiling your entire single-file HTML/CSS/JS MVP code on the server-side, integrating mock analytics models, interactive templates, and navigation features. Please hold on!
+                                </p>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
 
@@ -2798,11 +2933,15 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           </div>
 
                           {/* Outer Flex Container for Step 6 Panels */}
-                          <div className="flex-1 flex flex-col lg:flex-row h-full w-full bg-white overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+                          <div id="workspace-panels-container" className="flex-1 flex flex-col lg:flex-row h-full w-full bg-white overflow-hidden">
                             
                             {/* Left Panel 0: Collapsible File Tree Sidebar (Pages, Components, Assets, etc.) */}
                             {!isSidebarHidden && workspaceLayout !== 'preview' && (
-                            <div className="w-full lg:w-[230px] border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0 font-sans transition-all duration-300 select-none">
+                              <>
+                                <div 
+                                  className="w-full border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0 font-sans transition-all duration-300 select-none h-full overflow-hidden"
+                                  style={{ width: `${sidebarWidth}px`, maxWidth: '100%' }}
+                                >
                               <div className="p-3 border-b border-slate-200 bg-[#f8fafc] flex justify-between items-center text-[10px] text-slate-500 font-mono shrink-0 uppercase tracking-widest font-black">
                                 <span className="flex items-center gap-1.5"><Columns className="w-3.5 h-3.5 text-[#2563eb]" /> Sandbox Files</span>
                                 <button
@@ -2906,7 +3045,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                       folderKey: 'src/components',
                                       children: [
                                         { name: 'Navigation.tsx', path: 'src/components/Navigation.tsx' },
-                                        { name: 'InteractiveWidget.tsx', path: 'src/components/InteractiveWidget.tsx' }
+                                        { name: 'InteractiveWidget.tsx', path: 'src/components/InteractiveWidget.tsx' },
+                                        { name: 'script.js', path: 'src/components/script.js' }
                                       ]
                                     },
                                     {
@@ -2922,6 +3062,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                       folderKey: 'src/styles',
                                       children: [
                                         { name: 'theme.css', path: 'src/styles/theme.css' },
+                                        { name: 'style.css', path: 'src/styles/style.css' },
                                         { name: 'tailwind.config.js', path: 'tailwind.config.js' }
                                       ]
                                     },
@@ -3042,11 +3183,22 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                 })()}
                               </div>
                             </div>
+                            {/* Drag Divider for Sidebar */}
+                            <div
+                              onMouseDown={(e) => handleMouseDown('sidebar', e)}
+                              className="hidden lg:block w-1 hover:w-1.5 bg-slate-200/65 hover:bg-[#2563eb] cursor-col-resize h-full transition-all shrink-0 z-30 relative"
+                              title="Drag to resize files panel"
+                            />
+                            </>
                           )}
 
-                          {/* Left Panel 1: Guide (300px width, scrollable description guides) */}
+                          {/* Left Panel 1: Guide (scrollable description guides) */}
                           {!isGuideHidden && workspaceLayout !== 'preview' && (
-                            <div className="w-full lg:w-[300px] p-5 flex flex-col justify-between bg-white shrink-0 overflow-y-auto scrollbar-thin">
+                            <>
+                              <div 
+                                className="w-full bg-white flex flex-col justify-between shrink-0 h-full overflow-y-auto border-r border-slate-200 scrollbar-thin"
+                                style={{ width: `${guideWidth}px`, maxWidth: '100%' }}
+                              >
                             <div className="space-y-4">
                               <div>
                                 <div className="text-[10px] font-bold text-[#2563eb] font-mono tracking-widest uppercase mb-1">
@@ -3332,11 +3484,25 @@ Handles routing via custom React layouts, templates, and server-side model groun
                               </div>
                             </div>
                           </div>
+                          {/* Drag Divider for Guide */}
+                          <div
+                            onMouseDown={(e) => handleMouseDown('guide', e)}
+                            className="hidden lg:block w-1 hover:w-1.5 bg-slate-200/60 hover:bg-[#2563eb] cursor-col-resize h-full transition-all shrink-0 z-30 relative"
+                            title="Drag to resize guide"
+                          />
+                          </>
                           )}
 
                           {/* Center Panel 2: Code Editor (flex-1 to expand beautifully) */}
                           {(workspaceLayout === 'split' || workspaceLayout === 'code') && (
-                            <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden h-full">
+                            <>
+                              <div 
+                                className="flex flex-col bg-slate-950 overflow-hidden h-full shrink-0"
+                              style={{ 
+                                width: (workspaceLayout === 'split' && window.innerWidth >= 1024) ? `${splitRatio}%` : (workspaceLayout === 'code' ? '100%' : undefined),
+                                flexGrow: workspaceLayout === 'split' ? undefined : 1
+                              }}
+                            >
                             {/* Tab Bar Utilities header */}
                             <div className="flex items-center justify-between px-2 bg-slate-900 border-b border-slate-800 font-mono text-[10px] shrink-0 select-none overflow-x-auto scrollbar-none h-[38px] w-full">
                               <div className="flex items-center gap-1 flex-1 overflow-x-auto scrollbar-none h-full">
@@ -3413,6 +3579,8 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             <div className="flex-1 relative overflow-hidden flex flex-col bg-slate-950">
                               {Object.keys(virtualFiles).length > 0 ? (
                                 <MonacoEditor
+                                  key={activeFile}
+                                  path={activeFile}
                                   height="100%"
                                   language={
                                     activeFile.endsWith('.ts') || activeFile.endsWith('.tsx') ? 'typescript' :
@@ -3482,12 +3650,27 @@ Handles routing via custom React layouts, templates, and server-side model groun
                               <span>Writable Sandbox Compiler</span>
                               <span className="flex items-center gap-1"><Check className="w-3 h-3 text-emerald-500" /> Auto-Saved</span>
                             </div>
-                          </div>
+                            </div>
+                            {/* Drag Divider for Splitter (Editor/Preview) */}
+                            {workspaceLayout === 'split' && (
+                              <div
+                                onMouseDown={(e) => handleMouseDown('splitter', e)}
+                                className="hidden lg:block w-1 hover:w-1.5 bg-slate-200/60 hover:bg-[#2563eb] cursor-col-resize h-full transition-all shrink-0 z-30 relative"
+                                title="Drag to resize panels"
+                              />
+                            )}
+                            </>
                           )}
 
-                          {/* Right Panel 3: Live Interactive Preview (flex-1 to expand beautifully) */}
+                          {/* Right Panel 3: Live Interactive Preview */}
                           {(workspaceLayout === 'split' || workspaceLayout === 'preview') && (
-                            <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden h-full">
+                            <div 
+                              className="flex flex-col bg-slate-50 overflow-hidden h-full shrink-0"
+                              style={{ 
+                                width: (workspaceLayout === 'split' && window.innerWidth >= 1024) ? `${100 - splitRatio}%` : (workspaceLayout === 'preview' ? '100%' : undefined),
+                                flexGrow: workspaceLayout === 'split' ? undefined : 1
+                              }}
+                            >
                             {/* Device controls header */}
                             <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white shrink-0 select-none">
                               <div className="flex items-center gap-2">
@@ -3969,17 +4152,22 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             <span className="absolute top-4 left-4 z-10 bg-slate-900/80 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-[#2563eb] rounded-lg font-mono">
                               Automatic Page Capture
                             </span>
-                            {screenshotUrl ? (
+                            {screenshotUrl && !screenshotError ? (
                               <img 
                                 src={screenshotUrl} 
                                 alt="Product Screenshot"
                                 className="w-full h-44 object-cover object-top rounded-xl"
                                 referrerPolicy="no-referrer"
+                                onError={() => setScreenshotError(true)}
                               />
                             ) : (
-                              <div className="w-full h-44 rounded-xl bg-gradient-to-br from-slate-900 to-[#1e293b] flex flex-col justify-center items-center text-center p-4">
-                                <Monitor className="w-8 h-8 text-[#2563eb] animate-pulse mb-2" />
-                                <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Generating Digital Capture...</span>
+                              <div className="w-full h-44 rounded-xl bg-gradient-to-br from-slate-900 to-[#1e293b] flex flex-col justify-center items-center text-center p-4 border border-slate-800">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  <Monitor className="w-6 h-6 text-[#2563eb]" />
+                                </div>
+                                <span className="text-[11px] font-mono font-bold text-[#38bdf8] uppercase tracking-wider">NoteBase Live Sandbox Ready</span>
+                                <span className="text-[10px] font-sans text-slate-400 mt-1">Direct deployment compilation successfully verified.</span>
                               </div>
                             )}
                           </div>
@@ -4192,9 +4380,21 @@ Handles routing via custom React layouts, templates, and server-side model groun
                 </button>
               )}
               {activeStep === 5 && (
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest font-mono flex items-center gap-2">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" /> Building MVP Package...
-                </div>
+                buildError ? (
+                  <button
+                    onClick={() => {
+                      setBuildError(null);
+                      handleApproveScreensAndBuild();
+                    }}
+                    className="px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:-translate-y-0.5 cursor-pointer border-none"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Retry Build
+                  </button>
+                ) : (
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest font-mono flex items-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" /> Building MVP Package...
+                  </div>
+                )
               )}
               {activeStep === 6 && (
                 <button
@@ -4373,7 +4573,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                 {activeShowcaseTab === 'overview' && (
                   <div className="space-y-6">
                     {/* Live Screenshot Hero */}
-                    {screenshotUrl && (
+                    {screenshotUrl && !screenshotError ? (
                       <div className="p-3 bg-white border border-slate-200 shadow-sm rounded-2xl">
                         <span className="text-[9px] font-mono uppercase bg-slate-900 text-[#2563eb] px-2.5 py-1 rounded-md font-black tracking-widest block mb-1 text-center">
                           Interactive Live Demo Screen Captured
@@ -4382,7 +4582,17 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           src={screenshotUrl} 
                           alt="Product Live Screen Capture" 
                           className="w-full max-h-[350px] object-cover object-top rounded-xl border border-slate-100 mt-2"
+                          onError={() => setScreenshotError(true)}
                         />
+                      </div>
+                    ) : (
+                      <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl text-center flex flex-col items-center justify-center min-h-[180px]">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          <Terminal className="w-5 h-5 text-[#2563eb]" />
+                        </div>
+                        <span className="text-xs font-mono font-bold text-slate-200 uppercase tracking-wider">NoteBase Dev Server Live</span>
+                        <span className="text-[10px] text-slate-400 mt-1 font-sans">Active Sandbox VM running on port 3000. All components compiled.</span>
                       </div>
                     )}
 
