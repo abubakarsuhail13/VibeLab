@@ -367,13 +367,6 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
               Dashboard
             </button>
           )}
-
-          <button 
-            onClick={() => navTo('verify-credential')} 
-            className={`hover:text-blue-600 transition-colors py-1 ${currentPage === 'verify-credential' ? 'text-blue-600 font-bold border-b-2 border-blue-600' : 'text-slate-600'}`}
-          >
-            Verify Credential
-          </button>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           {user ? (
@@ -470,13 +463,6 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
                   Dashboard
                 </button>
               )}
-
-              <button 
-                onClick={() => navTo('verify-credential')} 
-                className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'verify-credential' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                Verify Credential
-              </button>
             </div>
           </motion.div>
         )}
@@ -1790,10 +1776,11 @@ const Footer = ({ onNavigate }: { onNavigate: (page: string) => void }) => {
 
         <div className="flex flex-col gap-4 text-sm">
           <h4 className="text-slate-900 font-bold uppercase tracking-widest text-xs mb-1">Company</h4>
-          <button onClick={() => onNavigate('about')} className="text-left text-slate-600 hover:text-cyan-655 transition-colors">About Us</button>
+          <button onClick={() => onNavigate('about')} className="text-left text-slate-600 hover:text-cyan-655 transition-colors cursor-pointer">About Us</button>
           <a href="#" className="text-slate-600 hover:text-cyan-655 transition-colors">Careers</a>
+          <button onClick={() => onNavigate('verify-credential')} className="text-left text-slate-600 hover:text-cyan-655 transition-colors cursor-pointer">Verify Credential</button>
           <a href="#" className="text-slate-600 hover:text-cyan-655 transition-colors">Press</a>
-          <button onClick={() => onNavigate('contact')} className="text-left text-slate-600 hover:text-cyan-655 transition-colors">Contact</button>
+          <button onClick={() => onNavigate('contact')} className="text-left text-slate-600 hover:text-cyan-655 transition-colors cursor-pointer">Contact</button>
         </div>
 
         {user?.role === 'admin' && (

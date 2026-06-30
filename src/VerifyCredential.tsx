@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ShieldCheck, Search, Trophy, Calendar, ExternalLink, ArrowRight, CornerDownRight, FileCheck, RefreshCw } from "lucide-react";
+import { EducationalAiBackground } from "./components/EducationalAiBackground";
 
 interface Accomplishment {
   phaseCode: string;
@@ -133,42 +134,27 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white pt-36 pb-24 px-6 relative overflow-hidden selection:bg-cyan-500/20 selection:text-cyan-300">
-      {/* Background Luxury Accent Orbs & Generated Ledger Animation Background */}
-      <div className="absolute inset-0 pointer-events-none select-none -z-20 overflow-hidden bg-slate-950">
-        <img 
-          src="/src/assets/images/credential_audit_bg_1779723307785.png" 
-          alt="Cryptographic Credentials Ledger Background" 
-          referrerPolicy="no-referrer"
-          className="w-full h-full object-cover object-center opacity-15 mix-blend-lighten filter blur-[1px]"
-        />
-        {/* Soft elegant gradient layers to ensure optimal text contrast */}
-        <div className="absolute inset-0 bg-radial-[circle_at_center,transparent_30%,#020617_90%] opacity-90" />
-        <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-slate-950 to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-slate-950 to-transparent" />
-      </div>
-
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[140px] pointer-events-none -z-10" />
-      <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none -z-10" />
+    <div className="min-h-screen bg-slate-50 text-slate-900 pt-36 pb-24 px-6 relative overflow-hidden selection:bg-cyan-500/20 selection:text-cyan-800">
+      <EducationalAiBackground />
 
       <div className="max-w-4xl mx-auto space-y-12 relative z-10">
         
         {/* Header Title */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200/60 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-700">
             <ShieldCheck size={14} />
             <span>Cryptographic Ledger</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-display font-extrabold tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-display font-extrabold tracking-tight text-slate-900">
             Employer Verification <span className="gradient-text">Portal</span>
           </h1>
-          <p className="text-slate-400 text-sm md:text-base max-w-lg mx-auto leading-relaxed">
+          <p className="text-slate-500 text-sm md:text-base max-w-lg mx-auto leading-relaxed font-medium">
             Verify student phases completions, certified badges, and proof-of-build accomplishments securely with their permanent VibeLab ID.
           </p>
         </div>
 
         {/* Search Input Box */}
-        <div className="bg-slate-900/60 border border-slate-800 p-8 rounded-[2.5rem] shadow-2xl backdrop-blur-md max-w-2xl mx-auto space-y-6">
+        <div className="bg-white border border-slate-200/80 p-8 rounded-[2.5rem] shadow-xl shadow-slate-100/50 max-w-2xl mx-auto space-y-6">
           <form 
             onSubmit={(e) => {
               e.preventDefault();
@@ -177,7 +163,7 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
             className="flex flex-col sm:flex-row gap-3"
           >
             <div className="relative flex-grow">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono font-black tracking-tight uppercase">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono font-black tracking-tight uppercase">
                 VL-
               </span>
               <input
@@ -185,14 +171,14 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
                 placeholder="Enter Student ID (e.g. 2026-F98)"
                 value={vlId.startsWith("VL-") ? vlId.slice(3) : vlId}
                 onChange={(e) => setVlId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-2xl py-4.5 pl-14 pr-6 text-sm focus:outline-none text-white font-mono uppercase tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-slate-500"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-cyan-500 focus:bg-white rounded-2xl py-4.5 pl-14 pr-6 text-sm focus:outline-none text-slate-900 font-mono uppercase tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-slate-300 transition-all"
                 required
               />
             </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-cyan-550 hover:bg-cyan-500 text-slate-950 font-black text-xs uppercase tracking-widest px-8 py-4.5 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-cyan-500/10 active:scale-95 disabled:opacity-40"
+              className="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-widest px-8 py-4.5 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 disabled:opacity-40 cursor-pointer"
             >
               {isLoading ? (
                 <RefreshCw size={14} className="animate-spin" />
@@ -206,7 +192,7 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
           {/* Quick Click Search Helpers */}
           {sampleStudents.length > 0 && (
             <div className="pt-2 flex flex-wrap items-center gap-x-2.5 gap-y-2 text-xs">
-              <span className="text-slate-500 font-semibold uppercase text-[10px] tracking-widest">Sandbox Fast-Track:</span>
+              <span className="text-slate-400 font-semibold uppercase text-[10px] tracking-widest">Sandbox Fast-Track:</span>
               {sampleStudents.map((s) => (
                 <button
                   key={s.vl_id}
@@ -215,7 +201,7 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
                     setVlId(s.vl_id);
                     handleSearch(s.vl_id);
                   }}
-                  className="px-3 py-1.5 bg-slate-950/80 border border-slate-800 hover:border-cyan-500 rounded-lg text-slate-300 font-mono transition-colors text-[10px]"
+                  className="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-cyan-550 rounded-lg text-slate-600 font-mono transition-colors text-[10px] hover:text-cyan-600 cursor-pointer"
                 >
                   {s.vl_id} ({s.name.split(" ")[0]})
                 </button>
@@ -245,7 +231,7 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="p-6 bg-rose-500/10 border border-rose-500/20 text-rose-200 text-sm font-medium rounded-2xl max-w-xl mx-auto flex items-center gap-3.5"
+              className="p-6 bg-rose-50 border border-rose-100 text-rose-600 text-sm font-medium rounded-2xl max-w-xl mx-auto flex items-center gap-3.5"
             >
               <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
               <p>{errorMsg}</p>
@@ -261,29 +247,29 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
               className="space-y-8"
             >
               {/* Profile Overview Banner */}
-              <div className="bg-slate-900 border border-slate-800 p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
+              <div className="bg-white border border-slate-200/80 p-8 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -mr-24 -mt-24" />
                 <div className="space-y-3 text-center md:text-left">
                   <div className="flex items-center justify-center md:justify-start gap-2.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] font-mono">
+                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] font-mono">
                       Active Registry Verified
                     </span>
                   </div>
-                  <h2 className="text-3xl font-display font-extrabold tracking-tight">
+                  <h2 className="text-3xl font-display font-extrabold tracking-tight text-slate-900">
                     {result.studentName}
                   </h2>
-                  <div className="mt-1 flex items-center justify-center md:justify-start gap-2 text-xs font-mono text-slate-400 bg-slate-950 px-3.5 py-1.5 rounded-lg border border-slate-800/80 w-fit mx-auto md:mx-0">
-                    <span className="text-slate-600 tracking-tight">VIBELAB-ID:</span>
-                    <span className="font-extrabold text-cyan-400">{result.vlId}</span>
+                  <div className="mt-1 flex items-center justify-center md:justify-start gap-2 text-xs font-mono text-slate-600 bg-slate-50 px-3.5 py-1.5 rounded-lg border border-slate-200 w-fit mx-auto md:mx-0">
+                    <span className="text-slate-400 tracking-tight">VIBELAB-ID:</span>
+                    <span className="font-extrabold text-cyan-600">{result.vlId}</span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 max-w-xs text-center md:text-left shrink-0">
-                  <ShieldCheck size={32} className="text-emerald-400 shrink-0" />
+                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 max-w-xs text-center md:text-left shrink-0">
+                  <ShieldCheck size={32} className="text-emerald-600 shrink-0" />
                   <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-emerald-400">Proof of Capability</h4>
-                    <p className="text-[10px] text-slate-400 leading-tight mt-0.5">All certifications are verified via direct instructor code inspect and automated testing.</p>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-emerald-700">Proof of Capability</h4>
+                    <p className="text-[10px] text-slate-500 leading-tight mt-0.5">All certifications are verified via direct instructor code inspect and automated testing.</p>
                   </div>
                 </div>
               </div>
@@ -299,16 +285,16 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
                     {result.accomplishments.map((acc, idx) => (
                       <div 
                         key={idx}
-                        className="p-6 rounded-3xl bg-slate-900/40 border border-slate-800/80 hover:border-cyan-500/20 transition-all flex items-start gap-4 relative group"
+                        className="p-6 rounded-3xl bg-white border border-slate-200 hover:border-cyan-500/40 shadow-sm shadow-slate-100/50 transition-all flex items-start gap-4 relative group"
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform shrink-0 shadow-inner">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-cyan-600 group-hover:scale-105 transition-transform shrink-0 shadow-inner">
                           <Trophy size={20} />
                         </div>
                         <div className="flex-grow space-y-1.5 min-w-0">
-                          <span className="text-[9px] font-mono font-black tracking-widest text-slate-500 uppercase">
+                          <span className="text-[9px] font-mono font-black tracking-widest text-slate-400 uppercase">
                             {acc.phaseCode}
                           </span>
-                          <h4 className="font-bold text-slate-200 text-sm truncate leading-tight">
+                          <h4 className="font-bold text-slate-800 text-sm truncate leading-tight">
                             {acc.phaseTitle}
                           </h4>
                           <div className="flex items-center gap-1.5 text-slate-500 text-[10px]">
@@ -319,7 +305,7 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
 
                         {/* Verification seal and Link */}
                         <div className="flex flex-col items-end justify-between h-full text-right shrink-0">
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-100 text-[9px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
                             <FileCheck size={10} /> Verified
                           </span>
                           {acc.certificateUrl && (
@@ -327,7 +313,7 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
                               href={acc.certificateUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 group-hover:underline mt-6"
+                              className="text-xs text-cyan-600 hover:text-cyan-700 font-semibold flex items-center gap-1 group-hover:underline mt-6"
                             >
                               Audit Certificate <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                             </a>
@@ -337,9 +323,9 @@ export default function VerifyCredential({ onNavigate }: { onNavigate: (page: st
                     ))}
                   </div>
                 ) : (
-                  <div className="p-16 text-center rounded-[2.5rem] bg-slate-900/30 border border-dashed border-slate-800 text-slate-500">
-                    <p className="font-bold text-slate-400 text-sm">No Certified Academics Yet</p>
-                    <p className="text-xs max-w-xs mx-auto leading-relaxed mt-1">This builder has registered but has not finalized phase requirements or quiz validations yet.</p>
+                  <div className="p-16 text-center rounded-[2.5rem] bg-white border border-dashed border-slate-200 text-slate-500 shadow-sm">
+                    <p className="font-bold text-slate-600 text-sm">No Certified Academics Yet</p>
+                    <p className="text-xs max-w-xs mx-auto leading-relaxed mt-1 text-slate-400">This builder has registered but has not finalized phase requirements or quiz validations yet.</p>
                   </div>
                 )}
               </div>
