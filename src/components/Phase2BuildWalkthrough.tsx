@@ -2221,7 +2221,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
 
       {/* Scrollable container for the single active step content */}
       <div className={`flex-1 ${activeStep === 6 ? 'p-0 overflow-hidden h-[calc(100vh-140px)]' : 'overflow-y-auto px-4 py-6 md:px-12 md:py-8'} relative z-10 flex flex-col justify-start`}>
-        <div className={`w-full bg-white/70 backdrop-blur-md ${activeStep === 6 ? 'rounded-none border-none p-0 flex-1 flex flex-col h-full overflow-hidden' : 'rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 h-auto overflow-visible'}`}>
+        <div className={`w-full bg-white/70 backdrop-blur-md ${activeStep === 6 ? 'rounded-none border-none p-0 flex-1 flex flex-col h-full overflow-hidden' : 'rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 h-auto overflow-visible max-w-6xl mx-auto'}`}>
           {activeStep !== 6 && (
             <div className="border-b border-slate-100 pb-4 mb-6">
               <h1 className="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -2389,9 +2389,9 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             
                             {/* COLUMN 1: MUST HAVE */}
-                            <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 space-y-4">
-                              <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-400 font-mono flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span> Must Have
+                            <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-4">
+                              <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-800 font-mono flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Must Have
                               </h4>
                               <div className="space-y-3">
                                 {features.filter(f => f.category === 'must_have').map(feat => (
@@ -2438,9 +2438,9 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             </div>
 
                             {/* COLUMN 2: NICE TO HAVE */}
-                            <div className="p-4 rounded-2xl bg-cyan-950/10 border border-cyan-800/15 space-y-4">
-                              <h4 className="text-[11px] font-black uppercase tracking-wider text-cyan-400 font-mono flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block"></span> Nice To Have
+                            <div className="p-4 rounded-2xl bg-cyan-50/70 border border-cyan-200/80 space-y-4">
+                              <h4 className="text-[11px] font-black uppercase tracking-wider text-cyan-800 font-mono flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-cyan-500 inline-block"></span> Nice To Have
                               </h4>
                               <div className="space-y-3">
                                 {features.filter(f => f.category === 'nice_to_have').map(feat => (
@@ -2487,9 +2487,9 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             </div>
 
                             {/* COLUMN 3: FUTURE */}
-                            <div className="p-4 rounded-2xl bg-purple-950/10 border border-purple-800/15 space-y-4">
-                              <h4 className="text-[11px] font-black uppercase tracking-wider text-purple-400 font-mono flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-purple-400 inline-block"></span> Future Expansion
+                            <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200/80 space-y-4">
+                              <h4 className="text-[11px] font-black uppercase tracking-wider text-purple-800 font-mono flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-purple-500 inline-block"></span> Future Expansion
                               </h4>
                               <div className="space-y-3">
                                 {features.filter(f => f.category === 'future').map(feat => (

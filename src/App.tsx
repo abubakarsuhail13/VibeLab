@@ -2124,6 +2124,7 @@ export default function App() {
           <Route path="/dashboard/certificates" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
           <Route path="/dashboard/grading" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
           <Route path="/dashboard/support" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
+          <Route path="/dashboard/leaderboard" element={<Dashboard user={user} onLogout={handleLogout} onUpdateUser={setUser} onNavigate={handleNavigate} />} />
           
           <Route path="/ideation" element={<IdeationEntry onNavigate={handleNavigate} />} />
           <Route path="/ideation/chat" element={<IdeationChat onNavigate={handleNavigate} />} />

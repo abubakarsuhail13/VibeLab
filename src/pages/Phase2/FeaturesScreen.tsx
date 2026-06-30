@@ -310,7 +310,7 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
           {/* COLUMN 1: MUST HAVE */}
           <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 flex flex-col min-h-[500px]">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-emerald-500/10">
-              <span className="px-3 py-1 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
+              <span className="px-3 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
                 MUST HAVE
               </span>
               <span className="text-xs font-bold font-jetbrains text-slate-500">
@@ -339,7 +339,7 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
           {/* COLUMN 2: NICE TO HAVE */}
           <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 flex flex-col min-h-[500px]">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-amber-500/10">
-              <span className="px-3 py-1 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
+              <span className="px-3 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
                 NICE TO HAVE
               </span>
               <span className="text-xs font-bold font-jetbrains text-slate-500">
@@ -368,7 +368,7 @@ export default function FeaturesScreen({ onNavigate }: { onNavigate?: (page: str
           {/* COLUMN 3: FUTURE */}
           <div className="p-5 rounded-2xl bg-white/40 border border-slate-200 flex flex-col min-h-[500px]">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
-              <span className="px-3 py-1 rounded-md bg-slate-800 text-slate-500 border border-slate-200 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
+              <span className="px-3 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-[10px] font-bold font-jetbrains uppercase tracking-widest">
                 FUTURE
               </span>
               <span className="text-xs font-bold font-jetbrains text-slate-500">
@@ -534,7 +534,7 @@ function FeatureUIProgressCard({ feature, onToggle, onChangeCategory, onRational
 
         {/* Feature content blocks */}
         <div className="flex-1 space-y-1">
-          <h4 className={`text-xs font-bold leading-tight select-text transition-all font-sans ${isInc ? 'text-white' : 'text-slate-500 line-through'}`}>
+          <h4 className={`text-xs font-bold leading-tight select-text transition-all font-sans ${isInc ? 'text-slate-900' : 'text-slate-500 line-through'}`}>
             {feature.feature_name}
           </h4>
           <p className="text-[10px] leading-relaxed text-slate-500 select-text font-normal">

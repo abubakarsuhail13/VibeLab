@@ -161,7 +161,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
     } else if (path === '/settings') {
       setActiveView('settings');
       setSelectedPhaseId(null);
-    } else if (path === '/leaderboard') {
+    } else if (path === '/leaderboard' || path === '/dashboard/leaderboard') {
       setActiveView('leaderboard');
       setSelectedPhaseId(null);
     } else if (path === '/dashboard/grading') {
@@ -603,7 +603,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => { navigate('/leaderboard'); fetchDashboardData(); if (isMobile) setIsMobileMenuOpen(false); }}
+                onClick={() => { navigate('/dashboard/leaderboard'); fetchDashboardData(); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -665,7 +665,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               </button>
 
               <button 
-                onClick={() => { navigate('/leaderboard'); if (isMobile) setIsMobileMenuOpen(false); }}
+                onClick={() => { navigate('/dashboard/leaderboard'); if (isMobile) setIsMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
                   activeView === 'leaderboard' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                 }`}
@@ -883,7 +883,7 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
 
       {/* Main Content */}
       <div className="flex-1 p-6 md:p-10 pt-16 lg:pt-28 overflow-y-auto">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
             {user?.role === "teacher" ? (
               // TEACHER SYSTEM WORKSPACE
