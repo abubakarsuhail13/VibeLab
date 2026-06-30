@@ -34,7 +34,12 @@ import {
   Sprout,
   Leaf,
   Briefcase,
-  Building2
+  Building2,
+  ChevronDown,
+  LayoutDashboard,
+  Settings,
+  LogOut,
+  User
 } from "lucide-react";
 import React, { useState, useRef, useEffect, FormEvent } from "react";
 import { Toaster } from "react-hot-toast";
@@ -295,6 +300,7 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
   onLogout: () => void
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleHowItWorksClick = () => {
     setIsOpen(false);
@@ -359,53 +365,116 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
             Pricing
           </button>
 
-          {user && (
-            <button 
-              onClick={() => navTo('dashboard')} 
-              className={`hover:text-blue-600 transition-colors py-1 ${currentPage === 'dashboard' ? 'text-blue-600 font-bold border-b-2 border-blue-600' : 'text-slate-600'}`}
-            >
-              Dashboard
-            </button>
-          )}
+
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           {user ? (
-            <>
-              <div className="hidden sm:flex flex-col items-end mr-1">
-                <span className="text-xs font-bold text-slate-900 leading-tight">{user.name}</span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">{user.role}</span>
-                  {user?.is_verified ? (
-                    <span className="text-[8px] font-black text-emerald-600 uppercase bg-emerald-50 border border-emerald-100/80 px-1 py-0.5 rounded flex items-center gap-0.5 leading-none select-none font-mono">
-                      <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
-                      Verified
-                    </span>
-                  ) : (
-                    <span className="text-[8px] font-black text-amber-600 uppercase bg-amber-50 border border-amber-100/80 px-1 py-0.5 rounded flex items-center gap-0.5 leading-none select-none font-mono">
-                      <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
-                      Pending
-                    </span>
-                  )}
-                </div>
-              </div>
+            <div className="relative">
               <button 
-                onClick={onLogout}
-                className="bg-slate-100 text-slate-600 px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all select-none"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/50 transition-all select-none text-left cursor-pointer"
               >
-                Logout
+                {/* Desktop/Tablet name block */}
+                <div className="hidden sm:flex flex-col items-end">
+                  <span className="text-xs font-bold text-slate-900 leading-tight">{user.name}</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider leading-none">{user.role}</span>
+                    {user?.is_verified ? (
+                      <span className="text-[8px] font-black text-emerald-600 uppercase bg-emerald-50 border border-emerald-100/80 px-1 py-0.5 rounded flex items-center gap-0.5 leading-none select-none font-mono">
+                        <ShieldCheck className="w-2.5 h-2.5 text-emerald-500" />
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="text-[8px] font-black text-amber-600 uppercase bg-amber-50 border border-amber-100/80 px-1 py-0.5 rounded flex items-center gap-0.5 leading-none select-none font-mono">
+                        <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
+                        Pending
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Mobile compact block */}
+                <div className="flex sm:hidden items-center justify-center w-6 h-6 rounded-lg bg-blue-50 text-blue-600">
+                  <User className="w-4 h-4" />
+                </div>
+
+                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
-            </>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {isDropdownOpen && (
+                  <>
+                    {/* Transparent backdrop for outside click close */}
+                    <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setIsDropdownOpen(false)} />
+                    
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-900/10 py-2 z-50 overflow-hidden"
+                    >
+                      {/* Profile Summary in dropdown */}
+                      <div className="px-4 py-2.5 border-b border-slate-100/80 bg-slate-50/50 mb-1">
+                        <p className="text-xs font-bold text-slate-900 leading-none truncate">{user.name}</p>
+                        <p className="text-[10px] text-slate-500 font-mono mt-1 uppercase leading-none">{user.role}</p>
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          navTo('dashboard');
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer ${
+                          currentPage === 'dashboard' ? 'bg-slate-50 text-blue-600 font-extrabold' : ''
+                        }`}
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-slate-400" />
+                        Dashboard
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          navTo('settings');
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer ${
+                          currentPage === 'settings' ? 'bg-slate-50 text-blue-600 font-extrabold' : ''
+                        }`}
+                      >
+                        <Settings className="w-4 h-4 text-slate-400" />
+                        Settings
+                      </button>
+                      
+                      <div className="h-px bg-slate-100/80 my-1" />
+                      
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          onLogout();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50/50 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4 text-rose-400" />
+                        Logout
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           ) : (
             <>
               <button 
                 onClick={() => navTo('login')}
-                className="text-slate-600 px-3.5 py-2 rounded-xl text-xs font-bold hover:text-slate-900 transition-all"
+                className="text-slate-600 px-3.5 py-2 rounded-xl text-xs font-bold hover:text-slate-900 transition-all cursor-pointer"
               >
                 Login
               </button>
               <button 
                 onClick={() => navTo('signup')}
-                className="bg-slate-900 text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
+                className="bg-slate-900 text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200 cursor-pointer"
               >
                 Sign Up
               </button>
@@ -415,7 +484,7 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
           {/* Hamburger Mobile Toggle */}
           <button 
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors pointer-events-auto"
+            className="lg:hidden p-2 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors pointer-events-auto cursor-pointer"
             aria-label="Toggle Menu"
           >
             {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -436,33 +505,24 @@ const Navbar = ({ onNavigate, currentPage, user, onLogout }: {
             <div className="flex flex-col gap-3">
               <button 
                 onClick={() => navTo('home')} 
-                className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'home' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
+                className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold cursor-pointer ${currentPage === 'home' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
               >
                 Home
               </button>
 
               <button 
                 onClick={handleHowItWorksClick} 
-                className="w-full py-3 px-4 rounded-xl text-left text-sm font-bold text-slate-600 hover:bg-slate-50"
+                className="w-full py-3 px-4 rounded-xl text-left text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 How It Works
               </button>
 
               <button 
                 onClick={handlePricingClick} 
-                className="w-full py-3 px-4 rounded-xl text-left text-sm font-bold text-slate-600 hover:bg-slate-50"
+                className="w-full py-3 px-4 rounded-xl text-left text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 Pricing
               </button>
-
-              {user && (
-                <button 
-                  onClick={() => navTo('dashboard')} 
-                  className={`w-full py-3 px-4 rounded-xl text-left text-sm font-bold ${currentPage === 'dashboard' ? 'bg-cyan-500/10 text-cyan-700 font-extrabold' : 'text-slate-600 hover:bg-slate-50'}`}
-                >
-                  Dashboard
-                </button>
-              )}
             </div>
           </motion.div>
         )}
