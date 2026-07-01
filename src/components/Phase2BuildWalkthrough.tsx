@@ -2297,7 +2297,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                 className="flex-1 flex flex-col"
               >
                 {/* Collapsible Expanded Component Content Section */}
-                <div className="space-y-6">
+                <div className={activeStep === 6 ? "flex-1 flex flex-col h-full overflow-hidden" : "space-y-6"}>
 
                       {/**********************************************************
                        * STEP 1: Blueprint Approver View

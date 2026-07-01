@@ -1996,7 +1996,8 @@ export default function App() {
       intro: '/intro',
       'profile-setup': '/onboarding',
       'employers': '/employers',
-      'phase-2': '/phase/2'
+      'phase-2': '/phase/2',
+      settings: '/settings'
     };
 
     const targetPath = routeMap[page];
