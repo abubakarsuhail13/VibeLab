@@ -667,16 +667,6 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
                 Leaderboard
               </button>
 
-              <button 
-                onClick={() => { navigate('/settings'); if (isMobile) setIsMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
-                  activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                Settings
-              </button>
-
             </>
           ) : (
             <>
@@ -728,16 +718,6 @@ export default function Dashboard({ user, onLogout, onUpdateUser, onNavigate }: 
               >
                 <Users className="w-5 h-5" />
                 Leaderboard
-              </button>
-
-              <button 
-                onClick={() => { navigate('/settings'); if (isMobile) setIsMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all ${
-                  activeView === 'settings' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                Settings
               </button>
 
               <div className="pt-6 pb-2 px-4">
