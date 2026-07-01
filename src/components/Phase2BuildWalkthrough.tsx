@@ -2220,7 +2220,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
       </div>
 
       {/* Scrollable container for the single active step content */}
-      <div className={`flex-1 ${activeStep === 6 ? 'p-0 overflow-hidden h-[calc(100vh-140px)]' : 'overflow-y-auto px-4 py-6 md:px-12 md:py-8'} relative z-10 flex flex-col justify-start`}>
+      <div className={`flex-1 ${activeStep === 6 ? 'p-0 overflow-hidden min-h-0' : 'overflow-y-auto px-4 py-6 md:px-12 md:py-8'} relative z-10 flex flex-col justify-start`}>
         <div className={`w-full bg-white/70 backdrop-blur-md ${activeStep === 6 ? 'rounded-none border-none p-0 flex-1 flex flex-col h-full overflow-hidden' : 'rounded-2xl border border-slate-200/60 p-6 md:p-8 shadow-xl shadow-slate-900/5 h-auto overflow-visible max-w-6xl mx-auto'}`}>
           {activeStep !== 6 && (
             <div className="border-b border-slate-100 pb-4 mb-6">
@@ -2849,12 +2849,12 @@ Handles routing via custom React layouts, templates, and server-side model groun
                               </span>
                               <span className="font-mono bg-slate-200/60 px-1.5 py-0.5 rounded text-slate-700 truncate font-semibold">
                                 vibelab-sandbox / {projectName || 'app'} / {activeFile}
-                              </span>
-                            </div>
+                            </span>
+                          </div>
 
-                            <div className="flex items-center gap-3">
-                              {/* Sidebar Toggle */}
-                              <div className="flex items-center gap-1 bg-white border border-slate-200 p-0.5 rounded-lg shrink-0">
+                          <div className="flex items-center gap-3">
+                            {/* Sidebar Toggle */}
+                            <div className="flex items-center gap-1 bg-white border border-slate-200 p-0.5 rounded-lg shrink-0">
                                 <button
                                   type="button"
                                   onClick={() => setIsSidebarHidden(prev => !prev)}
@@ -2865,7 +2865,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                                   }`}
                                   title={isSidebarHidden ? "Show Files Sidebar" : "Hide Files Sidebar"}
                                 >
-                                  <Columns className="w-3 h-3" />
+                                  <FolderOpen className="w-3 h-3" />
                                   <span className="hidden sm:inline font-sans">Files</span>
                                 </button>
 
@@ -2933,17 +2933,17 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           </div>
 
                           {/* Outer Flex Container for Step 6 Panels */}
-                          <div id="workspace-panels-container" className="flex-1 flex flex-col lg:flex-row h-full w-full bg-white overflow-hidden">
+                          <div id="workspace-panels-container" className="flex-1 flex flex-col lg:flex-row h-full w-full bg-white overflow-y-auto lg:overflow-hidden">
                             
                             {/* Left Panel 0: Collapsible File Tree Sidebar (Pages, Components, Assets, etc.) */}
                             {!isSidebarHidden && workspaceLayout !== 'preview' && (
                               <>
                                 <div 
-                                  className="w-full border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0 font-sans transition-all duration-300 select-none h-full overflow-hidden"
+                                  className="w-full border-r border-slate-200 bg-slate-50/50 flex flex-col shrink-0 font-sans transition-all duration-300 select-none h-[220px] lg:h-full overflow-hidden"
                                   style={{ width: `${sidebarWidth}px`, maxWidth: '100%' }}
                                 >
                               <div className="p-3 border-b border-slate-200 bg-[#f8fafc] flex justify-between items-center text-[10px] text-slate-500 font-mono shrink-0 uppercase tracking-widest font-black">
-                                <span className="flex items-center gap-1.5"><Columns className="w-3.5 h-3.5 text-[#2563eb]" /> Sandbox Files</span>
+                                <span className="flex items-center gap-1.5"><FolderOpen className="w-3.5 h-3.5 text-[#2563eb]" /> Sandbox Files</span>
                                 <button
                                   onClick={() => setIsSidebarHidden(true)}
                                   className="text-[10px] text-slate-400 hover:text-[#2563eb] font-mono border-none bg-transparent cursor-pointer font-bold"
@@ -3196,7 +3196,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           {!isGuideHidden && workspaceLayout !== 'preview' && (
                             <>
                               <div 
-                                className="w-full bg-white flex flex-col justify-between shrink-0 h-full overflow-y-auto border-r border-slate-200 scrollbar-thin"
+                                className="w-full bg-white flex flex-col justify-between shrink-0 h-[320px] lg:h-full overflow-y-auto border-r border-slate-200 scrollbar-thin"
                                 style={{ width: `${guideWidth}px`, maxWidth: '100%' }}
                               >
                             <div className="space-y-4">
@@ -3497,7 +3497,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           {(workspaceLayout === 'split' || workspaceLayout === 'code') && (
                             <>
                               <div 
-                                className="flex flex-col bg-slate-950 overflow-hidden h-full shrink-0"
+                                className="flex flex-col bg-slate-950 overflow-hidden h-[450px] lg:h-full shrink-0"
                               style={{ 
                                 width: (workspaceLayout === 'split' && window.innerWidth >= 1024) ? `${splitRatio}%` : (workspaceLayout === 'code' ? '100%' : undefined),
                                 flexGrow: workspaceLayout === 'split' ? undefined : 1
@@ -3665,7 +3665,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
                           {/* Right Panel 3: Live Interactive Preview */}
                           {(workspaceLayout === 'split' || workspaceLayout === 'preview') && (
                             <div 
-                              className="flex flex-col bg-slate-50 overflow-hidden h-full shrink-0"
+                              className="flex flex-col bg-slate-50 overflow-hidden h-[500px] lg:h-full shrink-0"
                               style={{ 
                                 width: (workspaceLayout === 'split' && window.innerWidth >= 1024) ? `${100 - splitRatio}%` : (workspaceLayout === 'preview' ? '100%' : undefined),
                                 flexGrow: workspaceLayout === 'split' ? undefined : 1
@@ -3674,15 +3674,6 @@ Handles routing via custom React layouts, templates, and server-side model groun
                             {/* Device controls header */}
                             <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white shrink-0 select-none">
                               <div className="flex items-center gap-2">
-                                {isSidebarHidden && (
-                                  <button
-                                    onClick={() => setIsSidebarHidden(false)}
-                                    className="p-1 px-1.5 rounded hover:bg-slate-100 text-[#2563eb] text-[10px] uppercase font-mono font-bold flex items-center gap-1 cursor-pointer border border-[#2563eb]/25 bg-transparent shrink-0"
-                                    title="Show Project Source files explorer"
-                                  >
-                                    <Layout className="w-3 h-3 text-[#2563eb]" /> Show Files
-                                  </button>
-                                )}
                                 <span className="text-[10px] font-black text-slate-500 uppercase font-mono tracking-widest">FLUID PREVIEW</span>
                               </div>
                               
