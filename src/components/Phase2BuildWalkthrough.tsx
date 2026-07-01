@@ -2148,7 +2148,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
     : (session ? (STEP_MAP_ORDER[session.current_step] || 1) : 1);
   const isFieldDisabled = activeStep < farthestStep && !isEditingApprovedStep;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-[#f8fafc] flex flex-col font-sans overflow-hidden text-slate-800 animate-fade-in">
       <EducationalAiBackground isDark={false} />
       
@@ -4996,6 +4996,7 @@ Handles routing via custom React layouts, templates, and server-side model groun
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body
   );
 }
